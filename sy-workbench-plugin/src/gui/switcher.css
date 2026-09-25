@@ -1,0 +1,27 @@
+/* 顶栏切换器（addTopBar 产物=运行时挂载，须全局样式；Svelte scoped 剪不到这里）。
+   照官方 toolbar 按钮形态：14px 线稿图标+13px 文字，项目名超长 ellipsis（信息平铺不裁剪线列表，仅按钮位限宽）。 */
+#toolbar .pj-switcher__name {
+    font-size: 13px;
+    margin-left: 4px; /* 图标与文字间距（vision P1-1） */
+    max-width: 8em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1;
+}
+
+#toolbar .pj-switcher__name--empty {
+    color: var(--b3-theme-on-surface-light);
+}
+
+/* 增补批二任务四：文件树定位短暂高亮（revealInFileTree 定位到位后挂 ~0.9s 再摘——
+   官方 setCurrent 的持续 focus 态之上的显式提示）。b3 变量必带 fallback
+   （思源主题缺该变量+var() 无 fallback=整条声明静默失效，css.md 坑）。 */
+@keyframes pj-tree-flash {
+    0% { background-color: var(--b3-theme-primary-lighter, rgba(35, 160, 218, 0.25)); }
+    100% { background-color: transparent; }
+}
+
+.pj-tree-flash {
+    animation: pj-tree-flash 0.9s ease-out;
+}

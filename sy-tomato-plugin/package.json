@@ -1,0 +1,95 @@
+{
+  "name": "sy-tomato-plugin",
+  "version": "5.18.5",
+  "description": "思源笔记的全能效率工具箱：状态栏番茄钟、AI 知识库问答、闪卡复习、阅读点与批注、悬浮球速记、同步块与思维导线——40+ 项功能，时间、阅读、复习、AI 一个插件全覆盖",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite build --watch",
+    "dev:kernel": "vite build --watch --config vite.kernel.config.ts",
+    "build:kernel": "vite build --config vite.kernel.config.ts",
+    "build": "npm run build:kernel && vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run --project unit"
+  },
+  "keywords": [
+    "TomatoClock",
+    "Time management",
+    "Productivity",
+    "Pomodoro technique",
+    "Timer plugin",
+    "Task scheduling",
+    "Focus sessions",
+    "Work intervals",
+    "Breaks",
+    "Time tracking",
+    "Timeboxing",
+    "Time optimization",
+    "Efficiency",
+    "Work-life balance",
+    "Distraction management",
+    "Task prioritization",
+    "Time blocking",
+    "Time visualization",
+    "Progress tracking",
+    "Goal setting"
+  ],
+  "author": "IAliceBobI",
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IAliceBobI/sy-tomato-plugin.git"
+  },
+  "homepage": "https://github.com/IAliceBobI/sy-tomato-plugin",
+  "overrides": {
+    "@mapbox/node-pre-gyp": {
+      "tar": "7.5.22"
+    },
+    "stonev5-utils": {
+      "uuid": "^11.1.1"
+    }
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.0",
+    "@types/elliptic": "^6.4.18",
+    "@types/fabric": "^5.3.7",
+    "@types/minimist": "^1.2.5",
+    "@types/node": "^20.12.7",
+    "@vitest/coverage-v8": "^4.0.18",
+    "esbuild": "^0.28.2",
+    "fast-glob": "^3.2.12",
+    "glob": "^11.0.0",
+    "happy-dom": "^20.11.6",
+    "minimist": "^1.2.8",
+    "rollup-plugin-livereload": "^2.0.5",
+    "sass": "^1.75.0",
+    "siyuan": "^1.2.5",
+    "svelte": "^5.53.5",
+    "svelte-check": "^4.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.5.0",
+    "vite": "^8.2.2",
+    "vite-plugin-static-copy": "^3.1.0",
+    "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "@dagrejs/dagre": "^3.1.1",
+    "@xyflow/svelte": "^1.5.1",
+    "elliptic": "^6.5.7",
+    "html2canvas": "^1.4.1",
+    "moment-timezone": "^0.6.3",
+    "openai": "^4.49.1",
+    "pinyin-pro": "^3.20.3",
+    "qrcode-generator": "^2.0.4",
+    "stonev5-utils": "^1.2.0",
+    "terser": "^5.31.6",
+    "ts-md5": "^2.0.1"
+  },
+  "allowScripts": {
+    "canvas": false,
+    "@parcel/watcher": true,
+    "esbuild": true,
+    "fsevents": true
+  }
+}

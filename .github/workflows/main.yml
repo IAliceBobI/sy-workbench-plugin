@@ -1,0 +1,49 @@
+name: Create Release on Tag Push
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+env:
+  PROJ_PATH: sy-workbench-plugin
+  DEPS_PATH: sy-tomato-plugin
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: |
+            sy-tomato-plugin/package-lock.json
+            sy-workbench-plugin/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd $DEPS_PATH
+          npm i
+          cd ..
+          cd $PROJ_PATH
+          npm i
+          cd ..
+
+      - name: Build for production
+        run: |
+          cd $PROJ_PATH
+          npm run build
+          cd build
+          zip -r package.zip ./*
+          mv package.zip ../..
+
+      - name: Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "package.zip"
+          prerelease: false

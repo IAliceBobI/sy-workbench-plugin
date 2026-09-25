@@ -1,0 +1,210 @@
+// sloop □7：班表→macOS 日历镜像 JXA 通道（随插件包分发：jxa/sched-calendar.jxa）。
+// 调用形态：osascript -l JavaScript sched-calendar.jxa '<JSON 命令>'（argv[0]），stdout=JSON 回执。
+// 命令面：{op:"probe"} | {op:"list",from,to} | {op:"upsert",key,summary,start,end,alarmMinutes,description?} | {op:"remove",key}
+// 事件标记=URL 字段 sy-pj-sched://item/<key>（uid 只读不可设——url 可写即映射，无账本态镜像）。
+// 权限（调研实锤 09-16）：首调弹自动化授权窗（挂起=-1712）；拒绝=-1743 静默。
+// 通道定档依据见 checkpoints sloop □7（JXA 首选/EventKit 不建议——TCC 宿主 bundle 不可声明）。
+
+"use strict";
+
+var MARKER_PREFIX = "sy-pj-sched://item/";
+
+function markerUrl(key) {
+    return MARKER_PREFIX + key;
+}
+
+function keyOfUrl(u) {
+    if (!u || u.indexOf(MARKER_PREFIX) !== 0) return null;
+    return u.slice(MARKER_PREFIX.length);
+}
+
+function iso(d) {
+    try {
+        return new Date(d).toISOString();
+    } catch (e) {
+        return "";
+    }
+}
+
+/** 可写日历（过滤订阅/只读历；调研结论：日历一律过滤 writable=false） */
+function writableCalendars(app) {
+    var out = [];
+    var cals = app.calendars();
+    for (var i = 0; i < cals.length; i++) {
+        var c = cals[i];
+        try {
+            if (c.writable()) out.push(c);
+        } catch (e) {
+            // 无 writable 属性的历按不可写处理
+        }
+    }
+    return out;
+}
+
+/** 目标日历：默认日历可写则用之，否则第一个可写历 */
+function targetCalendar(app) {
+    var cals = writableCalendars(app);
+    if (!cals.length) throw new Error("无可写日历（订阅/只读历不可用——在日历 App 里启用一个本地或 iCloud 日历）");
+    try {
+        var def = app.defaultCalendar();
+        if (def && def.writable && def.writable()) return def;
+    } catch (e) {
+        // 老版本无 defaultCalendar——退第一个可写历
+    }
+    return cals[0];
+}
+
+/** 窗口内事件（whose 过滤失败退全量再 JS 过滤——小日历可接受） */
+function eventsInWindow(app, cal, from, to) {
+    var evs;
+    try {
+        evs = cal.events.whose({ startDate: { _greaterThan: from, _lessThan: to } })();
+    } catch (e1) {
+        try {
+            evs = cal.events();
+        } catch (e2) {
+            return [];
+        }
+    }
+    return evs || [];
+}
+
+/** 全可写历里找我们的标记事件（url=marker），返回 {cal, ev} */
+function findOurs(app, key, from, to) {
+    var url = markerUrl(key);
+    var cals = writableCalendars(app);
+    for (var i = 0; i < cals.length; i++) {
+        var evs = eventsInWindow(app, cals[i], from, to);
+        for (var j = 0; j < evs.length; j++) {
+            var u = "";
+            try { u = evs[j].url() || ""; } catch (e) { u = ""; }
+            if (u === url) return { cal: cals[i], ev: evs[j] };
+        }
+    }
+    return null;
+}
+
+function alarmMinutesOf(ev) {
+    try {
+        var alarms = ev.alarms();
+        if (!alarms || !alarms.length) return null;
+        var ti = alarms[0].triggerInterval();
+        return typeof ti === "number" ? -ti : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function setAlarms(app, ev, minutes) {
+    if (minutes == null) {
+        ev.alarms = [];
+    } else {
+        var al = app.Alarm({ triggerInterval: -minutes });
+        ev.alarms = [al];
+    }
+}
+
+function eventRow(ev, cal) {
+    var u = "";
+    try { u = ev.url() || ""; } catch (e) { u = ""; }
+    var key = keyOfUrl(u);
+    if (!key) return null;
+    var s = "", en = "";
+    try { s = iso(ev.startDate()); } catch (e) { s = ""; }
+    try { en = iso(ev.endDate()); } catch (e) { en = ""; }
+    var sum = "";
+    try { sum = ev.summary() || ""; } catch (e) { sum = ""; }
+    var calId = "";
+    try { calId = cal.id() || ""; } catch (e) { calId = ""; }
+    return { key: key, summary: sum, start: s, end: en, alarmMinutes: alarmMinutesOf(ev), calendarId: calId };
+}
+
+function run(argv) {
+    var cmd;
+    try {
+        cmd = JSON.parse(argv[0]);
+    } catch (e) {
+        return JSON.stringify({ ok: false, error: "bad argv json: " + e });
+    }
+    var app = Application("Calendar");
+    try {
+        if (cmd.op === "probe") {
+            var cals = writableCalendars(app);
+            var list = [];
+            for (var i = 0; i < cals.length; i++) {
+                var name = "";
+                var id = "";
+                try { name = cals[i].name() || ""; } catch (e) { name = ""; }
+                try { id = cals[i].id() || ""; } catch (e) { id = ""; }
+                list.push({ id: id, name: name });
+            }
+            var defName = "", defId = "";
+            try {
+                var def = targetCalendar(app);
+                defName = def.name() || "";
+                defId = def.id() || "";
+            } catch (e) {
+                return JSON.stringify({ ok: false, error: String(e) });
+            }
+            return JSON.stringify({ ok: true, calendars: list, defaultCalendar: { id: defId, name: defName } });
+        }
+
+        if (cmd.op === "list") {
+            var from = new Date(cmd.from), to = new Date(cmd.to);
+            var lcals = writableCalendars(app);
+            var rows = [];
+            for (var a = 0; a < lcals.length; a++) {
+                var evs = eventsInWindow(app, lcals[a], from, to);
+                for (var b = 0; b < evs.length; b++) {
+                    var row = eventRow(evs[b], lcals[a]);
+                    if (row) rows.push(row);
+                }
+            }
+            return JSON.stringify({ ok: true, events: rows });
+        }
+
+        if (cmd.op === "upsert") {
+            if (!cmd.key || !cmd.summary || !cmd.start || !cmd.end) throw new Error("upsert 须带 key/summary/start/end");
+            var ufrom = new Date(new Date(cmd.start).getTime() - 90 * 86400000);
+            var uto = new Date(new Date(cmd.start).getTime() + 400 * 86400000);
+            var hit = findOurs(app, cmd.key, ufrom, uto);
+            var desc = cmd.description || "";
+            var alarm = cmd.alarmMinutes == null ? null : cmd.alarmMinutes;
+            if (hit) {
+                var ev = hit.ev;
+                ev.summary = cmd.summary;
+                ev.startDate = new Date(cmd.start);
+                ev.endDate = new Date(cmd.end);
+                ev.description = desc;
+                setAlarms(app, ev, alarm);
+                return JSON.stringify({ ok: true, action: "update" });
+            }
+            var cal = targetCalendar(app);
+            var nev = app.Event({
+                summary: cmd.summary,
+                startDate: new Date(cmd.start),
+                endDate: new Date(cmd.end),
+                description: desc,
+                url: markerUrl(cmd.key),
+            });
+            cal.events.push(nev);
+            setAlarms(app, nev, alarm);
+            return JSON.stringify({ ok: true, action: "create" });
+        }
+
+        if (cmd.op === "remove") {
+            if (!cmd.key) throw new Error("remove 须带 key");
+            // 全窗扫（不知道事件在哪个时刻——班表条目可能被用户在日历里挪过）
+            var rfrom = new Date(Date.now() - 370 * 86400000);
+            var rto = new Date(Date.now() + 400 * 86400000);
+            var rhit = findOurs(app, cmd.key, rfrom, rto);
+            if (!rhit) return JSON.stringify({ ok: true, action: "none", note: "not found" });
+            rhit.cal.events.id(rhit.ev.id()).delete();
+            return JSON.stringify({ ok: true, action: "delete" });
+        }
+
+        return JSON.stringify({ ok: false, error: "unknown op: " + cmd.op });
+    } catch (err) {
+        return JSON.stringify({ ok: false, error: String(err) });
+    }
+}

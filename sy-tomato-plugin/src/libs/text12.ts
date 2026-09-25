@@ -1,0 +1,538 @@
+import { TomatoI18nABC13 } from "./text13";
+
+export abstract class TomatoI18nABC12 extends TomatoI18nABC13 {
+    public get 所有原文都加引用() {
+        switch (this.lang) {
+            case "zh_CN": return "所有原文都加引用";
+            case "es_ES": return "Añadir cita a todos los textos originales";
+            case "fr_FR": return "Ajouter une citation à tous les textes originaux";
+            case "ja_JP": return "すべての原文に引用を追加";
+            case "zh_CHT": return "所有原文都加引用";
+            case "it_IT": return "Aggiungi citazione a tutti i testi originali";
+            case "de_DE": return "Zitat zu allen Originaltexten hinzufügen";
+            case "he_IL": return "הוסף ציטוט לכל הטקסטים המקוריים";
+            case "ru_RU": return "Добавить цитирование ко всем исходным текстам";
+            case "pl_PL": return "Dodaj cytat do wszystkich oryginalnych tekstów";
+            case "en_US":
+            default: return "Add citation to all original texts";
+        }
+    }
+
+    public get 块折叠助手() {
+        switch (this.lang) {
+            case "zh_CN": return "块折叠助手";
+            case "es_ES": return "Asistente de plegado de bloques";
+            case "fr_FR": return "Assistant de repliement de blocs";
+            case "ja_JP": return "ブロック折りたたみヘルパー";
+            case "zh_CHT": return "塊折疊助手";
+            case "it_IT": return "Assistente piegatura blocchi";
+            case "de_DE": return "Block-Falt-Hilfe";
+            case "he_IL": return "עוזר קיפול בלוקים";
+            case "ru_RU": return "Помощник сворачивания блоков";
+            case "pl_PL": return "Pomocnik zwijania bloków";
+            case "en_US":
+            default: return "Block folding helper";
+        }
+    }
+
+    public get 超级块() {
+        switch (this.lang) {
+            case "zh_CN": return "超级块";
+            case "es_ES": return "Super bloque";
+            case "fr_FR": return "Super bloc";
+            case "ja_JP": return "スーパーブロック";
+            case "zh_CHT": return "超級塊";
+            case "it_IT": return "Super blocco";
+            case "de_DE": return "Super-Block";
+            case "he_IL": return "בלוק על";
+            case "ru_RU": return "Супер блок";
+            case "pl_PL": return "Super blok";
+            case "en_US":
+            default: return "Super block";
+        }
+    }
+
+    public get 表格() {
+        switch (this.lang) {
+            case "zh_CN": return "表格";
+            case "es_ES": return "Tabla";
+            case "fr_FR": return "Tableau";
+            case "ja_JP": return "表";
+            case "zh_CHT": return "表格";
+            case "it_IT": return "Tabella";
+            case "de_DE": return "Tabelle";
+            case "he_IL": return "טבלה";
+            case "ru_RU": return "Таблица";
+            case "pl_PL": return "Tabela";
+            case "en_US":
+            default: return "Table";
+        }
+    }
+
+    public get 列表块() {
+        switch (this.lang) {
+            case "zh_CN": return "列表块";
+            case "es_ES": return "Bloque de lista";
+            case "fr_FR": return "Bloc de liste";
+            case "ja_JP": return "リストブロック";
+            case "zh_CHT": return "列表塊";
+            case "it_IT": return "Blocco elenco";
+            case "de_DE": return "Listenblock";
+            case "he_IL": return "בלוק רשימה";
+            case "ru_RU": return "Блок списка";
+            case "pl_PL": return "Blok listy";
+            case "en_US":
+            default: return "List block";
+        }
+    }
+
+    public get 列表项() {
+        switch (this.lang) {
+            case "zh_CN": return "列表项";
+            case "es_ES": return "Elemento de lista";
+            case "fr_FR": return "Élément de liste";
+            case "ja_JP": return "リストアイテム";
+            case "zh_CHT": return "列表項";
+            case "it_IT": return "Elemento dell'elenco";
+            case "de_DE": return "Listenelement";
+            case "he_IL": return "פריט ברשימה";
+            case "ru_RU": return "Элемент списка";
+            case "pl_PL": return "Element listy";
+            case "en_US":
+            default: return "List item";
+        }
+    }
+
+    public get 引述块() {
+        switch (this.lang) {
+            case "zh_CN": return "引述块";
+            case "es_ES": return "Bloque de cita";
+            case "fr_FR": return "Bloc de citation";
+            case "ja_JP": return "引用ブロック";
+            case "zh_CHT": return "引述塊";
+            case "it_IT": return "Blocco citazione";
+            case "de_DE": return "Zitatblock";
+            case "he_IL": return "בלוק ציטוט";
+            case "ru_RU": return "Блок цитирования";
+            case "pl_PL": return "Blok cytatu";
+            case "en_US":
+            default: return "Quote block";
+        }
+    }
+
+    public get 在块的右上角显示折叠图标() {
+        switch (this.lang) {
+            case "zh_CN": return "在块的右上角显示折叠图标";
+            case "es_ES": return "Mostrar el icono de plegar en la esquina superior derecha del bloque";
+            case "fr_FR": return "Afficher l'icône de réduction dans le coin supérieur droit du bloc";
+            case "ja_JP": return "ブロックの右上に折りたたみアイコンを表示";
+            case "zh_CHT": return "在區塊的右上角顯示折疊圖示";
+            case "it_IT": return "Mostra l'icona di compressione nell'angolo in alto a destra del blocco";
+            case "de_DE": return "Minimieren-Symbol in der oberen rechten Ecke des Blocks anzeigen";
+            case "he_IL": return "הצג את סמל הקיפול בפינה הימנית העליונה של הבלוק";
+            case "ru_RU": return "Показать значок сворачивания в правом верхнем углу блока";
+            case "pl_PL": return "Pokaż ikonę zwijania w prawym górnym rogu bloku";
+            case "en_US":
+            default: return "Show collapse icon at the top right corner of the block";
+        }
+    }
+
+    public get 标题() {
+        switch (this.lang) {
+            case "zh_CN": return "标题";
+            case "es_ES": return "Título";
+            case "fr_FR": return "Titre";
+            case "ja_JP": return "タイトル";
+            case "zh_CHT": return "標題";
+            case "it_IT": return "Titolo";
+            case "de_DE": return "Titel";
+            case "he_IL": return "כותרת";
+            case "ru_RU": return "Заголовок";
+            case "pl_PL": return "Tytuł";
+            case "en_US":
+            default: return "Title";
+        }
+    }
+
+    public get 时间到播放声音() {
+        switch (this.lang) {
+            case "zh_CN": return "时间到播放声音（可以是网络url或者本地路径c:\\abc.mp3）";
+            case "es_ES": return "Reproducir sonido cuando termine el tiempo (puede ser una URL o una ruta local como c:\\abc.mp3)";
+            case "fr_FR": return "Jouer un son à la fin du temps (peut être une URL ou un chemin local comme c:\\abc.mp3)";
+            case "ja_JP": return "時間になったら音を再生（URLまたはローカルパスc:\\abc.mp3が使用可能）";
+            case "zh_CHT": return "時間到播放聲音（可以是網路url或本地路徑c:\\abc.mp3）";
+            case "it_IT": return "Riproduci suono allo scadere del tempo (può essere un URL o un percorso locale come c:\\abc.mp3)";
+            case "de_DE": return "Ton abspielen, wenn die Zeit abgelaufen ist (kann eine URL oder ein lokaler Pfad wie c:\\abc.mp3 sein)";
+            case "he_IL": return "נגן צליל כאשר הזמן נגמר (יכול להיות כתובת URL או נתיב מקומי כמו c:\\abc.mp3)";
+            case "ru_RU": return "Воспроизвести звук по окончании времени (может быть URL или локальный путь, например c:\\abc.mp3)";
+            case "pl_PL": return "Odtwórz dźwięk po upływie czasu (może to być adres URL lub lokalna ścieżka, np. c:\\abc.mp3)";
+            case "en_US":
+            default: return "Play sound when time is up (can be a URL or local path like c:\\abc.mp3)";
+        }
+    }
+
+    public get 刷新文档正引() {
+        switch (this.lang) {
+            case "zh_CN": return "刷新文档正引";
+            case "es_ES": return "Actualizar citas directas del documento";
+            case "fr_FR": return "Rafraîchir les citations directes du document";
+            case "ja_JP": return "ドキュメントのインライン引用を更新";
+            case "zh_CHT": return "刷新文件正引";
+            case "it_IT": return "Aggiorna citazioni dirette del documento";
+            case "de_DE": return "Direktzitate im Dokument aktualisieren";
+            case "he_IL": return "רענן ציטוטים ישירים במסמך";
+            case "ru_RU": return "Обновить прямые цитаты в документе";
+            case "pl_PL": return "Odśwież cytaty bezpośrednie w dokumencie";
+            case "en_US":
+            default: return "Refresh document direct citations";
+        }
+    }
+
+    public get 导出工作空间() {
+        switch (this.lang) {
+            case "zh_CN": return "导出工作空间";
+            case "es_ES": return "Exportar espacio de trabajo";
+            case "fr_FR": return "Exporter l'espace de travail";
+            case "ja_JP": return "ワークスペースをエクスポート";
+            case "zh_CHT": return "導出工作空間";
+            case "it_IT": return "Esporta spazio di lavoro";
+            case "de_DE": return "Arbeitsbereich exportieren";
+            case "he_IL": return "ייצא סביבת עבודה";
+            case "ru_RU": return "Экспортировать рабочее пространство";
+            case "pl_PL": return "Eksportuj przestrzeń roboczą";
+            case "en_US":
+            default: return "Export workspace";
+        }
+    }
+
+    public get 全量导出() {
+        switch (this.lang) {
+            case "zh_CN": return "全量导出";
+            case "es_ES": return "Exportación completa";
+            case "fr_FR": return "Exportation complète";
+            case "ja_JP": return "全量エクスポート";
+            case "zh_CHT": return "全量導出";
+            case "it_IT": return "Esportazione completa";
+            case "de_DE": return "Vollständiger Export";
+            case "he_IL": return "ייצוא מלא";
+            case "ru_RU": return "Полный экспорт";
+            case "pl_PL": return "Eksport pełny";
+            case "en_US":
+            default: return "Full export";
+        }
+    }
+
+    public get 增量导出() {
+        switch (this.lang) {
+            case "zh_CN": return "增量导出";
+            case "es_ES": return "Exportación incremental";
+            case "fr_FR": return "Exportation incrémentielle";
+            case "ja_JP": return "増分エクスポート";
+            case "zh_CHT": return "增量導出";
+            case "it_IT": return "Esportazione incrementale";
+            case "de_DE": return "Inkrementeller Export";
+            case "he_IL": return "ייצוא הדרגתי";
+            case "ru_RU": return "Инкрементальный экспорт";
+            case "pl_PL": return "Eksport przyrostowy";
+            case "en_US":
+            default: return "Incremental export";
+        }
+    }
+
+    public get 没有需要导出的文档() {
+        switch (this.lang) {
+            case "zh_CN": return "没有需要导出的文档";
+            case "es_ES": return "No hay documentos para exportar";
+            case "fr_FR": return "Aucun document à exporter";
+            case "ja_JP": return "エクスポートするドキュメントがありません";
+            case "zh_CHT": return "沒有需要導出的文件";
+            case "it_IT": return "Nessun documento da esportare";
+            case "de_DE": return "Keine Dokumente zum Exportieren vorhanden";
+            case "he_IL": return "אין מסמכים לייצא";
+            case "ru_RU": return "Нет документов для экспорта";
+            case "pl_PL": return "Brak dokumentów do eksportu";
+            case "en_US":
+            default: return "No documents to export";
+        }
+    }
+
+    public get 导出工作空间正在进行中请稍后再试() {
+        switch (this.lang) {
+            case "zh_CN": return "导出工作空间正在进行中，请稍后再试";
+            case "es_ES": return "La exportación del espacio de trabajo está en curso, inténtalo de nuevo más tarde";
+            case "fr_FR": return "L'exportation de l'espace de travail est en cours, veuillez réessayer plus tard";
+            case "ja_JP": return "ワークスペースのエクスポートが進行中です。しばらくしてから再試行してください";
+            case "zh_CHT": return "導出工作空間正在進行中，請稍後再試";
+            case "it_IT": return "L'esportazione dello spazio di lavoro è in corso, riprova più tardi";
+            case "de_DE": return "Der Export des Arbeitsbereichs läuft, bitte versuche es später erneut";
+            case "he_IL": return "ייצוא סביבת העבודה מתבצע כעת, נסה שוב מאוחר יותר";
+            case "ru_RU": return "Экспорт рабочего пространства выполняется, попробуйте позже";
+            case "pl_PL": return "Trwa eksport przestrzeni roboczej, spróbuj ponownie później";
+            case "en_US":
+            default: return "Workspace export is in progress, please try again later";
+        }
+    }
+
+    public 间隔x分钟检查所有闪卡加上默认优先级(x: string) {
+        switch (this.lang) {
+            case "zh_CN": return `每间隔${x}分钟检查所有闪卡，并加上默认优先级`;
+            case "es_ES": return `Comprobar todas las tarjetas flash cada ${x} minutos y asignar la prioridad predeterminada`;
+            case "fr_FR": return `Vérifier toutes les flashcards toutes les ${x} minutes et attribuer la priorité par défaut`;
+            case "ja_JP": return `${x}分ごとにすべてのフラッシュカードをチェックし、デフォルトの優先度を付与`;
+            case "zh_CHT": return `每間隔${x}分鐘檢查所有閃卡，並加上預設優先級`;
+            case "it_IT": return `Controlla tutte le flashcard ogni ${x} minuti e assegna la priorità predefinita`;
+            case "de_DE": return `Alle ${x} Minuten alle Karteikarten überprüfen und Standardpriorität zuweisen`;
+            case "he_IL": return `בדוק את כל כרטיסי הברק כל ${x} דקות והוסף עדיפות ברירת מחדל`;
+            case "ru_RU": return `Проверять все флеш-карты каждые ${x} минут и назначать приоритет по умолчанию`;
+            case "pl_PL": return `Sprawdzaj wszystkie fiszki co ${x} minut i ustaw domyślny priorytet`;
+            case "en_US":
+            default: return `Check all flashcards every ${x} minutes and assign default priority`;
+        }
+    }
+
+    public get 不扫描优先级() {
+        switch (this.lang) {
+            case "zh_CN": return "不扫描优先级";
+            case "es_ES": return "No escanear prioridad";
+            case "fr_FR": return "Ne pas scanner la priorité";
+            case "ja_JP": return "優先度をスキャンしない";
+            case "zh_CHT": return "不掃描優先級";
+            case "it_IT": return "Non scansionare la priorità";
+            case "de_DE": return "Priorität nicht scannen";
+            case "he_IL": return "אל תסרוק עדיפות";
+            case "ru_RU": return "Не сканировать приоритет";
+            case "pl_PL": return "Nie skanuj priorytetu";
+            case "en_US":
+            default: return "Do not scan priority";
+        }
+    }
+
+    public get 导出工作空间到此文件夹() {
+        switch (this.lang) {
+            case "zh_CN": return "导出工作空间到此文件夹";
+            case "es_ES": return "Exportar espacio de trabajo a esta carpeta";
+            case "fr_FR": return "Exporter l'espace de travail dans ce dossier";
+            case "ja_JP": return "ワークスペースをこのフォルダーにエクスポート";
+            case "zh_CHT": return "導出工作空間到此資料夾";
+            case "it_IT": return "Esporta spazio di lavoro in questa cartella";
+            case "de_DE": return "Arbeitsbereich in diesen Ordner exportieren";
+            case "he_IL": return "ייצא סביבת עבודה לתיקיה זו";
+            case "ru_RU": return "Экспортировать рабочее пространство в эту папку";
+            case "pl_PL": return "Eksportuj przestrzeń roboczą do tego folderu";
+            case "en_US":
+            default: return "Export workspace to this folder";
+        }
+    }
+    public get 添加到导出工作空间的白名单() {
+        switch (this.lang) {
+            case "zh_CN": return "添加到导出工作空间的白名单";
+            case "es_ES": return "Agregar a la lista blanca del espacio de trabajo de exportación";
+            case "fr_FR": return "Ajouter à la liste blanche de l'espace de travail d'exportation";
+            case "ja_JP": return "エクスポートワークスペースのホワイトリストに追加";
+            case "zh_CHT": return "添加到導出工作空間的白名單";
+            case "it_IT": return "Aggiungere alla lista bianca dello spazio di lavoro di esportazione";
+            case "de_DE": return "Zur Whitelist des Export-Arbeitsbereichs hinzufügen";
+            case "he_IL": return "הוסף לרשימה הלבנה של סביבת העבודה לייצוא";
+            case "ru_RU": return "Добавить в белый список рабочего пространства экспорта";
+            case "pl_PL": return "Dodaj do białej listy przestrzeni roboczej eksportu";
+            case "en_US":
+            default: return "Add to export workspace whitelist";
+        }
+    }
+    public get 可以填写小数() {
+        switch (this.lang) {
+            case "zh_CN": return "可以填写小数";
+            case "es_ES": return "Se pueden introducir decimales";
+            case "fr_FR": return "Les décimales peuvent être saisies";
+            case "ja_JP": return "小数を入力できます";
+            case "zh_CHT": return "可以填寫小數";
+            case "it_IT": return "È possibile inserire decimali";
+            case "de_DE": return "Dezimalzahlen können eingegeben werden";
+            case "he_IL": return "ניתן להזין מספרים עשרוניים";
+            case "ru_RU": return "Можно вводить десятичные числа";
+            case "pl_PL": return "Można wprowadzać liczby dziesiętne";
+            case "en_US":
+            default: return "Decimals can be entered";
+        }
+    }
+
+    public 添加了x个文件夹(x: number) {
+        switch (this.lang) {
+            case "zh_CN": return `添加了 ${x} 个文件夹`;
+            case "es_ES": return `Se han añadido ${x} carpetas`;
+            case "fr_FR": return `${x} dossiers ajoutés`;
+            case "ja_JP": return `${x}個のフォルダーを追加しました`;
+            case "zh_CHT": return `已添加 ${x} 個資料夾`;
+            case "it_IT": return `Aggiunte ${x} cartelle`;
+            case "de_DE": return `${x} Ordner hinzugefügt`;
+            case "he_IL": return `נוספו ${x} תיקיות`;
+            case "ru_RU": return `Добавлено папок: ${x}`;
+            case "pl_PL": return `Dodano ${x} folderów`;
+            case "en_US":
+            default: return `Added ${x} folders`;
+        }
+    }
+   
+    public get 添加到导出工作空间的黑名单() {
+        switch (this.lang) {
+            case "zh_CN": return "添加到导出工作空间的黑名单";
+            case "es_ES": return "Agregar a la lista negra del espacio de trabajo de exportación";
+            case "fr_FR": return "Ajouter à la liste noire de l'espace de travail d'exportation";
+            case "ja_JP": return "エクスポートワークスペースのブラックリストに追加";
+            case "zh_CHT": return "添加到導出工作空間的黑名單";
+            case "it_IT": return "Aggiungere alla blacklist dello spazio di lavoro di esportazione";
+            case "de_DE": return "Zur Blacklist des Export-Arbeitsbereichs hinzufügen";
+            case "he_IL": return "הוסף לרשימה השחורה של סביבת העבודה לייצוא";
+            case "ru_RU": return "Добавить в черный список рабочего пространства экспорта";
+            case "pl_PL": return "Dodaj do czarnej listy przestrzeni roboczej eksportu";
+            case "en_US":
+            default: return "Add to export workspace blacklist";
+        }
+    }
+    public get 确保导出符合配置() {
+        switch (this.lang) {
+            case "zh_CN": return "确保导出符合配置";
+            case "es_ES": return "Asegúrese de que la exportación cumpla con la configuración";
+            case "fr_FR": return "Assurez-vous que l'exportation est conforme à la configuration";
+            case "ja_JP": return "エクスポートが設定に準拠していることを確認してください";
+            case "zh_CHT": return "確保導出符合配置";
+            case "it_IT": return "Assicurati che l'esportazione sia conforme alla configurazione";
+            case "de_DE": return "Stellen Sie sicher, dass der Export den Einstellungen entspricht";
+            case "he_IL": return "ודא שהייצוא תואם את ההגדרות";
+            case "ru_RU": return "Убедитесь, что экспорт соответствует настройкам";
+            case "pl_PL": return "Upewnij się, że eksport jest zgodny z konfiguracją";
+            case "en_US":
+            default: return "Ensure export matches configuration";
+        }
+    }
+    public get 将选中的内容转为引用() {
+        switch (this.lang) {
+            case "zh_CN": return "将选中的内容转为引用";
+            case "es_ES": return "Convertir el contenido seleccionado en cita";
+            case "fr_FR": return "Convertir le contenu sélectionné en citation";
+            case "ja_JP": return "選択した内容を引用に変換";
+            case "zh_CHT": return "將選中的內容轉為引用";
+            case "it_IT": return "Converti il contenuto selezionato in citazione";
+            case "de_DE": return "Ausgewählten Inhalt in Zitat umwandeln";
+            case "he_IL": return "הפוך את התוכן שנבחר לציטוט";
+            case "ru_RU": return "Преобразовать выбранное содержимое в цитату";
+            case "pl_PL": return "Zamień zaznaczoną treść na cytat";
+            case "en_US":
+            default: return "Convert selected content to quote";
+        }
+    }
+
+    public get 插入单项列表() {
+        switch (this.lang) {
+            case "zh_CN": return "插入单项列表";
+            case "es_ES": return "Insertar lista de un solo elemento";
+            case "fr_FR": return "Insérer une liste à un seul élément";
+            case "ja_JP": return "単一項目リストを挿入";
+            case "zh_CHT": return "插入單項列表";
+            case "it_IT": return "Inserisci elenco a voce singola";
+            case "de_DE": return "Einzelne Liste einfügen";
+            case "he_IL": return "הוסף רשימה של פריט אחד";
+            case "ru_RU": return "Вставить одноэлементный список";
+            case "pl_PL": return "Wstaw listę pojedynczego elementu";
+            case "en_US":
+            default: return "Insert single item list";
+        }
+    }
+
+    public get 导出图片() {
+        switch (this.lang) {
+            case "zh_CN": return "导出图片";
+            case "es_ES": return "Exportar imagen";
+            case "fr_FR": return "Exporter l'image";
+            case "ja_JP": return "画像をエクスポート";
+            case "zh_CHT": return "導出圖片";
+            case "it_IT": return "Esporta immagine";
+            case "de_DE": return "Bild exportieren";
+            case "he_IL": return "ייצא תמונה";
+            case "ru_RU": return "Экспортировать изображение";
+            case "pl_PL": return "Eksportuj obraz";
+            case "en_US":
+            default: return "Export image";
+        }
+    }
+    public get 导出路径去掉块ID后缀() {
+        switch (this.lang) {
+            case "zh_CN": return "导出路径去掉块ID后缀";
+            case "zh_CHT": return "導出路徑去掉塊ID後綴";
+            case "es_ES": return "Exportar rutas sin sufijo de ID de bloque";
+            case "fr_FR": return "Exporter les chemins sans le suffixe d'ID de bloc";
+            case "ja_JP": return "ブロックIDの接尾辞を付けずにエクスポート";
+            case "it_IT": return "Esporta i percorsi senza il suffisso ID del blocco";
+            case "de_DE": return "Pfade ohne Block-ID-Suffix exportieren";
+            case "he_IL": return "ייצוא נתיבים ללא סיומת מזהה הבלוק";
+            case "ru_RU": return "Экспортировать пути без суффикса ID блока";
+            case "pl_PL": return "Eksportuj ścieżki bez sufiksu ID bloku";
+            case "en_US":
+            default: return "Export paths without block ID suffix";
+        }
+    }
+    public get 切换本开关后执行一次确保导出符合配置即可自动迁移() {
+        switch (this.lang) {
+            case "zh_CN": return "切换本开关后，执行一次「确保导出符合配置」即可自动迁移（大库耗时）";
+            case "zh_CHT": return "切換本開關後，執行一次「確保導出符合配置」即可自動遷移（大庫耗時）";
+            case "es_ES": return "Tras cambiar este interruptor, ejecute «Asegurar exportación conforme a la configuración» una vez para migrar automáticamente (lento en bibliotecas grandes)";
+            case "fr_FR": return "Après avoir basculé ce commutateur, exécutez une fois « Assurer la conformité de l'exportation » pour migrer automatiquement (lent pour les grandes bibliothèques)";
+            case "ja_JP": return "このスイッチを切り替えた後、「エクスポートを設定に合わせる」を一度実行すると自動移行します（大規模ライブラリでは時間がかかります）";
+            case "it_IT": return "Dopo aver attivato questo interruttore, esegui una volta «Garantisci export conforme alla configurazione» per migrare automaticamente (lento per librerie grandi)";
+            case "de_DE": return "Nach dem Umschalten dieses Schalters einmal „Export an Konfiguration angleichen“ ausführen, um automatisch zu migrieren (bei großen Bibliotheken langsam)";
+            case "he_IL": return "לאחר החלפת מצב המתג, הפעל פעם אחת «ודא שהייצוא תואם לתצורה» כדי להעביר אוטומטית (אטי עבור ספריות גדולות)";
+            case "ru_RU": return "После переключения этого выключателя выполните один раз «Убедиться, что экспорт соответствует конфигурации» для автоматической миграции (медленно для больших библиотек)";
+            case "pl_PL": return "Po przełączeniu tego przełącznika uruchom raz «Dopasuj eksport do konfiguracji», aby automatycznie migrować (wolne przy dużych bibliotekach)";
+            case "en_US":
+            default: return "After toggling this switch, run \"Ensure export matches config\" once to migrate automatically (slow for large vaults)";
+        }
+    }
+    public get 导出目录由插件管理手动放入的文件会被清理删除() {
+        switch (this.lang) {
+            case "zh_CN": return "导出目录由插件管理，手动放入的文件会被清理删除";
+            case "zh_CHT": return "導出目錄由外掛管理，手動放入的檔案會被清理刪除";
+            case "es_ES": return "El directorio de exportación lo gestiona el complemento; los archivos colocados manualmente se eliminarán al limpiar";
+            case "fr_FR": return "Le répertoire d'exportation est géré par le plugin ; les fichiers ajoutés manuellement seront supprimés lors du nettoyage";
+            case "ja_JP": return "エクスポート先はプラグインが管理します。手動で置いたファイルはクリーンアップで削除されます";
+            case "it_IT": return "La directory di esportazione è gestita dal plugin; i file inseriti manualmente verranno eliminati durante la pulizia";
+            case "de_DE": return "Das Exportverzeichnis wird vom Plugin verwaltet; manuell abgelegte Dateien werden beim Aufräumen gelöscht";
+            case "he_IL": return "ספריית הייצוא מנוהלת על ידי התוסף; קבצים שהוצבו ידנית יימחקו בניקוי";
+            case "ru_RU": return "Каталогом экспорта управляет плагин; вручную помещённые файлы будут удалены при очистке";
+            case "pl_PL": return "Katalogiem eksportu zarządza wtyczka; ręcznie umieszczone pliki zostaną usunięte podczas czyszczenia";
+            case "en_US":
+            default: return "The export directory is managed by the plugin; manually placed files will be cleaned up and deleted";
+        }
+    }
+    public get 构建导出目录清单失败已中止清理() {
+        switch (this.lang) {
+            case "zh_CN": return "构建导出目录清单失败，已中止本次清理";
+            case "zh_CHT": return "建立導出目錄清單失敗，已中止本次清理";
+            case "es_ES": return "Error al construir el listado del directorio de exportación; limpieza cancelada";
+            case "fr_FR": return "Échec de la construction de la liste du répertoire d'exportation ; nettoyage annulé";
+            case "ja_JP": return "エクスポートディレクトリ一覧の作成に失敗したため、クリーンアップを中止しました";
+            case "it_IT": return "Creazione dell'elenco della directory di esportazione non riuscita; pulizia interrotta";
+            case "de_DE": return "Erstellen der Exportverzeichnisliste fehlgeschlagen; Aufräumen abgebrochen";
+            case "he_IL": return "בניית רשימת ספריית הייצוא נכשלה; הניקוי בוטל";
+            case "ru_RU": return "Не удалось построить список каталога экспорта; очистка прервана";
+            case "pl_PL": return "Nie udało się zbudować listy katalogu eksportu; czyszczenie przerwane";
+            case "en_US":
+            default: return "Failed to build the export directory listing; cleanup aborted";
+        }
+    }
+    public get 导出目录清单为空已中止清理() {
+        switch (this.lang) {
+            case "zh_CN": return "导出目录清单为空，已中止本次清理";
+            case "zh_CHT": return "導出目錄清單為空，已中止本次清理";
+            case "es_ES": return "El listado del directorio de exportación está vacío; limpieza cancelada";
+            case "fr_FR": return "La liste du répertoire d'exportation est vide ; nettoyage annulé";
+            case "ja_JP": return "エクスポートディレクトリ一覧が空のため、クリーンアップを中止しました";
+            case "it_IT": return "L'elenco della directory di esportazione è vuoto; pulizia interrotta";
+            case "de_DE": return "Exportverzeichnisliste ist leer; Aufräumen abgebrochen";
+            case "he_IL": return "רשימת ספריית הייצוא ריקה; הניקוי בוטל";
+            case "ru_RU": return "Список каталога экспорта пуст; очистка прервана";
+            case "pl_PL": return "Lista katalogu eksportu jest pusta; czyszczenie przerwane";
+            case "en_US":
+            default: return "Export directory listing is empty; cleanup aborted";
+        }
+    }
+}

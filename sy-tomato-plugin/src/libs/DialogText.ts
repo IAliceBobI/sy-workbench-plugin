@@ -1,0 +1,105 @@
+import DialogTextSv from "./DialogTextSv.svelte";
+import { Dialog } from "siyuan";
+import { DestroyManager } from "./destroyer";
+import { events } from "./Events";
+import { newID } from "stonev5-utils";
+import { mount, unmount } from "svelte";
+
+export class DialogTextArea {
+    private title: string;
+    private defaultValue: string;
+
+    constructor(title: string, defaultValue: string, callback: (s: string) => Promise<void>) {
+        this.title = title;
+        this.defaultValue = defaultValue;
+        this.open(callback);
+    }
+
+    private open(callback: Func) {
+        const id = newID();
+        const dm = new DestroyManager();
+
+        const dialog = new Dialog({
+            title: this.title,
+            content: `<div id="${id}"></div>`,
+            width: events.isMobile ? "90vw" : null,
+            height: events.isMobile ? null : null,
+            destroyCallback() {
+                dm.destroyBy("dialog");
+            },
+        });
+        dm.add("dialog", () => dialog.destroy());
+
+        const svelte = mount(DialogTextSv, {
+            target: dialog.element.querySelector("#" + id),
+            props: {
+                dm,
+                callback,
+                defaultValue: this.defaultValue,
+                alwaysConfirm: true,
+                useTextArea: true,
+            }
+        })
+        dm.add("svelte", () => unmount(svelte));
+    }
+}
+
+export class DialogText {
+    private title: string;
+    private defaultValue: string;
+    private description: string;
+    private alwaysConfirm: boolean;
+
+    constructor(title: string, defaultValue: string, callback: Func, alwaysConfirm = false, description = "") {
+        this.alwaysConfirm = alwaysConfirm;
+        this.title = title;
+        this.defaultValue = defaultValue;
+        this.description = description;
+        this.open(callback);
+    }
+
+    private open(callback: Func) {
+        const id = newID();
+        const dm = new DestroyManager();
+
+        const dialog = new Dialog({
+            title: this.title,
+            content: `<div id="${id}"></div>`,
+            width: events.isMobile ? "90vw" : null,
+            height: events.isMobile ? null : null,
+            destroyCallback() {
+                dm.destroyBy("dialog");
+            },
+        });
+        dm.add("dialog", () => dialog.destroy());
+
+        const svelte = mount(DialogTextSv, {
+            target: dialog.element.querySelector("#" + id),
+            props: {
+                dm,
+                callback,
+                defaultValue: this.defaultValue,
+                alwaysConfirm: this.alwaysConfirm,
+                description: this.description,
+            }
+        });
+        dm.add("svelte", () => unmount(svelte));
+    }
+}
+
+// fballfb □5：dialog2floating（dialog 型拖动常驻的视觉处理：去 scrim+auto 尺寸）随
+// dialog 型退役删除——悬浮窗常驻形态统一走 float 型（FloatingBallProtyleDialog）
+
+export function showDialog(mount: (target: HTMLElement, dm: DestroyManager) => any, opt: Partial<ConstructorParameters<typeof Dialog>[0]>) {
+    if (!opt.width) opt.width = events.isMobile ? "90vw" : "700px";
+    if (!opt.height) opt.height = events.isMobile ? "180vw" : "700px";
+    if (!opt.title) opt.title = "💬"
+    const id = newID()
+    opt.content = `<div id="${id}"></div>`
+    const dm = new DestroyManager()
+    const dialog = new Dialog(opt as any);
+    const svelte = mount(dialog.element.querySelector("#" + id), dm);
+    dm.add("svelte", () => unmount(svelte))
+    dm.add("dialog", () => dialog.destroy())
+    return dm;
+}

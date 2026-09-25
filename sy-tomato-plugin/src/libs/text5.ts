@@ -1,0 +1,1080 @@
+import { TomatoI18nABC6 } from "./text6";
+
+export abstract class TomatoI18nABC5 extends TomatoI18nABC6 {
+    public get 给无序列表加上背景色() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "给无序列表加上背景色";
+            case "es_ES":
+                return "Añadir color de fondo a la lista desordenada";
+            case "fr_FR":
+                return "Ajouter une couleur d'arrière-plan à la liste non ordonnée";
+            case "ja_JP":
+                return "無順序リストに背景色を追加";
+            case "zh_CHT":
+                return "給無序清單加上背景色";
+            case "it_IT":
+                return "Aggiungi colore di sfondo alla lista non ordinata";
+
+            default:
+                return "Add background color to unordered list";
+        }
+    }
+    public get 禁用强提醒() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "禁用强提醒";
+            case "es_ES":
+                return "Deshabilitar recordatorios fuertes";
+            case "fr_FR":
+                return "Désactiver les rappels insistants";
+            case "ja_JP":
+                return "強力なリマインダーを無効にする";
+            case "zh_CHT":
+                return "禁用強提醒"; // Traditional Chinese can be the same or a traditional version of zh_CN text.
+            case "it_IT":
+                return "Disattiva promemoria forti";
+
+            default:
+                return "Disable strong reminders";
+        }
+    }
+    public get 触发快捷键时弹出对话框() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "触发快捷键时弹出对话框(速度更快)";
+            case "es_ES":
+                return "Mostrar cuadro de diálogo al activar la tecla de acceso rápido (más rápido)";
+            case "fr_FR":
+                return "Afficher la boîte de dialogue lors de l'activation de la touche de raccourci (plus rapide)";
+            case "ja_JP":
+                return "ショートカットキーを押したときにダイアログを表示する（より速い）";
+            case "zh_CHT":
+                return "觸發快捷鍵時彈出對話框(速度更快)";
+            case "it_IT":
+                return "Mostra finestra di dialogo al premere del tasto di scelta rapida (più veloce)";
+
+            default:
+                return "Show dialog when shortcut key is triggered (faster)";
+        }
+    }
+    public get 同步块选择() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "同步块-选择";
+            case "es_ES":
+                return "Bloque de sincronización - Seleccionar";
+            case "fr_FR":
+                return "Bloc de synchronisation - Sélectionner";
+            case "ja_JP":
+                return "同期ブロック - 選択";
+            case "zh_CHT":
+                return "同步塊-選擇";
+            case "it_IT":
+                return "Blocco di sincronizzazione - Seleziona";
+
+            default:
+                return "Sync Block - Select";
+        }
+    }
+    public get 同步块创建() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "同步块-创建";
+            case "es_ES":
+                return "Bloque de sincronización - Crear";
+            case "fr_FR":
+                return "Bloc de synchronisation - Créer";
+            case "ja_JP":
+                return "同期ブロック - 作成";
+            case "zh_CHT":
+                return "同步塊-創建";
+            case "it_IT":
+                return "Blocco di sincronizzazione - Crea";
+
+            default:
+                return "Sync Block - Create";
+        }
+    }
+    public get 同步块() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "同步块";
+            case "es_ES":
+                return "Bloque de sincronización";
+            case "fr_FR":
+                return "Bloc de synchronisation";
+            case "ja_JP":
+                return "同期ブロック";
+            case "zh_CHT":
+                return "同步塊";
+            case "it_IT":
+                return "Blocco di sincronizzazione";
+
+            default:
+                return "Synchronization Block";
+        }
+    }
+
+    public 已在x个地方同步(x: number) {
+        switch (this.lang) {
+            case "zh_CN":
+                return `已在${x}个地方同步`;
+            case "es_ES":
+                return `Sincronizado en ${x} lugares`;
+            case "fr_FR":
+                return `Synchronisé en ${x} endroits`;
+            case "ja_JP":
+                return `${x}箇所で同期されました`;
+            case "zh_CHT":
+                return `已在${x}個地方同步`;
+            case "it_IT":
+                return `Sincronizzato in ${x} luoghi`;
+
+            default:
+                return `Synchronized in ${x} places`;
+        }
+    }
+    public get 保存() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "保存";
+            case "es_ES":
+                return "Guardar";
+            case "fr_FR":
+                return "Enregistrer";
+            case "ja_JP":
+                return "保存";
+            case "zh_CHT":
+                return "保存";
+            case "it_IT":
+                return "Salva";
+
+            default:
+                return "Save";
+        }
+    }
+    public get 自动() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "自动";
+            case "es_ES":
+                return "Automático";
+            case "fr_FR":
+                return "Automatique";
+            case "ja_JP":
+                return "自動";
+            case "zh_CHT":
+                return "自動";
+            case "it_IT":
+                return "Automatico";
+
+            default:
+                return "Auto";
+        }
+    }
+    public 延迟x秒后执行(x: number) {
+        switch (this.lang) {
+            case "zh_CN":
+                return `延迟${x}秒后执行，请勿修改`;
+            case "es_ES":
+                return `Ejecutar después de ${x} segundos, no modificar`;
+            case "fr_FR":
+                return `Exécuter après ${x} secondes, ne pas modifier`;
+            case "ja_JP":
+                return `${x}秒後に実行、変更しないでください`;
+            case "zh_CHT":
+                return `延遲${x}秒後執行，請勿修改`;
+            case "it_IT":
+                return `Esegui dopo ${x} secondi, non modificare`;
+
+            default:
+                return `Execute after ${x} seconds, do not modify`;
+        }
+    }
+    public get 全部打开() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "全部打开";
+            case "es_ES":
+                return "Abrir todo";
+            case "fr_FR":
+                return "Tout ouvrir";
+            case "ja_JP":
+                return "すべて開く";
+            case "zh_CHT":
+                return "全部打開";
+            case "it_IT":
+                return "Apri tutto";
+
+            default:
+                return "Open all";
+        }
+    }
+    public get 自动隐藏() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "自动隐藏";
+            case "es_ES":
+                return "Ocultar automáticamente";
+            case "fr_FR":
+                return "Masquer automatiquement";
+            case "ja_JP":
+                return "自動非表示";
+            case "zh_CHT":
+                return "自動隱藏";
+            case "it_IT":
+                return "Nascondi automaticamente";
+
+            default:
+                return "Auto hide";
+        }
+    }
+    // 1548 □1 按钮条位置四档下拉
+    public get 优先级按钮条位置() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "优先级按钮条位置";
+            case "es_ES":
+                return "Posición de la barra de prioridad";
+            case "fr_FR":
+                return "Position de la barre de priorité";
+            case "ja_JP":
+                return "優先度ボタンバーの位置";
+            case "zh_CHT":
+                return "優先級按鈕條位置";
+            case "it_IT":
+                return "Posizione della barra priorità";
+
+            default:
+                return "Priority bar position";
+        }
+    }
+    public get 条位置块右上角() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "块右上角（默认）";
+            case "es_ES":
+                return "Superior derecha del bloque";
+            case "fr_FR":
+                return "Haut droit du bloc";
+            case "ja_JP":
+                return "ブロック右上";
+            case "zh_CHT":
+                return "塊右上角（預設）";
+            case "it_IT":
+                return "In alto a destra del blocco";
+
+            default:
+                return "Top-right of block";
+        }
+    }
+    public get 条位置块左上角() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "块左上角";
+            case "es_ES":
+                return "Superior izquierda del bloque";
+            case "fr_FR":
+                return "Haut gauche du bloc";
+            case "ja_JP":
+                return "ブロック左上";
+            case "zh_CHT":
+                return "塊左上角";
+            case "it_IT":
+                return "In alto a sinistra del blocco";
+
+            default:
+                return "Top-left of block";
+        }
+    }
+    public get 条位置内容下方贴左() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "内容下方贴左";
+            case "es_ES":
+                return "Debajo del contenido, a la izquierda";
+            case "fr_FR":
+                return "Sous le contenu, à gauche";
+            case "ja_JP":
+                return "本文の下・左寄せ";
+            case "zh_CHT":
+                return "內容下方靠左";
+            case "it_IT":
+                return "Sotto il contenuto, a sinistra";
+
+            default:
+                return "Below content, left";
+        }
+    }
+    public get 条位置内容上方贴左() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "内容上方贴左";
+            case "es_ES":
+                return "Sobre el contenido, a la izquierda";
+            case "fr_FR":
+                return "Au-dessus du contenu, à gauche";
+            case "ja_JP":
+                return "本文の上・左寄せ";
+            case "zh_CHT":
+                return "內容上方靠左";
+            case "it_IT":
+                return "Sopra il contenuto, a sinistra";
+
+            default:
+                return "Above content, left";
+        }
+    }
+    public get 添加到原始块的链接() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "添加到原始块的链接";
+            case "es_ES":
+                return "Enlace a bloque original";
+            case "fr_FR":
+                return "Lien vers le bloc original";
+            case "ja_JP":
+                return "元のブロックへのリンク";
+            case "zh_CHT":
+                return "添加到原始塊的連結";
+            case "it_IT":
+                return "Collegamento al blocco originale";
+
+            default:
+                return "Link to original block";
+        }
+    }
+    public get 添加到原始块的引用() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "添加到原始块的引用";
+            case "es_ES":
+                return "Referencia al bloque original";
+            case "fr_FR":
+                return "Référence au bloc original";
+            case "ja_JP":
+                return "元のブロックへの参照";
+            case "zh_CHT":
+                return "添加到原始塊的引用";
+            case "it_IT":
+                return "Riferimento al blocco originale";
+
+            default:
+                return "Reference to original block";
+        }
+    }
+    public get 设为原始块() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "设为原始块";
+            case "es_ES":
+                return "Establecer como bloque original";
+            case "fr_FR":
+                return "Définir comme bloc original";
+            case "ja_JP":
+                return "元のブロックに設定";
+            case "zh_CHT":
+                return "設為原始塊";
+            case "it_IT":
+                return "Imposta come blocco originale";
+
+            default:
+                return "Set as Original Block";
+        }
+    }
+    public get 全部删除() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "全部删除";
+            case "es_ES":
+                return "Eliminar todo";
+            case "fr_FR":
+                return "Tout supprimer";
+            case "ja_JP":
+                return "すべて削除";
+            case "zh_CHT":
+                return "全部刪除";
+            case "it_IT":
+                return "Elimina tutto";
+
+            default:
+                return "Delete All";
+        }
+    }
+    public get 删除其他() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "删除其他";
+            case "es_ES":
+                return "Eliminar otros";
+            case "fr_FR":
+                return "Supprimer les autres";
+            case "ja_JP":
+                return "他を削除";
+            case "zh_CHT":
+                return "刪除其他";
+            case "it_IT":
+                return "Elimina altri";
+
+            default:
+                return "Delete Others";
+        }
+    }
+    public get 同步失败() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "同步失败";
+            case "es_ES":
+                return "Fallo de sincronización";
+            case "fr_FR":
+                return "Échec de synchronisation";
+            case "ja_JP":
+                return "同期に失敗しました";
+            case "zh_CHT":
+                return "同步失敗";
+            case "it_IT":
+                return "Sincronizzazione fallita";
+
+            default:
+                return "Synchronization failed";
+        }
+    }
+    public get 检测到同步冲突() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "检测到同步冲突，请打开同步块菜单选择保留版本";
+            case "es_ES":
+                return "Se detectó un conflicto de sincronización; abra el menú del bloque sincronizado para elegir la versión a conservar";
+            case "fr_FR":
+                return "Conflit de synchronisation détecté ; ouvrez le menu du bloc synchronisé pour choisir la version à conserver";
+            case "ja_JP":
+                return "同期の競合を検出しました。同期ブロックのメニューを開いて残すバージョンを選択してください";
+            case "zh_CHT":
+                return "檢測到同步衝突，請打開同步塊選單選擇保留版本";
+            case "it_IT":
+                return "Rilevato un conflitto di sincronizzazione; apri il menu del blocco sincronizzato per scegliere la versione da mantenere";
+
+            default:
+                return "Sync conflict detected; open the sync block menu to choose which version to keep";
+        }
+    }
+    public get 同步冲突() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "同步冲突";
+            case "es_ES":
+                return "Conflicto de sincronización";
+            case "fr_FR":
+                return "Conflit de synchronisation";
+            case "ja_JP":
+                return "同期の競合";
+            case "zh_CHT":
+                return "同步衝突";
+            case "it_IT":
+                return "Conflitto di sincronizzazione";
+
+            default:
+                return "Sync Conflict";
+        }
+    }
+    public get 以此块为准同步() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "以此块为准同步";
+            case "es_ES":
+                return "Sincronizar usando este bloque";
+            case "fr_FR":
+                return "Synchroniser depuis ce bloc";
+            case "ja_JP":
+                return "このブロックを基準に同期";
+            case "zh_CHT":
+                return "以此塊為準同步";
+            case "it_IT":
+                return "Sincronizza da questo blocco";
+
+            default:
+                return "Sync from this block";
+        }
+    }
+    public get 冲突已解决() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "冲突已解决，已同步到全部副本";
+            case "es_ES":
+                return "Conflicto resuelto; se ha sincronizado con todas las copias";
+            case "fr_FR":
+                return "Conflit résolu ; synchronisé avec toutes les copies";
+            case "ja_JP":
+                return "競合を解決しました。すべてのコピーに同期しました";
+            case "zh_CHT":
+                return "衝突已解決，已同步到全部副本";
+            case "it_IT":
+                return "Conflitto risolto; sincronizzato con tutte le copie";
+
+            default:
+                return "Conflict resolved; synced to all copies";
+        }
+    }
+    public get 巡检重算哈希() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "巡检时重算同步块哈希（检测引擎外的修改）";
+            case "es_ES":
+                return "Recalcular el hash de los bloques sincronizados al inspeccionar (detecta cambios ajenos al motor)";
+            case "fr_FR":
+                return "Recalculer le hachage des blocs synchronisés lors de l'inspection (détecte les modifications hors moteur)";
+            case "ja_JP":
+                return "スキャン時に同期ブロックのハッシュを再計算（エンジン外の変更を検出）";
+            case "zh_CHT":
+                return "巡檢時重算同步塊雜湊（檢測引擎外的修改）";
+            case "it_IT":
+                return "Ricalcola l'hash dei blocchi sincronizzati durante l'ispezione (rileva modifiche esterne al motore)";
+
+            default:
+                return "Re-hash sync blocks on scan (detects out-of-engine changes)";
+        }
+    }
+    public get 子块ID重映射实验() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "子块ID重映射（实验）";
+            case "es_ES":
+                return "Remapear IDs de bloques secundarios (experimental)";
+            case "fr_FR":
+                return "Remapper les IDs des sous-blocs (expérimental)";
+            case "ja_JP":
+                return "子ブロックIDのリマップ（実験的）";
+            case "zh_CHT":
+                return "子塊ID重映射（實驗）";
+            case "it_IT":
+                return "Rimappa ID blocchi figli (sperimentale)";
+
+            default:
+                return "Remap child block IDs (experimental)";
+        }
+    }
+    public get 开启后每个副本的子块使用独立块ID() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "开启后每个副本的子块使用独立块ID，首次开启可能需要重新同步一次全组，建议先对全组执行一次「以此块为准」同步后再开启";
+            case "es_ES":
+                return "Al activarlo, los bloques secundarios de cada copia usan IDs de bloque independientes; la primera activación puede requerir resincronizar todo el grupo; se recomienda ejecutar «Sincronizar usando este bloque» en todo el grupo antes de activarlo";
+            case "fr_FR":
+                return "Une fois activé, les sous-blocs de chaque copie utilisent des IDs de bloc distincts ; la première activation peut nécessiter une resynchronisation du groupe entier ; il est recommandé d'exécuter « Synchroniser depuis ce bloc » sur tout le groupe avant de l'activer";
+            case "ja_JP":
+                return "有効にすると各コピーの子ブロックが独立したブロックIDを使用します。初回有効時はグループ全体の再同期が必要になる場合があります。有効にする前にグループ全体へ「このブロックを基準に同期」を実行することをお勧めします";
+            case "zh_CHT":
+                return "開啟後每個副本的子塊使用獨立塊ID，首次開啟可能需要重新同步一次全組，建議先對全組執行一次「以此塊為準」同步後再開啟";
+            case "it_IT":
+                return "Una volta attivato, i blocchi figli di ogni copia usano ID blocco indipendenti; la prima attivazione può richiedere una risincronizzazione dell'intero gruppo; si consiglia di eseguire \"Sincronizza da questo blocco\" sull'intero gruppo prima di attivarlo";
+
+            default:
+                return "Once enabled, each copy's child blocks use their own block IDs; the first activation may require a full-group re-sync; run \"Sync from this block\" on the whole group before turning it on";
+        }
+    }
+    public get 无复本块() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "无复本块";
+            case "es_ES":
+                return "Sin bloque de copia";
+            case "fr_FR":
+                return "Aucun bloc de copie";
+            case "ja_JP":
+                return "コピーブロックなし";
+            case "zh_CHT":
+                return "無複本塊";
+            case "it_IT":
+                return "Nessun blocco di copia";
+
+            default:
+                return "No copy block";
+        }
+    }
+    public get 重置版本() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "重置版本";
+            case "es_ES":
+                return "Versión de reinicio";
+            case "fr_FR":
+                return "Version de réinitialisation";
+            case "ja_JP":
+                return "リセットバージョン";
+            case "zh_CHT":
+                return "重置版本";
+            case "it_IT":
+                return "Versione di ripristino";
+
+            default:
+                return "Reset Version";
+        }
+    }
+    public get 打开块关系图() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "打开块关系图";
+            case "es_ES":
+                return "Abrir diagrama de bloques";
+            case "fr_FR":
+                return "Ouvrir le diagramme de blocs";
+            case "ja_JP":
+                return "ブロック関係図を開く";
+            case "zh_CHT":
+                return "打開塊關係圖";
+            case "it_IT":
+                return "Aprire il diagramma dei blocchi";
+
+            default:
+                return "Open block diagram";
+        }
+    }
+
+ 
+    public get 批注(): string {
+        switch (this.lang) {
+            case "zh_CN":
+                return "批注";
+            case "es_ES":
+                return "Anotación"; // 西班牙语：批注
+            case "fr_FR":
+                return "Annotation"; // 法语：批注
+            case "ja_JP":
+                return "注釈"; // 日语：批注
+            case "zh_CHT":
+                return "註釋"; // 繁体中文：批注
+            case "it_IT":
+                return "Annotazione"; // 意大利语：批注
+
+            default:
+                return "Annotation"; // 英语：批注
+        }
+    }
+    // 查看字号三档行（陆杰 09-17）：设置面板紧凑行标题+三档短标签
+    public get 查看字号(): string {
+        switch (this.lang) {
+            case "zh_CN":
+                return "查看字号";
+            case "es_ES":
+                return "Tamaño de lectura";
+            case "fr_FR":
+                return "Taille de lecture";
+            case "ja_JP":
+                return "表示サイズ";
+            case "zh_CHT":
+                return "查看字號";
+            case "it_IT":
+                return "Dimensione di lettura";
+            default:
+                return "Reading font sizes";
+        }
+    }
+    public get 引文(): string {
+        switch (this.lang) {
+            case "zh_CN":
+                return "引文";
+            case "es_ES":
+                return "Cita";
+            case "fr_FR":
+                return "Citation";
+            case "ja_JP":
+                return "引用";
+            case "zh_CHT":
+                return "引文";
+            case "it_IT":
+                return "Citazione";
+            default:
+                return "Quote";
+        }
+    }
+    public get 包含正反链() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "包含正反链";
+            case "es_ES":
+                return "contiene enlaces directos e inversos";
+            case "fr_FR":
+                return "contient des liens directs et inverses";
+            case "ja_JP":
+                return "順方向と逆方向のリンクを含む";
+            case "zh_CHT":
+                return "包含正反鏈";
+            case "it_IT":
+                return "contiene sia collegamenti diretti che inversi";
+
+            default:
+                return "contains both forward and reverse links";
+        }
+    }
+    public get 正引() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "正引";
+            case "es_ES":
+                return "forward link";
+            case "fr_FR":
+                return "forward link";
+            case "ja_JP":
+                return "forward link";
+            case "zh_CHT":
+                return "正引";
+            case "it_IT":
+                return "forward link";
+
+            default:
+                return "forward link";
+        }
+    }
+    public get 反引() {
+        // 补充缺失的语言
+        switch (this.lang) {
+            case "zh_CN":
+                return "反引";
+            case "es_ES":
+                return "enlace inverso";
+            case "fr_FR":
+                return "lien inverse";
+            case "ja_JP":
+                return "逆リンク";
+            case "zh_CHT":
+                return "反引";
+            case "it_IT":
+                return "collegamento inverso";
+
+            default:
+                return "backref";
+        }
+    }
+    public get 虚引() {
+        // 补充缺失的语言
+        switch (this.lang) {
+            case "zh_CN":
+                return "虚引";
+            case "es_ES":
+                return "enlace virtual";
+            case "fr_FR":
+                return "lien virtuel";
+            case "ja_JP":
+                return "仮想リンク";
+            case "zh_CHT":
+                return "虛引";
+            case "it_IT":
+                return "collegamento virtuale";
+
+            default:
+                return "virref";
+        }
+    }
+    public get 添加批注() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "添加批注";
+            case "es_ES":
+                return "Agregar anotación";
+            case "fr_FR":
+                return "Ajouter une annotation";
+            case "ja_JP":
+                return "注釈を追加";
+            case "zh_CHT":
+                return "添加批註";
+
+            default:
+                return "Add annotation";
+        }
+    }
+    public get 添加批注到新文件() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "添加批注到新文件";
+            case "es_ES":
+                return "Agregar anotación a un nuevo archivo";
+            case "fr_FR":
+                return "Ajouter une annotation à un nouveau fichier";
+            case "ja_JP":
+                return "新しいファイルに注釈を追加";
+            case "zh_CHT":
+                return "添加批注到新檔案";
+            case "it_IT":
+                return "Aggiungi annotazione a un nuovo file";
+
+            default:
+                return "Add annotation to new file";
+        }
+    }
+    public get 定位() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "定位";
+            case "es_ES":
+                return "ubicación";
+            case "fr_FR":
+                return "localisation";
+            case "ja_JP":
+                return "位置";
+            case "zh_CHT":
+                return "定位";
+            case "it_IT":
+                return "posizione";
+
+            default:
+                return "position";
+        }
+    }
+    public get 引用已向上传递() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "引用已向上传递";
+            case "es_ES":
+                return "La referencia se ha pasado hacia arriba";
+            case "fr_FR":
+                return "La référence a été transmise vers le haut";
+            case "ja_JP":
+                return "参照が上に渡されました";
+            case "zh_CHT":
+                return "引用已向上傳遞";
+            case "it_IT":
+                return "Il riferimento è stato passato verso l'alto";
+
+            default:
+                return "Reference has been passed upwards";
+        }
+    }
+    public get 显示ID() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "显示ID";
+            case "es_ES":
+                return "Mostrar ID";
+            case "fr_FR":
+                return "Afficher l'ID";
+            case "ja_JP":
+                return "IDを表示";
+            case "zh_CHT":
+                return "顯示ID";
+            case "it_IT":
+                return "Mostra ID";
+
+            default:
+                return "Show ID";
+        }
+    }
+    public get 显示路径() {
+        // 补充缺失的语言
+        switch (this.lang) {
+            case "zh_CN":
+                return "显示路径";
+            case "es_ES":
+                return "Mostrar ruta";
+            case "fr_FR":
+                return "Afficher le chemin";
+            case "ja_JP":
+                return "パスを表示";
+            case "zh_CHT":
+                return "顯示路徑";
+            case "it_IT":
+                return "Mostra percorso";
+
+            default:
+                return "Show path";
+        }
+    }
+    public get 向上传递引用到标题() {
+        // 补充缺失的语言
+        switch (this.lang) {
+            case "zh_CN":
+                return "向上传递引用到标题";
+            case "es_ES":
+                return "Pasar referencia hacia arriba al título";
+            case "fr_FR":
+                return "Transmettre la référence vers le titre";
+            case "ja_JP":
+                return "タイトルに参照を渡す";
+            case "zh_CHT":
+                return "向上傳遞引用到標題";
+            case "it_IT":
+                return "Passa il riferimento al titolo";
+
+            default:
+                return "Pass reference up to title";
+        }
+    }
+    public get 向上传递引用到超级块() {
+        // 补充缺失的语言
+        switch (this.lang) {
+            case "zh_CN":
+                return "向上传递引用到超级块";
+            case "es_ES":
+                return "Pasar referencia hacia arriba al superbloque";
+            case "fr_FR":
+                return "Transmettre la référence vers le super bloc";
+            case "ja_JP":
+                return "スーパーブロックに参照を渡す";
+            case "zh_CHT":
+                return "向上傳遞引用到超級塊";
+            case "it_IT":
+                return "Passa il riferimento al superblocco";
+
+            default:
+                return "Pass reference up to superblock";
+        }
+    }
+    public get 向上传递引用到引述块() {
+        // 补充缺失的语言
+        switch (this.lang) {
+            case "zh_CN":
+                return "向上传递引用到引述块";
+            case "es_ES":
+                return "Pasar referencia hacia arriba al bloque de cita";
+            case "fr_FR":
+                return "Transmettre la référence vers le bloc de citation";
+            case "ja_JP":
+                return "引用ブロックに参照を渡す";
+            case "zh_CHT":
+                return "向上傳遞引用到引述塊";
+            case "it_IT":
+                return "Passa il riferimento al blocco di citazione";
+
+            default:
+                return "Pass reference up to quote block";
+        }
+    }
+    public get 复制为引用() {
+        // 补充缺失的语言
+        switch (this.lang) {
+            case "zh_CN":
+                return "复制为引用";
+            case "es_ES":
+                return "Copiar como cita";
+            case "fr_FR":
+                return "Copier comme citation";
+            case "ja_JP":
+                return "引用としてコピー";
+            case "zh_CHT":
+                return "複製為引用";
+            case "it_IT":
+                return "Copia come citazione";
+
+            default:
+                return "Copy as citation";
+        }
+    }
+    public get 展开与折叠() {
+        // 补充缺失的语言
+        switch (this.lang) {
+            case "zh_CN":
+                return "展开与折叠";
+            case "es_ES":
+                return "Expandir y colapsar";
+            case "fr_FR":
+                return "Développer et réduire";
+            case "ja_JP":
+                return "展開と折りたたみ";
+            case "zh_CHT":
+                return "展開與折疊";
+            case "it_IT":
+                return "Espandi e comprimi";
+
+            default:
+                return "Expand and collapse";
+        }
+    }
+    public get 将选择文字加入文档的别名() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "将选择文字加入文档的别名";
+            case "es_ES":
+                return "Alias para añadir texto seleccionado al documento";
+            case "fr_FR":
+                return "Alias pour ajouter le texte sélectionné au document";
+            case "ja_JP":
+                return "選択したテキストをドキュメントに追加するエイリアス";
+            case "zh_CHT":
+                return "將選擇文字加入文件的別名";
+            case "it_IT":
+                return "Alias per aggiungere il testo selezionato al documento";
+
+            default:
+                return "Alias to add selected text to document";
+        }
+    }
+    public get 回到第一页() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "回到第一页";
+            case "es_ES":
+                return "Volver a la primera página";
+            case "fr_FR":
+                return "Retour à la première page";
+            case "ja_JP":
+                return "最初のページに戻る";
+            case "zh_CHT":
+                return "回到第一頁";
+            case "it_IT":
+                return "Torna alla prima pagina";
+
+            default:
+                return "Back to the first page";
+        }
+    }
+    public get 保存查询条件() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "保存查询条件";
+            case "es_ES":
+                return "Guardar condiciones de búsqueda";
+            case "fr_FR":
+                return "Enregistrer les critères de recherche";
+            case "ja_JP":
+                return "検索条件を保存";
+            case "zh_CHT":
+                return "保存查詢條件";
+            case "it_IT":
+                return "Salva i criteri di ricerca";
+
+            default:
+                return "Save search conditions";
+        }
+    }
+
+
+
+    public get 上传当前文档以及所有子文档() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "上传当前文档以及所有子文档";
+            case "es_ES":
+                return "Subir el documento actual y todos los subdocumentos";
+            case "fr_FR":
+                return "Télécharger le document actuel et tous les sous-documents";
+            case "ja_JP":
+                return "現在のドキュメントとすべてのサブドキュメントをアップロード";
+            case "zh_CHT":
+                return "上傳當前文檔以及所有子文檔";
+            case "it_IT":
+                return "Carica il documento corrente e tutti i sottodocumenti";
+
+            default:
+                return "Upload current document and all subdocuments";
+        }
+    }
+    // □5 annofeed0917：瞬态全默认代保存被拦的 toast（guardSaveSettings）
+    public get 设置读取异常未保存(): string {
+        switch (this.lang) {
+            case "zh_CN":
+                return "设置读取异常，为防覆盖真配置本次未保存，请重开设置面板核对";
+            case "es_ES":
+                return "Error de lectura de ajustes; no se guardó nada para proteger su configuración. Reabra el panel de ajustes";
+            case "fr_FR":
+                return "Lecture des réglages échouée ; rien n'a été enregistré pour protéger votre configuration. Rouvrez le panneau";
+            case "ja_JP":
+                return "設定の読み込みに失敗したため保護のため保存しませんでした。設定画面を開き直してください";
+            case "zh_CHT":
+                return "設定讀取異常，為防覆蓋真設定本次未保存，請重開設定面板核對";
+            case "it_IT":
+                return "Lettura impostazioni anomala; nulla è stato salvato per proteggere la configurazione. Riapri il pannello";
+            default:
+                return "Settings read failed; nothing was saved to protect your config. Please reopen the settings panel";
+        }
+    }
+}

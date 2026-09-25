@@ -1,0 +1,820 @@
+// https://app.quicktype.io/?l=ts
+
+type eventCB = (eventType: string, detail: any) => any;
+type wsCB = (detail: WsMain) => any;
+
+type Func = (...args: any[]) => any;
+
+type LinkElementAttr = { isThisDoc: boolean }
+type LinkItem = { conceptTree: string[], text: string, count: number, id: string, dataNodeIDSet: Set<string>, blockIDs: Set<string>, attrs: LinkElementAttr };
+type RefCollector = Map<string, LinkItem>;
+type Overlays = { overlays: Overlay[], originWidth: number }
+type Overlay = { left: number, top: number, width: number, height: number, angle: number, cID: string };
+
+
+type TSK = keyof TomatoSettings
+
+type TomatoSettings = {
+    annoCollectScope: string,
+    annoCollectDest: string,
+    annoCollectTargetDoc: string,
+    annoCollectAnchor: boolean,
+    annoCollectColor: boolean,
+    annoAutoArchive: boolean,
+    dailyQuota: string,
+    prefixArticlesSoftLimit: string,
+    knowledgeBoxCheckbox: boolean,
+    knowledgeMenu: boolean,
+    exportFilesMenu: boolean,
+    knowledgeAutoSyncMin: string,
+    zhipuApiKey: string,
+    zhipuKbName: string,
+    toolbarTidyExt: string,
+    blockEditorBox: boolean,
+    navSourceBlock: boolean,
+    exportWL4All: boolean,
+    blockEditorMenu: boolean,
+    qeFloatBall: boolean,
+    superRefBoxGlobalLnkMenu: boolean,
+    superRefBoxGlobalFixMenu: boolean,
+    superRefBoxCheckBox: boolean,
+    deleteBlocksMenu: boolean,
+    floatingballDocTabMenu: boolean,
+    cardBoxCardtab: boolean,
+    card_refresh_visible_only: boolean,
+    cardBoxSettingsShow: boolean,
+    cardBoxDeleteNoConfirm: boolean,
+    cardBoxReviewDocMenu: boolean,
+    refCleanMenu: boolean,
+    prefixArticlesTagsShow: boolean,
+    prefixArticlesTagsGroup: boolean,
+    fastNoteBoxDocPrefix: boolean,
+    foldTypesNODE_listITEM: boolean,
+    dailyNoteMoveLeaveLnk: boolean,
+    prefixArticlesMenu: boolean,
+    prefixArticlesEnable: boolean,
+    floatingballDocMenu: boolean,
+    floatingballEnable: boolean,
+    floatingballDocOpenBottom: boolean,
+    floatingballKeepBall: boolean,
+    floatingballDocList: FloatingDocItem[],
+    floatingballKeyboardList: FloatingKeyboardItem[],
+    floatingballBallList: BallItem[],
+    exportWhiteList: string[],
+    exportBlackList: string[],
+    hiddenMenuItems: string[],
+    commandToggles: Record<string, boolean>,
+    exportCleanFilesOn: boolean,
+    exportIntervalSecOn: boolean,
+    markdownExportPics: boolean,
+    exportCleanPath: boolean,
+    markdownExportBoxCheckbox: boolean,
+    exportIntervalSec: string,
+    exportCleanFiles: string,
+    exportPath: string,
+    exportPathWin: string,
+    tomato_clocks_audio: string,
+    foldTypes: string[],
+    foldTypesNODE_HEADING: boolean,
+    foldTypesNODE_TABLE: boolean,
+    foldTypesNODE_LIST: boolean,
+    foldTypesBLOCKQUOTE: boolean,
+    foldTypesSuperBlock: boolean,
+    cardPrioritySetPriInterval: string,
+    cssSuperBlockBorder: boolean,
+    mindWireColorfull: boolean,
+    mindWireLine: boolean,
+    mindWireWidth: number,
+    mindWireStarRefOnly: boolean,
+    mindWireDocMenu: boolean,
+    mindWireGlobalMenu: boolean,
+    mindWireEnable: boolean,
+    mindWireDynamicLine: boolean,
+    mindWireCheckbox: boolean,
+    mindWireWordWire: boolean,
+    mindWireBlockWire: boolean,
+    mindWireHoverBar: boolean,
+    addSelectionBtnsDesktop: boolean,
+    addSelectionBtnsMobile: boolean,
+    digestAddReadingpoint: boolean,
+    cardBoxSuperCard: boolean,
+    digestGlobalSigle: string,
+    dailyNotetopbarright: boolean,
+    dailyNotetopbarleft: boolean,
+    ProgressiveJumpMenu: boolean,
+    piecesmenu: boolean,
+    blockIconMenu: boolean,
+    ProgressiveStart2learn: boolean,
+    mobileSelectBtns: boolean,
+    digestmenu: boolean,
+    wholeDigestMenu: boolean,
+    cardContextMenu: boolean,
+    reviewSchedMenu: boolean,
+    revisitRhythmMenu: boolean,
+    toolbarlocatedoc: boolean,
+    toolbarrefreshVr: boolean,
+    toolbarspacerepeat: boolean,
+    bigReloadTopbar: boolean,
+    /** 打字标点自动整理（puncttidy 2026-09-10 seller 迁入）：总开关+速记折叠扩展子开关+自定义映射原文 */
+    punctTidyEnable: boolean,
+    punctTidyExtRules: boolean,
+    punctTidyCustomMap: string,
+    tag2RefSearchLnk: boolean,
+    tag2RefSearchRef: boolean,
+    readingAddJumpMenu: boolean,
+    readingAddDeleteMenu: boolean,
+    dbBkBoxRefreshMenu: boolean,
+    dbBkBoxMenuTools: boolean,
+    readingAddRPmenu: boolean,
+    /** rpfloatbar 战役（2026-09-05）：悬浮球主控/显隐标记/位置（九宫格锚点+偏移）；
+     *  readingAdd2Card=设点入闪卡（readpoint □2-B 复活，老版同名） */
+    readingFloatBar: boolean,
+    readingFloatBallHidden: boolean,
+    readingAdd2Card: boolean,
+    /** anno-round2 □4：开=设点只顶同文档旧点（一书多点）；关=一书一点顶替全书 */
+    readingPointPerDoc: boolean,
+    readingFloatBallPos: { anchor: number, offsetX: number, offsetY: number },
+    bkenableAndDisablemenu: boolean,
+    linkBoxBilinkMenu: boolean,
+    graphlocatetographMenu: boolean,
+    graphopengraphMenu: boolean,
+    graphAddTopbarIcon: boolean,
+    dailyNoteCopyMenu: boolean,
+    dailyNoteGoToBottomMenu: boolean,
+    commentBoxMenu: boolean,
+    commentBoxAnnoToolbar: boolean,
+    cardPriorityBoxPriorityMenu: boolean,
+    cardPriorityBoxSpradDelayMenu: boolean,
+    cardPriorityBoxPostponeCardMenu: boolean,
+    imgBoxShowMenu: boolean,
+    aiBoxMenuShow: boolean,
+    digest2dailycard: boolean,
+    digestLanding: string,
+    card2dailycard: boolean,
+    cardLanding: string,
+    mobileTopBar: boolean,
+    /** need-0924-03 浮条入槽入口（直接入槽/摘抄态入槽）按需出现的手动总开关（默认开：
+     *  开=有在写的注册书才显示；关=恒不显示） */
+    floatbarSlotEntryShow: boolean,
+    cardAppendTime: boolean,
+    /** 卡片顶部来源层级路径（custom-ref/origin-hpath ::before）显示开关，默认关（09-17 群反馈） */
+    flashcardShowPath: boolean,
+    cardUnderPiece: boolean,
+    openCardsOnOpenPiece: boolean,
+    hideBtnsInFlashCard: boolean,
+    pieceTailCard: boolean,
+    /** 阅读曲线接管（1530 期1，实验默认关）：分片卡 due=滚筒节奏投影进官方复习界面 */
+    readCurveTakeover: boolean,
+    /** □5 progfix0922：分片自动制卡独立开关（默认开）——分片自动加入背诵闪卡，与阅读曲线接管解耦 */
+    pieceAutoCard: boolean,
+    /** 巡查频率档（分钟）：0=关/30/60/360，默认 30 */
+    readCurveSweepMins: number,
+    /** 阅读点卡块接管类开关（1141 期3，默认开）：关=新阅读点不再挂键接管 */
+    readCurveReadingPoint: boolean,
+    /** 「我的文档卡」自动收编总开关（1141 期3，默认关）；单卡入口=右键「加入阅读卡」 */
+    readCurvePlainDocs: boolean,
+    /** 分片类开关（1141 期5，默认开）：关=不再建新分片卡 */
+    readCurvePiece: boolean,
+    /** 素材类开关（1141 期5，默认开）：关=素材不再首推建卡 */
+    readCurveMaterial: boolean,
+    /** 摘抄类开关（1141 期5，默认开）：关=不再为无键摘抄建卡 */
+    readCurveDigest: boolean,
+    /** 重现族节奏档位（1141 期5）：0=默认 ×2 曲线；N∈{1,3,7,14,30}=每 N 天 */
+    readCurveCadMaterial: number,
+    readCurveCadDigest: number,
+    readCurveCadReadingPoint: number,
+    readCurveCadPlain: number,
+    /** 写作每日目标档（□9 方案 A）：1/2/3 默认 1；达标变绿、无欠债累加 */
+    writingQuota: number,
+    initProgFloatBtnsDisable: boolean,
+    floatbarMainBtns: string[],
+    floatbarFreeMainBtns: string[],
+    floatbarDigestMainBtns: string[],
+    floatbarBookMainBtns: string[],
+    floatbarFlatCollapsed: boolean,
+    digSubrankOpen: boolean,
+    floatbarExpandPref: boolean | null,
+    /** □2 平铺区二级编排：按 kind 分份 × 5 段顺序清单（段名=FLAT_SEG_IDS，钮归属+段内序） */
+    floatbarFlatManifest: Record<string, Record<string, string[]>>,
+    markOriginTextBG: boolean,
+    materialCapsuleBorder: boolean,
+    writingPoolUnderBook: boolean,
+    revTraceEnabled: boolean,
+    revTraceScope: string,
+    pieceNoBacktraceLink: boolean,
+    digestNoBacktraceLink: boolean,
+    flashcardNotebook: string,
+    windowOpenStyle: string,
+    flashcardMultipleLnks: boolean,
+    flashcardAddRefs: boolean,
+    flashcardAddOriginRef: boolean,
+    //------------------
+    graphHideStructEdges: boolean,
+    graphShowNumbers: boolean,
+    // graphmind □6：视图收敛——full/treemap 入口显隐开关（默认关=主界面两档）
+    graphShowAllViewModes: boolean,
+    graphblockmarkMenu: boolean,
+    graphBlockMarkBar: boolean,
+    // graphfloat □3：悬浮图（球+浮窗看当前文档块关系图，dock 保留）
+    graph_float: boolean,
+    // gfloatnav：图内导航后自动收起悬浮面板
+    graphFloatJumpClose: boolean,
+    graphMaxAllBlocks: string,
+    graphMaxPBlocks: string,
+    // graphbox 期2：默认展开层级（按标题层级 h1=1；"all"=全部展开，段落链折叠独立于档位）
+    graphDefaultExpandLevel: string,
+    graphBoxCheckbox: string,
+    userToken: string,
+    userID: string,
+    // md5 指纹（批次 B1）；升级前老用户盘上是布尔，load 原样读入、指纹比对处理
+    licenseCloudSynced: string | boolean,
+    cssListBackgound: boolean,
+    cssNattyList: boolean,
+    cssRefStyle: string,
+    // 引用效果五档（2026-09-03 多档化）；旧 cssRefStyle/cssRefSquareBrackets 布尔仅迁移期读取
+    cssRefEffect: "none" | "brackets" | "icon" | "shadow" | "highlight",
+    keepLazyLoadStore: string,
+    awaysExitFocusStore: string,
+    cssRefAsTags: string,
+    showDocAttrs: boolean,
+    cssShowHomeEndIcon: boolean,
+    cssHomeEndIconLeft: boolean,
+    cssRefSquareBrackets: boolean,
+    cssShowMemo: boolean,
+    // 外观域·界面净化 6 开关（2026-09-12 uiclean：seller 写死 CSS 迁移改造，默认全关）
+    uiCleanTabClose: boolean,
+    uiCleanTabBarBtns: boolean,
+    uiCleanTopbarStatus: boolean,
+    uiCleanEmptyHelp: boolean,
+    uiCleanDocTreeBadge: boolean,
+    uiCleanDocTreeCompact: boolean,
+    cssShowFlashCardBlank: boolean,
+    cssFlashThoughts: boolean,
+    flashThoughtUseDialog: boolean,
+    tomatoClockCheckbox: boolean,
+    readingPointBoxCheckbox: boolean,
+    readingTopBar: boolean,
+    readingStatusBar: boolean,
+    readingShowAllFolders: boolean,
+    cardBoxCheckbox: boolean,
+    cardBoxAddConcepts: boolean,
+    cardBoxSpradEvenlyPostpone: boolean,
+    cardBoxDelayDays: number,
+    cardRemoveBoxCheckbox: boolean,
+    cardAddListBoxCheckbox: boolean,
+    cardPriorityBoxCheckbox: boolean,
+    cardPriorityBoxAutoHide: boolean,
+    cardPriBarPos: string,
+    card_priority_slider_hide: boolean,
+    card_priority_stopBtn_hide: boolean,
+    linkBoxLnkTitle: boolean,
+    linkBoxSyncRef: boolean,
+    linkBoxSyncHref: boolean,
+    linkBoxSyncBlockAuto: boolean,
+    linkBoxSyncScanDeep: boolean,
+    linkBoxSyncRemapChildID: boolean,
+    linkBoxUseLnkOrRef: boolean,
+    pairBarEnabled: boolean,
+    pairBarDefaultFunc: string,
+    pairBarLastFunc: string,
+    pairBarLastSrcID: string,
+    pairBarEntryHotkey: boolean,
+    pairBarEntryStatus: boolean,
+    pairBarEntryMenu: boolean,
+    pairBarEntryIconMenu: boolean,
+    dailyNoteBoxCheckbox: boolean,
+    dailyNoteGoToBottom: boolean,
+    dailyNoteMoveToBottom: boolean,
+    dailyNoteCopySimple: boolean,
+    dailyNoteCopyAnchorText: boolean,
+    dailyNoteCopyUseRef: boolean,
+    dailyNoteCopyUpdateBG: boolean,
+    dailyNoteCopyInsertPR: boolean,
+    dailyNoteCopyShowPath: boolean,
+    dailyNoteCopyFlashCard: boolean,
+    dbBkBoxCheckbox: boolean,
+    dbBkBoxMaxBacklinkSize: number,
+    dbBkBoxHideDatetime: boolean,
+    imgOverlayCheckbox: boolean,
+    imgBoxCheckbox: boolean,
+    backLinkBottomBoxCheckbox: boolean,
+    mixBoxCheckbox: boolean,
+    mixBoxPinyin: boolean,
+    mixBoxAddAlias: boolean,
+    storeOpenRefsClick: boolean,
+    storeCopyStdMD: boolean,
+    storeOpenRefsMenu: boolean,
+    storeMergeDoc: boolean,
+    storeMoveDocContentHere: boolean,
+    storeRefreshStaticBkLnk: boolean,
+    storeInsertXml: boolean,
+    storeFillMemoMenu: boolean,
+    writingBoxCheckbox: boolean,
+    tag2RefBoxCheckbox: boolean,
+    spaceRefEnabled: boolean,
+    spaceRefLinkType: "ref" | "lnk",
+    toolbarEN2CHBtn: boolean,
+    copyIdCheckbox: boolean,
+    foldCmdCheckbox: boolean,
+    toolbarTidy: boolean,
+    cmdBlockBoxCheckbox: boolean,
+    listBoxCheckbox: boolean,
+    noteBoxCheckbox: boolean,
+    noteBoxMobileSync: boolean,
+    noteBoxAllKinds: string,
+    aiBoxCheckbox: boolean,
+    aiBoxPrompts: boolean,
+    aiPanelCheckbox: boolean,
+    agentMaxTurns: number,
+    agentReviewEdit: boolean,
+    agentReviewRunJs: boolean,
+    agentKnowledgeDocs: string[],
+    agentSkillDocs: string[],
+    agentHistoryMsgs: number,
+    agentDocSnapshotLimit: number,
+    "daily-note-box-id": string,
+    "tomato-clocks": string,
+    tomato_clocks_force_dialog: boolean,
+    "tomato-clocks-force-notice": string,
+    "tomato-clocks-change-bg": string,
+    "tomato-clocks-change-bg-dark": string,
+    tomato_clocks_position_right: string,
+    tomato_clocks_opacity: string,
+    tomato_clocks_loop: boolean,
+    tomato_clocks_break: string,
+    tomato_clocks_notice: boolean,
+    tomato_clocks_focus: boolean,
+    tomato_microbreak: boolean,
+    tomato_microbreak_min: string,
+    tomato_microbreak_max: string,
+    tomato_microbreak_duration: string,
+    tomato_microbreak_dialog: boolean,
+    tomato_microbreak_notice: boolean,
+    tomato_microbreak_notification: boolean,
+    "back-link-max-size": number,
+    "back-link-mention-count": number,
+    "back-link-default-off": boolean,
+    "back-link-dailynote-off": boolean,
+    back_link_refresh_off: boolean,
+    bk_refresh_interval_sec: number,
+    bk_visible_only: boolean,
+    back_link_goto_bottom_btn: boolean,
+    back_link_float: boolean,
+    back_link_float_ball_stay: boolean,
+    back_link_concept_fold: boolean,
+    back_link_copy: boolean,
+    back_link_move_to_dailynote: boolean,
+    back_link_remove_refs: boolean,
+    back_link_embed: boolean,
+    back_link_ref: boolean,
+    back_link_move_here: boolean,
+    back_link_move_with_backlink: boolean,
+    back_link_protyle_height: string,
+    back_link_show_path: boolean,
+    back_link_follow_width: boolean,
+    back_link_passup_heading: boolean,
+    back_link_passup_quote: boolean,
+    back_link_passup_super: boolean,
+    "tag-to-ref-add-card": boolean,
+    "tag-to-ref-add-pinyin": boolean,
+    "auto-card-priority": boolean,
+    "dont-break-list": boolean,
+    "ai-return-insert-place": number,
+    "ernie-bot-4-ak": string,
+    "ernie-bot-4-sk": string,
+    "avoiding-cloud-synchronization-conflicts": boolean,
+    "flash-thoughts-2-top": boolean,
+    "flash-thoughts-target-file": string,
+    "shorthandRelayEnabled": boolean,
+    "flash-stat-tag": boolean,
+    "flash-block-form": "super" | "para" | "list",
+    "flashThoughtsBlurClose": boolean,
+    "quickNoteCheckbox": boolean,
+    "quickNoteOpenMode": "external" | "focus",
+    "quickNoteRect": { x: number; y: number; width: number; height: number; opacity?: number } | null,
+    "dailyNoteReviewTopbar": boolean,
+    "dailyNoteCopyFragment": boolean,
+    storeNoteBox_selectedNoteType: string,
+    storeNoteBox_keep: boolean,
+    storeNoteBox_pin: boolean,
+    storeNoteBox_recentText: (string | import("../libs/stores").RecentItem)[],
+    storeNoteBox_noteAreaText: string,
+    storeNoteBox_selectedNotebook: string,
+    fastNoteBoxCheckbox: boolean,
+    fastNoteBoxDisableBK: boolean,
+    fastNoteBoxAdd2Flashcard: boolean,
+    fastNoteBoxDelAfterCreating: boolean,
+    commentBoxCheckbox: boolean,
+    commentBoxMaxProtyleHeight: number,
+    commentBoxAnnoUnderlineThickness: number,
+    commentBoxAnnoMarkStyle: string,
+    commentBoxAnnoLineType: string,
+    commentBoxAnnoBg: boolean,
+    commentBoxForwardRef: boolean,
+    commentBoxBackwardRef: boolean,
+    commentBoxVirtualRef: boolean,
+    commentBoxAnnotations: boolean,
+    commentBoxAddFlashCard: boolean,
+    commentBoxShowID: boolean,
+    commentBoxStaticOutlink: boolean,
+    commentBoxPanelSkin: string,
+    /** 批注弹窗编辑器形态：rich（内嵌 Protyle 富文本）| plain（textarea 秒开，2026-09-01） */
+    commentBoxAnnoEditorMode: string,
+    /** 批注编辑器字号 px（两模式统一，12~22） */
+    commentBoxAnnoEditorFontSize: number,
+    /** 批注查看态字号 px（气泡+面板正文同源，12~22，默认 13） */
+    commentBoxAnnoViewFontSize: number,
+    /** 查看态追加分档字号 px（侧边栏+气泡追加时间线，11~20，默认 12，陆杰 09-17） */
+    commentBoxAnnoReplyFontSize: number,
+    /** 查看态引文分档字号 px（侧边栏引文摘要，11~20，默认 12，陆杰 09-17） */
+    commentBoxAnnoQuoteFontSize: number,
+    linkBoxAttrIconOnHide: boolean,
+};
+
+type AttrType = {
+    "custom-block-editor"?: string,
+    "custom-ref-id"?: string,
+    "custom-ref-snapshot-"?: string,
+    "custom-ai-response"?: string,
+    title?: string,
+    alias?: string, // comma separated
+    memo?: string,
+    updated?: string,
+    id?: string,
+    name?: string,
+    bookmark?: string,
+    scroll?: string,
+    style?: string,
+    md?: string,// for 'Writing' plugin
+    content?: string,// for 'Writing' plugin
+    href?: string,
+    src?: string,
+    "data-src"?: string,
+    "data-href"?: string,
+    "custom-tomato-annotations"?: string,
+    "title-img"?: string,
+    "custom-tomato-ref-hpath"?: string,
+    "tomato-bk-ignore"?: string,
+    "data-position"?: string,
+    "data-type"?: string,
+    "data-subtype"?: string,
+    "tomato-data-node-id"?: string,
+    "data-id"?: string,
+    "protyle-breadcrumb__item"?: string,
+    "custom-progmark"?: string,
+    "custom-progref"?: string,
+    "custom-prog-tail"?: string, // □2 片尾收束卡宿主文档幂等 flag（tailCardBlock.ts）
+    "custom-prog-for-recite"?: string, // □2 仿写副本标记（retrofit 补插跳过，digestUtils.ts）
+    "custom-prog-key-note"?: string,
+    "custom-in-piece-ref"?: string,
+    "custom-prog-origin-text"?: string,
+    "custom-sy-readonly"?: string,
+    "custom-tomato-readonly"?: string,
+    "custom-riff-decks"?: string,
+    "custom-linkboxdoclinkial"?: string,
+    "custom-attr-pic-overlay"?: string,
+    "custom-tomatomention"?: string,
+    "custom-off-tomatobacklink"?: string,
+    "custom-card-priority"?: string,
+    "custom-card-priority-stop"?: string,
+    "custom-card-priority-id"?: string,
+    "custom-card-priority-doc-id"?: string,
+    "custom-ref-hierarchy"?: string,
+    "custom-origin-hpath"?: string,
+    "custom-ref-hpath"?: string,
+    "custom-pinyin"?: string,
+    "custom-category"?: string,
+    "custom-paragraph-index"?: string,
+    "custom-in-book-index"?: string,
+    "custom-tomato-line-blur"?: string,
+    "custom-tomato-line-through"?: string,
+    "custom-tomato-readingpoint"?: string,
+    "custom-tomato-rp-content-hash"?: string,
+    "custom-prog-key-no-color"?: string,
+    "custom-pdigest-ctime"?: string,//PDIGEST_CTIME
+    "custom-pdigest-last-id"?: string,//PDIGEST_LAST_ID
+    "custom-pdigest-parent-id"?: string,//PDIGEST_PARENT_ID
+    "custom-pdigest-index"?: string,//PDIGEST_INDEX
+    "custom-book-writing"?: string,//BOOK_WRITING
+    "custom-book-clue"?: string,//BOOK_CLUE
+    "custom-book-single-card"?: string,
+    "custom-book-prompt"?: string,
+    "custom-tomatoclockvedioversion"?: string,
+    "custom-tomatoUpdated"?: string,
+    "custom-bkDisabledIDs"?: string,
+    "custom-bkColCount"?: string,
+    "custom-bkSortBy"?: string,
+    "custom-bkSavedQueries"?: string,
+    "custom-database-backlink"?: string,
+    "custom-database-backlink-avID"?: string,
+    "custom-database-backlink-PKID"?: string,
+    "custom-database-backlink-ContentID"?: string,
+    "custom-database-backlink-mSelectID"?: string,
+    "custom-database-backlink-viewID"?: string,
+    "custom-database-backlink-updatedID"?: string,
+    "custom-database-backlink-createdID"?: string,
+    "custom-tomato-idea-time"?: string,
+    "custom-tomato-idea-interval"?: string,
+    "custom-qf-doc-md5"?: string,
+    "custom-qf-knowledge-file-id"?: string,
+    "custom-qf-file-id"?: string,
+    "custom-fastnote"?: string,
+    "custom-fastdraft"?: string,
+    "custom-lnk-my-id"?: string,
+    "custom-lnk-to-ids"?: string,
+    "custom-bkMenDocCount"?: string,
+    "custom-bkRefDocCount"?: string,
+    "custom-graph-isVertical"?: string,
+    "custom-graph-layout"?: string,
+    "custom-graph-mode"?: string,
+    "custom-graph-struct-marks"?: string,
+    // custom-graph-node-positions（拖拽位置存档）graphrelayout □6 惰性废弃：不再读不清，
+    // 遗留键读到也忽略
+    "custom-graph-collapsed"?: string,
+    "custom-tomato-mark"?: string,
+    "custom-super-list"?: string,
+    "custom-tomato-reflink"?: string,
+    "custom-sync-block-id"?: string,
+    "custom-sync-block-count"?: string,
+    "custom-sync-version"?: string,
+    "custom-sync-origin-id"?: string,
+    "custom-sync-item-id"?: string,
+    "custom-sync-hash"?: string,//SYNC_HASH 内容基线哈希
+    "custom-sync-status"?: string,//SYNC_STATUS ok(缺省)/conflict
+    "data-node-id"?: string,
+    "tomato-control-card-priority"?: string,
+    "custom-prog-words"?: string,
+    "custom-super-card-box"?: string,
+    "custom-super-card-question"?: string,
+    "custom-super-card-answer"?: string,
+    "custom-comment-fold"?: string,
+    "custom-lnk-bottom"?: string,
+    "fold"?: string,
+    "heading-fold"?: string,
+    "custom-doc-notes"?: string,
+    "custom-prog-piece-previous"?: string,
+    "custom-mindwire-enable"?: string,
+};
+
+type AttrKey = keyof AttrType;
+
+type RiffCard = { due: string, reps: number };
+
+type BacklinkSv<T = any> = {
+    bk: Backlink;
+    bkDiv: HTMLElement;
+    id: string;
+    attrs: LinkElementAttr;
+    isMention: boolean;
+    isFold: boolean;
+    backlink: Backlink2;
+    atBottom: boolean;
+    blockID: string;
+    parentID?: string;
+    parentType?: string;
+    edit?: boolean;
+    /** □4 展示态（纯 UI state 不落盘）：截断→展开→编辑 三态，见 spec §4 */
+    expanded?: boolean;
+    /** □4 截断态实测正文是否超 3 行（不足则不渲染渐隐+提示条） */
+    clampOverflow?: boolean;
+    updated: string;
+    sortBy: string;
+    protyle: T;
+    ob: MutationObserver;
+    row?: Block; // commentbox用.
+    /** □3 提及马克笔：本卡来源文档响应的 keywords（编辑态 CSS Highlight 高亮用，
+     *  官方 searchMarkRender 同源）；空数组=无高亮 */
+    keywords?: string[];
+};
+
+type EventsReadingPoint = { docID: string, blockID: string, title: string, time: Date };
+
+interface PluginSpec {
+    name: string;
+    author: string;
+    url: string;
+    version: string;
+    minAppVersion: string;
+    backends: string[];
+    frontends: string[];
+    displayName: Description;
+    description: Description;
+    readme: Description;
+    funding: Funding;
+    keywords: string[];
+}
+
+interface Description {
+    default: string;
+    "zh-CN": string;
+}
+
+interface Funding {
+    openCollective: string;
+    patreon: string;
+    github: string;
+    custom: string[];
+}
+
+interface ID_Time {
+    id: string;
+    time: string;
+    interval: string;
+    /** 块 created（YYYYMMDDHHmmss），间隔计算优先用它（跨天正确） */
+    created?: string;
+}
+
+type WindowOpenStyle = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "nop" | "front" | "back" | "right" | "bottom" | "move" | "peek"
+
+interface GraphDockData<T> {
+    svelte: T;
+    setCanvasSize: () => void;
+    /** 期4：true=已居中脉冲；false=目标不在图（调用方 toast 找不到的原因） */
+    locateID: (id: string) => Promise<boolean>;
+    /** refreshOnly=true=同文档内容刷新：relayout 不 fitView（保用户/定位视图；期4 P1 竞态修复）。
+     *  返回是否真跑（gfloat review P1-2）：true=持锁执行完（含组件内指纹短路——数据未变
+     *  也是正确终态）；false=GRAPH_LOCK 被占（ifAvailable 抢锁失败静默放弃），调用方勿提交指纹 */
+    changeDoc: (p: IProtyle, refreshOnly?: boolean) => Promise<boolean>;
+    /** 期4：定位脉冲窗口内抑制自动刷新（expandTo 写属性→ws 回流→relayout 重建打断脉冲/打回 setCenter） */
+    suppressAutoRefreshUntil?: number;
+    /** graphbox 期1：Provider 内 useSvelteFlow 借道（relayout 末尾首屏视口适配） */
+    /** minZoom/maxZoom=fitView 缩放上下限（graphmind □7fix 真 fit 显式传参；minZoom 下限
+     *  原防孤儿列/宽树过缩成不可见小簇——□2 vision P1，□7fix 取舍翻转为全树可见优先） */
+    fitView?: (opts?: { padding?: number; duration?: number; minZoom?: number; maxZoom?: number }) => void;
+    /** graphmind □2 P1 注册（fitReadable 根锚定分支消费）；□7fix 真 fit 后无图内消费方，
+     *  保留通道（GraphControl 仍注册，后续视口钉位需求复用） */
+    setViewport?: (vp: { x: number; y: number; zoom: number }, opts?: { duration?: number }) => void;
+    /** graphrelayout □1 注册：交互链视口钉（capturePin 交互前快照被点节点屏幕位置） */
+    getViewport?: () => { x: number; y: number; zoom: number };
+    /** graphbox 期2：展开目标节点的折叠祖先链（定位不静默）；返回是否有折叠变更 */
+    expandTo?: (id: string) => Promise<boolean>;
+    /** graphbox 期4：图当前通道态/文档/块上限（locateNode 的 toast 分支文案依据）；
+     *  二期 □2 增 blockCount（precheck 真实块数，「超上限」文案只留给 cnt > maxBlocks 的真超限）；
+     *  treemap □5 增 marks 档（同 treemap 定位语义） */
+    getGraphState?: () => { mode: "structure" | "full" | "treemap" | "marks"; docID: string; maxBlocks: number; blockCount?: number };
+    /** graphbox 二期 □2：图内全块 id 集（locateNode 定位兜底上爬祖先的「图内」判定） */
+    graphIDsOf?: () => Set<string>;
+    // graphrelayout □2：isVertical/layoutForm 两字段随四态退役删除（原服务「zoom 过小提示
+    // 切纵向」toast 的判定，恒 LR 后无处可切）
+    /** graphbox 期7：¶ 链中段定位重定向（目标块并进 ¶ 大节点 → 图上节点=链头） */
+    paraRedirectOf?: (id: string) => string;
+    /** graphmark 期3：块级标记写后通知（标记写不碰 updated=指纹短路不含标记集，
+     *  GraphBox.ts toggleBlockMark 显式触发图组件 SWR 重拉标记——●N/只看标记过滤集跟进） */
+    marksChanged?: () => void;
+    /** graphmark 期4：图上聚焦（目标块一跳邻域高亮+其余淡化）。mode=toggle（默认，
+     *  同目标再进=退出全景——命令直连路径的「再按同块恢复」语义）；set（上爬兜底专用，
+     *  重定向目标撞上当前聚焦点=保持聚焦不 toggle，防「聚焦子块=静默关聚焦」错乱）。
+     *  false=图上无此块（调用方上爬图内祖先兜底）；treemap 档恒 false */
+    focusNode?: (id: string, mode?: "toggle" | "set") => Promise<boolean>;
+    /** graphbox 期3：xyflow 内部 store 借道（官方更新通道；bind store 在 runes 组件不可靠） */
+    graphStore?: { nodes: any; edges: any };
+}
+
+interface WsMain {
+    cmd: string;
+    reqId: number;
+    app: string;
+    sid: string;
+    pushMode: number;
+    callback: string;
+    code: number;
+    msg: string;
+    data: WsMainData;
+}
+
+interface ProtyleWs {
+    cmd: string;
+    reqId: number;
+    app: string;
+    sid: string;
+    pushMode: number;
+    callback: string;
+    code: number;
+    msg: string;
+    data: Datum[];
+}
+
+interface Datum {
+    timestamp: number;
+    doOperations: DoOperation[];
+    undoOperations: DoOperation[];
+}
+
+interface DoOperation {
+    action: string;
+    data: string;
+    id: string;
+    rootID: string; // graphrelayout □5：内核 Operation 恒带（model/blockial.go pushBlockAttrs）——updateAttrs op 的块属性判定键（op.id=块 id 无 parentID）
+    parentID: string;
+    previousID: string;
+    nextID: string;
+    retData: string;
+    blockIDs: string;
+    blockID: string;
+    deckID: string;
+    avID: string;
+    srcIDs: string;
+    srcs: string;
+    isDetached: boolean;
+    name: string;
+    type: string;
+    format: string;
+    keyID: string;
+    rowID: string;
+    isTwoWay: boolean;
+    backRelationKeyID: string;
+    removeDest: boolean;
+    layout: string;
+    groupID: string;
+    targetGroupID: string;
+    viewID: string;
+    ignoreDefaultFill: boolean;
+    context: string;
+}
+
+interface WsMainData {
+    tasks?: WsMainTask[];
+    ids?: string[];
+    id?: string;
+    box?: string;
+    path?: string;
+    refText?: string;
+    title?: string;
+}
+
+interface WsMainTask {
+    action: string;
+}
+
+type FloatingDocItem = {
+    enableMobile?: boolean;
+    enable?: boolean;
+    docName?: string;
+    docID?: string;
+    docIcon?: string;
+    openDocType?: number;
+    openOnCreate?: boolean;
+}
+
+type FloatingKeyboardItem = {
+    enableMobile?: boolean;
+    enable?: boolean;
+    keyIcon?: string;
+    key?: string;
+    altKey?: boolean;
+    shiftKey?: boolean;
+    ctrlKey?: boolean;
+}
+
+// 悬浮球统一模型（期1 翻新地基）：位置进数据本体（anchor 九宫格+偏移，几何见
+// libs/ballGeometry.ts），废 config 顶层 TomatoFloatingBtnDMKey_* 动态散键；
+// id=newID() 稳定身份；type 走 actions/ 注册表分派。size/opacity/label 为期4 外观字段预留。
+type BallType = "doc" | "shortcut" | "url" | "plugincmd";
+
+type BallItem = {
+    id: string;
+    type: BallType;
+    action?: any;
+    icon?: string;
+    label?: string;
+    size?: number;
+    opacity?: number;
+    showLabel?: boolean;
+    anchor?: number;
+    offsetX?: number;
+    offsetY?: number;
+    enable?: boolean;
+    enableMobile?: boolean;
+}
+
+type ArticlesPrefix = { id: string; docName: string; prefix: string }
+
+type SyDock = Record<string, SyDockItem>;
+
+type SyDockItem = {
+    config: Config;
+}
+
+type Config = {
+    index: number;
+    position: string;
+    size: Size;
+    icon: string;
+    title: string;
+    hotkey: string;
+    show: boolean;
+}
+
+type Size = {
+    height: number;
+    width: number;
+}
+
+type Tag = {
+    name: string;
+    label: string;
+    children: null;
+    type: string;
+    depth: number;
+    count: number;
+}

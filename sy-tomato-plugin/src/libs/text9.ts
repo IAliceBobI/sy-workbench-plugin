@@ -1,0 +1,1528 @@
+import { TomatoI18nABC10 } from "./text10";
+
+export abstract class TomatoI18nABC9 extends TomatoI18nABC10 {
+
+    public get 跳到底部反链() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "跳到底部反链";
+            case "es_ES":
+                return "Ir a las referencias inversas al final";
+            case "fr_FR":
+                return "Aller aux références inverses en bas";
+            case "ja_JP":
+                return "ページ下部の逆リンクに移動";
+            case "zh_CHT":
+                return "跳到底部反鏈";
+
+            default:
+                return "Jump to Backlinks at the Bottom";
+        }
+    }
+    public get 底部反链入口文案() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "底部反链 · 本文档有 {n} 条反链";
+            case "es_ES":
+                return "Retroenlaces · {n} en este documento";
+            case "fr_FR":
+                return "Rétroliens · {n} dans ce document";
+            case "ja_JP":
+                return "バックリンク · この文書に {n} 件";
+            case "zh_CHT":
+                return "底部反鏈 · 本文件有 {n} 條反鏈";
+
+            default:
+                return "Backlinks · {n} in this doc";
+        }
+    }
+    public get 开启() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "开启";
+            case "es_ES":
+                return "Activar";
+            case "fr_FR":
+                return "Activer";
+            case "ja_JP":
+                return "有効にする";
+            case "zh_CHT":
+                return "開啟";
+
+            default:
+                return "Enable";
+        }
+    }
+    public get 在标题下添加跳转到底部的按钮() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "在标题下添加跳转到底部的按钮";
+            case "es_ES":
+                return "Agregar botón para saltar al final debajo del título";
+            case "fr_FR":
+                return "Ajouter un bouton pour sauter en bas sous le titre";
+            case "ja_JP":
+                return "タイトルの下にページの最後にジャンプするボタンを追加";
+            case "zh_CHT":
+                return "在標題下添加跳轉到底部的按鈕";
+
+            default:
+                return "Add jump to bottom button under the title";
+        }
+    }
+
+    public get 跳转顶部() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "跳转顶部";
+            case "es_ES":
+                return "Saltar al inicio";
+            case "fr_FR":
+                return "Sauter en haut";
+            case "ja_JP":
+                return "ページの先頭にジャンプ";
+            case "zh_CHT":
+                return "跳轉頂部";
+
+            default:
+                return "Jump to top";
+        }
+    }
+    public get 默认折叠概念栏() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "默认折叠概念栏";
+            case "es_ES":
+                return "Barra de conceptos plegable predeterminada";
+            case "fr_FR":
+                return "Barre de concepts repliable par défaut";
+            case "ja_JP":
+                return "デフォルトで折りたたまれるコンセプトバー";
+            case "zh_CHT":
+                return "預設摺疊概念欄";
+
+            default:
+                return "Default collapsible concept bar";
+        }
+    }
+    public get 反链启用只读模式(): string {
+        switch (this.lang) {
+            case "zh_CN":
+                return "反链启用只读模式，提高性能";
+            case "es_ES":
+                return "El modo de solo lectura para enlaces inversos se activa y mejora el rendimiento.";
+            case "fr_FR":
+                return "Le mode lecture seule pour les liens entrants est activé et améliore les performances.";
+            case "ja_JP":
+                return "バックリンクの読み取り専用モードが有効になり、パフォーマンスが向上します。";
+            case "zh_CHT":
+                return "反向鏈接啟用唯讀模式，提高性能。";
+
+            default:
+                return "Backlink enable read-only mode to improve performance.";
+        }
+    }
+    public get 过滤下面显示的反链提及() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "在下面显示的反链提及中过滤。可点击问号查看语法。";
+            case "es_ES":
+                return "Filtrar las menciones de enlaces inversos mostrados a continuación.";
+            case "fr_FR":
+                return "Filtrer les mentions de liens inverses affichées ci-dessous.";
+            case "ja_JP":
+                return "以下に表示されるバックリンクの言及をフィルタリングします。疑問符をクリックして構文を確認できます。";
+            case "zh_CHT":
+                return "在下面顯示的反向鏈接提及中過濾。可點擊問號查看語法。";
+
+            default:
+                return "Filter the backlink mentions shown below. Click the question mark to view the syntax.";
+        }
+    }
+    public get 搜索反链提及() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "搜索本文档所有反链提及，搜索范围不受最大展开数限制。";
+            case "es_ES":
+                return "Buscar todas las menciones de enlaces inversos en este documento. El alcance de búsqueda no está limitado por el número máximo de expansiones.";
+            case "fr_FR":
+                return "Rechercher toutes les mentions de liens inverses dans ce document. La portée de la recherche n'est pas limitée par le nombre maximal d'expansions.";
+            case "ja_JP":
+                return "この文書内のすべてのバックリンクの言及を検索します。検索範囲は最大展開数に制限されません。";
+            case "zh_CHT":
+                return "搜尋本文檔所有反向鏈接提及，搜索範圍不受最大展開數限制。";
+
+            default:
+                return "Search for all backlink mentions in this document. The search scope is not limited by the maximum number of expansions.";
+        }
+    }
+    public get 标题字母升序() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "标题字母升序";
+            case "es_ES":
+                return "Título alfabético ascendente";
+            case "fr_FR":
+                return "Titre par ordre alphabétique croissant";
+            case "ja_JP":
+                return "タイトルアルファベット昇順";
+            case "zh_CHT":
+                return "標題字母升序";
+
+            default:
+                return "Title Alphabetical Ascending";
+        }
+    }
+
+    public get 标题字母降序() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "标题字母降序";
+            case "es_ES":
+                return "Título alfabético descendente";
+            case "fr_FR":
+                return "Titre par ordre alphabétique décroissant";
+            case "ja_JP":
+                return "タイトルアルファベット降順";
+            case "zh_CHT":
+                return "標題字母降序";
+
+            default:
+                return "Title Alphabetical Descending";
+        }
+    }
+
+    public get 标题自然数升序() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "标题自然数升序";
+            case "es_ES":
+                return "Título numérico natural ascendente";
+            case "fr_FR":
+                return "Titre par ordre numérique naturel croissant";
+            case "ja_JP":
+                return "タイトル自然数昇順";
+            case "zh_CHT":
+                return "標題自然數升序";
+
+            default:
+                return "Title Natural Number Ascending";
+        }
+    }
+
+    public get 标题自然数降序() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "标题自然数降序";
+            case "es_ES":
+                return "Título numérico natural descendente";
+            case "fr_FR":
+                return "Titre par ordre numérique naturel décroissant";
+            case "ja_JP":
+                return "タイトル自然数降順";
+            case "zh_CHT":
+                return "標題自然數降序";
+
+            default:
+                return "Title Natural Number Descending";
+        }
+    }
+
+    public get 将指定的引用渲染为标签(): string {
+        switch (this.lang) {
+            case "zh_CN":
+                return "把包含指定前缀的引用，渲染为标签。每个前缀用逗号隔开。";
+            case "es_ES":
+                return "Renderizar referencias que contienen un prefijo específico como etiquetas. Separe cada prefijo con una coma.";
+            case "fr_FR":
+                return "Rendre les références contenant un préfixe spécifié en tant qu'étiquettes. Séparez chaque préfixe par une virgule.";
+            case "ja_JP":
+                return "指定されたプレフィックスを含む参照をタグとしてレンダリングします。各プレフィックスはカンマで区切ります。";
+            case "zh_CHT":
+                return "把包含指定前綴的引用，渲染為標籤。每個前綴用逗號隔開。";
+
+            default:
+                return "Render references containing a specified prefix as tags. Separate each prefix with a comma.";
+        }
+    }
+    public get 使用链接否则用引用() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "打开使用链接，关闭使用引用。";
+            case "es_ES":
+                return "Abra usando el enlace, cierre usando la referencia.";
+            case "fr_FR":
+                return "Ouvrez en utilisant le lien, fermez en utilisant la référence.";
+            case "ja_JP":
+                return "リンクを使用して開き、参照を使用して閉じます。";
+            case "zh_CHT":
+                return "打開使用連結，關閉使用引用。";
+
+            default:
+                return "Open using the link, close using the reference.";
+        }
+    }
+    public get 总是保持已经加载的内容() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "总是保持已经加载的内容";
+            case "es_ES":
+                return "Mantener siempre el contenido ya cargado";
+            case "fr_FR":
+                return "Toujours conserver le contenu déjà chargé";
+            case "ja_JP":
+                return "常に既にロードされたコンテンツを保持する";
+            case "zh_CHT":
+                return "總是保持已經加載的內容";
+
+            default:
+                return "Always keep the already loaded content";
+        }
+    }
+    public get 数据库充当反链() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "数据库反链：用数据库来充当反链面板，把反链自动插入数据库中";
+            case "es_ES":
+                return "Enlaces inversos de base de datos: Utilice la base de datos como un panel de enlaces inversos e inserte automáticamente los enlaces inversos en la base de datos.";
+            case "fr_FR":
+                return "Liens inverses de base de données : Utilisez la base de données comme panneau de liens inverses et insérez automatiquement les liens inversos dans la base de données.";
+            case "ja_JP":
+                return "データベースの逆リンク：データベースを逆リンクパネルとして使用し、逆リンクを自動的にデータベースに挿入します。";
+            case "zh_CHT":
+                return "資料庫反鏈：用資料庫充當反鏈面板，把反鏈自動插入資料庫中。";
+            case "it_IT":
+                return "Collegamenti inversi del database: Usa il database come un pannello di collegamenti inversi e inserisci automaticamente i collegamenti inversi nel database.";
+
+            default:
+                return "Database backlinks: Use the database as a backlink panel and automatically insert backlinks into the database.";
+        }
+    }
+    public get 刷新数据库反链() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "刷新数据库反链";
+            case "es_ES":
+                return "Actualizar enlaces inversos de la base de datos"; // 西班牙语
+            case "fr_FR":
+                return "Actualiser les backlinks de la base de données"; // 法语
+            case "ja_JP":
+                return "データベースの逆参照を更新する"; // 日语
+            case "zh_CHT":
+                return "刷新數據庫反鏈"; // 繁体中文
+            case "it_IT":
+                return "Aggiorna i backlink del database"; // 意大利语
+
+            default:
+                return "Refresh database backlinks"; // 英语
+        }
+    }
+    public get 删除失效的闪卡() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "删除失效的闪卡。删卡时没有先取消闪卡，而是直接把闪卡的内容删除，则闪卡没有对应的内容，变成失效闪卡。（使用前请先创建备份）";
+            case "es_ES":
+                return "Eliminar tarjetas interactivas caducadas. Si se elimina el contenido de una tarjeta interactiva sin cancelarla primero, la tarjeta no tendrá contenido correspondiente y se convertirá en una tarjeta caducada. (Cree una copia de seguridad antes de usarla).";
+            case "fr_FR":
+                return "Supprimer les cartes mémoire expirées. Si vous supprimez le contenu d'une carte mémoire sans la désactiver d'abord, la carte n'aura plus de contenu correspondant et deviendra une carte mémoire expirée. (Faites une sauvegarde avant de l'utiliser).";
+            case "ja_JP":
+                return "無効なフラッシュカードを削除します。フラッシュカードをキャンセルせずに直接その内容を削除すると、フラッシュカードに対応する内容がなくなり、無効なフラッシュカードになります。（使用前にバックアップを作成してください）。";
+            case "zh_CHT":
+                return "刪除失效的閃卡。若未先取消閃卡，而是直接刪除閃卡內容，則閃卡將沒有對應內容，變成失效閃卡。（使用前請先建立備份）。";
+            case "it_IT":
+                return "Eliminare le schede lampo scadute. Se si elimina il contenuto di una scheda lampo senza prima annullarla, la scheda non avrà più un contenuto corrispondente e diventerà una scheda scaduta. (Fare un backup prima di utilizzarla).";
+
+            default:
+                return "Delete expired flashcards. If you delete the content of a flashcard without canceling it first, the flashcard will have no corresponding content and become an expired flashcard. (Create a backup before using it).";
+        }
+    }
+    public get 删除失效的数据库() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "删除失效的数据库。与失效的闪卡一样，从文档中删除数据库，数据库还是会在/data/storage/av 下存在。（使用前请先创建备份）";
+            case "es_ES":
+                return "Eliminar la base de datos no válida. Al igual que las tarjetas flash no válidas, eliminar la base de datos del documento. La base de datos aún existirá en /data/storage/av. (Cree una copia de seguridad antes de usarla).";
+            case "fr_FR":
+                return "Supprimer la base de données non valide. Comme les cartes mémoire non valides, supprimer la base de données du document. La base de données existera toujours sous /data/storage/av. (Faites une sauvegarde avant de l'utiliser).";
+            case "ja_JP":
+                return "無効なデータベースを削除します。無効なフラッシュカードと同じように、ドキュメントからデータベースを削除しますが、データベースは依然として/data/storage/avに存在します。（使用前にバックアップを作成してください）。";
+            case "zh_CHT":
+                return "刪除失效的資料庫。與失效的閃卡一樣，從文件中刪除資料庫，資料庫仍會在/data/storage/av 下存在。（使用前請先創建備份）。";
+            case "it_IT":
+                return "Eliminare il database non valido. Come le flashcard non valide, eliminare il database dal documento. Il database sarà ancora presente in /data/storage/av. (Creare un backup prima di utilizzarlo).";
+
+            default:
+                return "Delete the invalid database. Just like invalid flashcards, delete the database from the document. The database will still exist under /data/storage/av. (Create a backup before using it).";
+        }
+    }
+    public get 将选中的内容移到下边() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "将选中的内容移到下边";
+            case "es_ES":
+                return "Mover el contenido seleccionado hacia abajo";
+            case "fr_FR":
+                return "Déplacer le contenu sélectionné vers le bas";
+            case "ja_JP":
+                return "選択した内容を下に移動する";
+            case "zh_CHT":
+                return "將選中的內容移到下邊";
+            case "it_IT":
+                return "Spostare il contenuto selezionato verso il basso";
+
+            default:
+                return "Move the selected content to the bottom";
+        }
+    }
+    public get 隐藏修改时间和创建时间(): string {
+        switch (this.lang) {
+            case "zh_CN":
+                return "隐藏修改时间和创建时间";
+            case "es_ES":
+                return "Ocultar la hora de modificación y la hora de creación";
+            case "fr_FR":
+                return "Masquer l'heure de modification et l'heure de création";
+            case "ja_JP":
+                return "修正日時と作成日時を非表示にする";
+            case "zh_CHT":
+                return "隱藏修改時間和創建時間";
+            case "it_IT":
+                return "Nascondi ora di modifica e ora di creazione";
+
+            default:
+                return "Hide modification time and creation time";
+        }
+    }
+    // TypeScript get property: translate and fill the rest langs on returns for me, give me typescript function. dont modify function name what i give you.
+    public get 移动内容后添加指向原来位置的链接() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "移动内容后，添加指向原来位置的链接";
+            case "es_ES":
+                return "Después de mover el contenido, agregue un enlace que apunte a la ubicación original";
+            case "fr_FR":
+                return "Après avoir déplacé le contenu, ajoutez un lien pointant vers l'emplacement d'origine";
+            case "ja_JP":
+                return "コンテンツを移動した後、元の場所を指すリンクを追加します";
+            case "zh_CHT":
+                return "移動內容後，添加指向原來位置的鏈接";
+            case "it_IT":
+                return "Dopo aver spostato il contenuto, aggiungi un collegamento che punta alla posizione originale";
+
+            default:
+                return "After moving the content, add a link pointing to the original location";
+        }
+    }
+    public get 给引用加上效果() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "给引用加上效果";
+            case "es_ES":
+                return "Aplicar efecto a la cita";
+            case "fr_FR":
+                return "Appliquer un effet à la citation";
+            case "ja_JP":
+                return "引用に効果を追加する";
+            case "zh_CHT":
+                return "給引用加上效果";
+            case "it_IT":
+                return "Applica effetto alla citazione";
+
+            default:
+                return "Apply effect to the quote";
+        }
+    }
+    // TypeScript get property: translate and fill the rest langs on returns for me, give me typescript function. dont modify function name what i give you.
+    public get 自定义图标() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "自定义图标";
+            case "es_ES":
+                return "Icono personalizado";
+            case "fr_FR":
+                return "Icône personnalisée";
+            case "ja_JP":
+                return "カスタムアイコン";
+            case "zh_CHT":
+                return "自訂圖標";
+            case "it_IT":
+                return "icona personalizzata";
+
+            default:
+                return "Custom Icon";
+        }
+    }
+    // TypeScript get property: translate and fill the rest langs on returns for me, give me typescript function. dont modify function name what i give you.
+    public get 立即刷新() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "立即刷新";
+            case "es_ES":
+                return "Actualizar inmediatamente";
+            case "fr_FR":
+                return "Actualiser immédiatement";
+            case "ja_JP":
+                return "直ちに更新";
+            case "zh_CHT":
+                return "立即刷新";
+            case "it_IT":
+                return "Aggiorna immediatamente";
+
+            default:
+                return "Refresh immediately";
+        }
+    }
+    public get 移动到Dailynote() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "移动到dailynote";
+            case "es_ES":
+                return "Mover a dailynote";
+            case "fr_FR":
+                return "Déplacer vers dailynote";
+            case "ja_JP":
+                return "dailynoteに移動";
+            case "zh_CHT":
+                return "移動到dailynote";
+            case "it_IT":
+                return "Sposta su dailynote";
+
+            default:
+                return "Move to dailynote";
+        }
+    }
+    public get 把指向当前文档的引用删除() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "把指向当前文档的引用删除";
+            case "es_ES":
+                return "Eliminar referencias al documento actual";
+            case "fr_FR":
+                return "Supprimer les références au document actuel";
+            case "ja_JP":
+                return "現在のドキュメントへの参照を削除";
+            case "zh_CHT":
+                return "把指向當前文檔的引用刪除";
+            case "it_IT":
+                return "Elimina riferimenti al documento corrente";
+
+            default:
+                return "Remove references to the current document";
+        }
+    }
+    public get VIP密钥() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "VIP密钥";
+            case "es_ES":
+                return "Clave VIP";
+            case "fr_FR":
+                return "Clé VIP";
+            case "ja_JP":
+                return "VIPキー";
+            case "zh_CHT":
+                return "VIP密鑰";
+            case "it_IT":
+                return "Chiave VIP";
+
+            default:
+                return "VIP Key";
+        }
+    }
+    public get 测试密钥的合法性() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "测试密钥的合法性";
+            case "es_ES":
+                return "Probar la legalidad de la clave";
+            case "fr_FR":
+                return "Tester la légalité de la clé";
+            case "ja_JP":
+                return "キーの合法性をテストする";
+            case "zh_CHT":
+                return "測試密鑰的合法性";
+            case "it_IT":
+                return "Verificare la legalità della chiave";
+
+            default:
+                return "Test the legality of the key";
+        }
+    }
+    public get 嵌入互链创建() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "嵌入互链-创建";
+            case "es_ES":
+                return "Crear enlace incrustado";
+            case "fr_FR":
+                return "Créer un lien intégré";
+            case "ja_JP":
+                return "埋め込みリンクの作成";
+            case "zh_CHT":
+                return "嵌入互鏈-創建";
+            case "it_IT":
+                return "Crea collegamento incorporato";
+
+            default:
+                return "Create Embedded Link";
+        }
+    }
+
+    public get 嵌入互链选择() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "嵌入互链-选择";
+            case "es_ES":
+                return "Seleccionar enlace incrustado";
+            case "fr_FR":
+                return "Sélectionner un lien intégré";
+            case "ja_JP":
+                return "埋め込みリンクの選択";
+            case "zh_CHT":
+                return "嵌入互鏈-選擇";
+            case "it_IT":
+                return "Seleziona collegamento incorporato";
+
+            default:
+                return "Select Embedded Link";
+        }
+    }
+    public get 总是退出聚焦() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "总是退出聚焦（闪卡除外）";
+            case "es_ES":
+                return "Siempre salir de enfoque (excepto tarjetas flash)";
+            case "fr_FR":
+                return "Toujours quitter le focus (sauf pour les cartes mémoire)";
+            case "ja_JP":
+                return "常にフォーカスを外す（カードを除く）";
+            case "zh_CHT":
+                return "總是退出聚焦（閃卡除外）";
+            case "it_IT":
+                return "Esci sempre dallo stato di attenzione (escluse le flashcard)";
+
+            default:
+                return "Always exit focus (except flashcards)";
+        }
+    }
+    public get 块关系图() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "块关系图";
+            case "es_ES":
+                return "Diagrama de relaciones de bloques"; // 西班牙语翻译  
+            case "fr_FR":
+                return "Diagramme de relations de blocs"; // 法语翻译  
+            case "ja_JP":
+                return "ブロック関係図"; // 日语翻译  
+            case "zh_CHT":
+                return "區塊關係圖"; // 繁体中文翻译  
+            case "it_IT":
+                return "Diagramma delle relazioni tra blocchi"; // 意大利语翻译  
+
+            default:
+                return "Block Relationship Diagram"; // 英语翻译，同时作为默认情况  
+        }
+    }
+    public get 最大连续段落块数量() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "最大连续段落块数量";
+            case "es_ES":
+                return "Cantidad máxima de bloques de párrafos continuos";
+            case "fr_FR":
+                return "Nombre maximal de blocs de paragraphes consécutifs";
+            case "ja_JP":
+                return "連続段落ブロックの最大数";
+            case "zh_CHT":
+                return "最大連續段落塊數量";
+            case "it_IT":
+                return "Numero massimo di blocchi di paragrafi consecutivi";
+
+            default:
+                return "Maximum consecutive paragraph block count";
+        }
+    }
+    public get 最大节点数量() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "最大节点数量";
+            case "es_ES":
+                return "Cantidad máxima de nodos";
+            case "fr_FR":
+                return "Nombre maximal de nœuds";
+            case "ja_JP":
+                return "ノードの最大数";
+            case "zh_CHT":
+                return "最大節點數量";
+            case "it_IT":
+                return "Numero massimo di nodi";
+
+            default:
+                return "Maximum node count";
+        }
+    }
+    public get 定位到图中的节点() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "定位到图中节点";
+            case "es_ES":
+                return "Ir al nodo en la gráfica";
+            case "fr_FR":
+                return "Aller au nœud dans le graphique";
+            case "ja_JP":
+                return "グラフ内のノードに移動";
+            case "zh_CHT":
+                return "定位到圖中節點";
+            case "it_IT":
+                return "Vai al nodo nel grafico";
+
+            default:
+                return "Go to node in graph";
+        }
+    }
+    // graphmark 期2：块级标记（右键/⌘⌥⇧M toggle + 正文左边条）
+    public get 标记此块() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "标记此块";
+            case "es_ES":
+                return "Marcar este bloque";
+            case "fr_FR":
+                return "Marquer ce bloc";
+            case "ja_JP":
+                return "このブロックをマーク";
+            case "zh_CHT":
+                return "標記此塊";
+            case "it_IT":
+                return "Contrassegna questo blocco";
+
+            default:
+                return "Mark this block";
+        }
+    }
+    public get 已标记此块() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "已标记此块";
+            case "es_ES":
+                return "Bloque marcado";
+            case "fr_FR":
+                return "Bloc marqué";
+            case "ja_JP":
+                return "ブロックをマークしました";
+            case "zh_CHT":
+                return "已標記此塊";
+            case "it_IT":
+                return "Blocco contrassegnato";
+
+            default:
+                return "Block marked";
+        }
+    }
+    public get 已取消标记此块() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "已取消标记";
+            case "es_ES":
+                return "Marca eliminada";
+            case "fr_FR":
+                return "Marque retirée";
+            case "ja_JP":
+                return "マークを解除しました";
+            case "zh_CHT":
+                return "已取消標記";
+            case "it_IT":
+                return "Contrassegno rimosso";
+
+            default:
+                return "Mark removed";
+        }
+    }
+    public get 标记此块失败() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "标记失败，请重试";
+            case "es_ES":
+                return "Error al marcar, reintenta";
+            case "fr_FR":
+                return "Échec du marquage, réessayez";
+            case "ja_JP":
+                return "マークに失敗しました。再試行してください";
+            case "zh_CHT":
+                return "標記失敗，請重試";
+            case "it_IT":
+                return "Contrassegnazione non riuscita, riprova";
+
+            default:
+                return "Failed to mark, please retry";
+        }
+    }
+    public get 标记左边条() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "标记块正文左边条";
+            case "es_ES":
+                return "Barra izquierda de bloques marcados";
+            case "fr_FR":
+                return "Barre gauche des blocs marqués";
+            case "ja_JP":
+                return "マークブロックの左バー";
+            case "zh_CHT":
+                return "標記塊正文左邊條";
+            case "it_IT":
+                return "Barra sinistra dei blocchi contrassegnati";
+
+            default:
+                return "Left bar on marked blocks";
+        }
+    }
+    // graphmark 期3：标记感知展开+只看标记档（●N 角标 aria/空态卡）
+    public get 处标记() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "%1 处标记，点击显示或收起";
+            case "es_ES":
+                return "%1 marcas, clic para mostrar u ocultar";
+            case "fr_FR":
+                return "%1 marques, cliquer pour afficher ou masquer";
+            case "ja_JP":
+                return "%1 件のマーク、クリックで表示切替";
+            case "zh_CHT":
+                return "%1 處標記，點擊顯示或收起";
+            case "it_IT":
+                return "%1 contrassegni, clic per mostrare o nascondere";
+
+            default:
+                return "%1 marks, click to show or hide";
+        }
+    }
+    public get 还没有标记() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "还没有标记";
+            case "es_ES":
+                return "Aún no hay marcas";
+            case "fr_FR":
+                return "Aucune marque pour le moment";
+            case "ja_JP":
+                return "まだマークがありません";
+            case "zh_CHT":
+                return "還沒有標記";
+            case "it_IT":
+                return "Nessun contrassegno ancora";
+
+            default:
+                return "No marks yet";
+        }
+    }
+    public get 知识地图空态正文() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "选中文字划线或加背景色后，这里会成为你的知识地图";
+            case "es_ES":
+                return "Resalta texto o añade color de fondo y esto se convertirá en tu mapa de conocimiento";
+            case "fr_FR":
+                return "Surlignez du texte ou ajoutez une couleur de fond, et ceci deviendra votre carte de connaissances";
+            case "ja_JP":
+                return "テキストをマークしたり背景色を付けたりすると、ここが知識マップになります";
+            case "zh_CHT":
+                return "選取文字劃線或加背景色後，這裡會成為你的知識地圖";
+            case "it_IT":
+                return "Evidenzia il testo o aggiungi un colore di sfondo e questo diventerà la tua mappa della conoscenza";
+
+            default:
+                return "Highlight text or add background color, and this becomes your knowledge map";
+        }
+    }
+    public get 回结构视图() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "回结构视图";
+            case "es_ES":
+                return "Volver a la vista de estructura";
+            case "fr_FR":
+                return "Retour à la vue structure";
+            case "ja_JP":
+                return "構造ビューに戻る";
+            case "zh_CHT":
+                return "回結構視圖";
+            case "it_IT":
+                return "Torna alla vista struttura";
+
+            default:
+                return "Back to structure view";
+        }
+    }
+    // graphmark 期4：聚焦模式（一跳邻域高亮+其余淡化）+ 无结构文档空态卡
+    public get 聚焦此块() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "聚焦此块";
+            case "es_ES":
+                return "Enfocar este bloque";
+            case "fr_FR":
+                return "Focaliser ce bloc";
+            case "ja_JP":
+                return "このブロックにフォーカス";
+            case "zh_CHT":
+                return "聚焦此塊";
+            case "it_IT":
+                return "Focalizza questo blocco";
+
+            default:
+                return "Focus this block";
+        }
+    }
+    public get 退出聚焦() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "退出聚焦";
+            case "es_ES":
+                return "Salir del enfoque";
+            case "fr_FR":
+                return "Quitter le focus";
+            case "ja_JP":
+                return "フォーカス解除";
+            case "zh_CHT":
+                return "退出聚焦";
+            case "it_IT":
+                return "Esci dalla messa a fuoco";
+
+            default:
+                return "Exit focus";
+        }
+    }
+    public get 聚焦光标块() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "聚焦光标块";
+            case "es_ES":
+                return "Enfocar el bloque del cursor";
+            case "fr_FR":
+                return "Focaliser le bloc du curseur";
+            case "ja_JP":
+                return "カーソルブロックにフォーカス";
+            case "zh_CHT":
+                return "聚焦游標塊";
+            case "it_IT":
+                return "Focalizza il blocco del cursore";
+
+            default:
+                return "Focus cursor block";
+        }
+    }
+    public get 方块档暂不支持聚焦() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "方块档暂不支持聚焦";
+            case "es_ES":
+                return "El modo de bloques aún no admite el enfoque";
+            case "fr_FR":
+                return "La vue blocs ne prend pas encore en charge le focus";
+            case "ja_JP":
+                return "ブロック概観ではフォーカス未対応";
+            case "zh_CHT":
+                return "方塊檔暫不支援聚焦";
+            case "it_IT":
+                return "La vista blocchi non supporta ancora la messa a fuoco";
+
+            default:
+                return "Treemap view does not support focus yet";
+        }
+    }
+    public get 已聚焦所在节点() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "已聚焦所在节点";
+            case "es_ES":
+                return "Se enfocó el nodo contenedor";
+            case "fr_FR":
+                return "Le nœud conteneur a été focalisé";
+            case "ja_JP":
+                return "含まれるノードにフォーカスしました";
+            case "zh_CHT":
+                return "已聚焦所在節點";
+            case "it_IT":
+                return "Focalizzato il nodo contenitore";
+
+            default:
+                return "Focused the containing node";
+        }
+    }
+    public get 聚焦未找到() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "聚焦未找到（图上无此块）";
+            case "es_ES":
+                return "No se encontró el objetivo de enfoque";
+            case "fr_FR":
+                return "Cible de focus introuvable";
+            case "ja_JP":
+                return "フォーカス対象が見つかりません";
+            case "zh_CHT":
+                return "聚焦未找到（圖上無此塊）";
+            case "it_IT":
+                return "Obiettivo della messa a fuoco non trovato";
+
+            default:
+                return "Focus target not found";
+        }
+    }
+    public get 无结构空态标题() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "没有标题结构";
+            case "es_ES":
+                return "Sin estructura de títulos";
+            case "fr_FR":
+                return "Pas de structure de titres";
+            case "ja_JP":
+                return "見出し構造がありません";
+            case "zh_CHT":
+                return "沒有標題結構";
+            case "it_IT":
+                return "Nessuna struttura di titoli";
+
+            default:
+                return "No heading structure";
+        }
+    }
+    public get 无结构空态正文() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "这个文档没有标题结构，挂不出章节树。加上标题后这里就是章节树，或先用其他视图浏览。";
+            case "es_ES":
+                return "Este documento no tiene títulos, así que no hay árbol de capítulos. Añade títulos o usa otra vista.";
+            case "fr_FR":
+                return "Ce document n'a pas de titres : aucun arbre de chapitres possible. Ajoutez des titres ou utilisez une autre vue.";
+            case "ja_JP":
+                return "この文書には見出しがなく、章ツリーを表示できません。見出しを追加するか、他のビューでご覧ください。";
+            case "zh_CHT":
+                return "這個文件沒有標題結構，掛不出章節樹。加上標題後這裡就是章節樹，或先用其他視圖瀏覽。";
+            case "it_IT":
+                return "Questo documento non ha titoli, quindi non c'è un albero di capitoli. Aggiungi titoli o usa un'altra vista.";
+
+            default:
+                return "This document has no headings, so there is no chapter tree. Add headings or browse with another view.";
+        }
+    }
+    public get 方块总览看段落分布() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "方块总览看段落分布";
+            case "es_ES":
+                return "Ver párrafos en el mapa de bloques";
+            case "fr_FR":
+                return "Voir les paragraphes dans la vue blocs";
+            case "ja_JP":
+                return "ブロック概観で段落を見る";
+            case "zh_CHT":
+                return "方塊總覽看段落分佈";
+            case "it_IT":
+                return "Vedi i paragrafi nella vista blocchi";
+
+            default:
+                return "See paragraphs in block overview";
+        }
+    }
+    public get 只看标记处数() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "只看标记（%1 处）";
+            case "es_ES":
+                return "Solo marcas (%1)";
+            case "fr_FR":
+                return "Marques uniquement (%1)";
+            case "ja_JP":
+                return "マークのみ（%1 件）";
+            case "zh_CHT":
+                return "只看標記（%1 處）";
+            case "it_IT":
+                return "Solo contrassegni (%1)";
+
+            default:
+                return "Marks only (%1)";
+        }
+    }
+    public get 知道了() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "知道了";
+            case "es_ES":
+                return "Entendido";
+            case "fr_FR":
+                return "Compris";
+            case "ja_JP":
+                return "わかりました";
+            case "zh_CHT":
+                return "知道了";
+            case "it_IT":
+                return "Capito";
+
+            default:
+                return "Got it";
+        }
+    }
+    public get 关联两个块选择() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "关联两个块-选择";
+            case "es_ES":
+                return "Asociar dos bloques - Selección";
+            case "fr_FR":
+                return "Associer deux blocs - Sélection";
+            case "ja_JP":
+                return "２つのブロックを関連付ける - 選択";
+            case "zh_CHT":
+                return "關聯兩個區塊 - 選擇";
+            case "it_IT":
+                return "Associa due blocchi - Selezione";
+
+            default:
+                return "Associate two blocks - Selection";
+        }
+    }
+    public get 关联两个块创建() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "关联两个块-创建";
+            case "es_ES":
+                return "Asociar dos bloques - Creación";
+            case "fr_FR":
+                return "Associer deux blocs - Création";
+            case "ja_JP":
+                return "２つのブロックを関連付ける - 作成";
+            case "zh_CHT":
+                return "關聯兩個區塊 - 建立";
+            case "it_IT":
+                return "Associa due blocchi - Creazione";
+
+            default:
+                return "Associate two blocks - Creation";
+        }
+    }
+    public get 互相插入引用于下方选择() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "互相插入引用于下方-选择";
+            case "es_ES":
+                return "Insertar referencias mutuamente debajo - Seleccionar";
+            case "fr_FR":
+                return "Insérer des références mutuelles ci-dessous - Sélectionner";
+            case "ja_JP":
+                return "相互参照を下に挿入 - 選択";
+            case "zh_CHT":
+                return "互相插入引用于下方-選擇";
+            case "it_IT":
+                return "Inserisci riferimenti reciproci sotto - Seleziona";
+
+            default:
+                return "Insert references mutually below - Select";
+        }
+    }
+    public get 互相插入引用于下方创建() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "互相插入引用于下方-创建";
+            case "es_ES":
+                return "Insertar referencias mutuamente debajo - Crear";
+            case "fr_FR":
+                return "Insérer des références mutuelles ci-dessous - Créer";
+            case "ja_JP":
+                return "相互参照を下に挿入 - 作成";
+            case "zh_CHT":
+                return "互相插入引用于下方-創建";
+            case "it_IT":
+                return "Inserisci riferimenti reciproci sotto - Crea";
+
+            default:
+                return "Insert references mutually below - Create";
+        }
+    }
+    // 「切换横向与纵向」随期7 四态形态循环钮退役删除；其后续文案「切换布局形态」
+    // 亦随 graphrelayout □2 恒 LR（2026-09-20）退役
+    public get 删除所选段落() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "用选中段落创建文档后，删除所选段落";
+            case "es_ES":
+                return "Después de crear un documento con los párrafos seleccionados, eliminar los párrafos seleccionados";
+            case "fr_FR":
+                return "Après avoir créé un document avec les paragraphes sélectionnés, supprimer les paragraphes sélectionnés";
+            case "ja_JP":
+                return "選択した段落でドキュメントを作成した後、選択した段落を削除する";
+            case "zh_CHT":
+                return "用選中段落創建文檔後，刪除所選段落";
+            case "it_IT":
+                return "Dopo aver creato un documento con i paragrafi selezionati, eliminare i paragrafi selezionati";
+
+            default:
+                return "After creating a document with the selected paragraphs, delete the selected paragraphs";
+        }
+    }
+    public get 极简无序列表样式() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "极简无序列表样式";
+            case "es_ES":
+                return "Estilo de lista desordenada minimalista";
+            case "fr_FR":
+                return "Style de liste non ordonnée minimaliste";
+            case "ja_JP":
+                return "ミニマルな無順序リストスタイル";
+            case "zh_CHT":
+                return "極簡無序列表樣式";
+            case "it_IT":
+                return "Stile di elenco non ordinato minimalista";
+
+            default:
+                return "Minimalist unordered list style";
+        }
+    }
+
+    // ---- □4 底部反链面板视觉翻新（spec §7.1，docs/tomato-bk-bottom-visual-spec.md）----
+
+    public get 展开全文() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "展开全文";
+            case "zh_CHT":
+                return "展開全文";
+            case "ja_JP":
+                return "全文を表示";
+            case "es_ES":
+                return "Expandir";
+            case "fr_FR":
+                return "Déplier";
+
+            default:
+                return "Expand";
+        }
+    }
+    public get 收起() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "收起";
+            case "zh_CHT":
+                return "收起";
+            case "ja_JP":
+                return "折りたたむ";
+            case "es_ES":
+                return "Contraer";
+            case "fr_FR":
+                return "Replier";
+
+            default:
+                return "Collapse";
+        }
+    }
+    public get 偏好设置() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "偏好设置";
+            case "zh_CHT":
+                return "偏好設定";
+            case "ja_JP":
+                return "環境設定";
+            case "es_ES":
+                return "Preferencias";
+            case "fr_FR":
+                return "Préférences";
+
+            default:
+                return "Preferences";
+        }
+    }
+    public get 卡片操作() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "卡片操作";
+            case "zh_CHT":
+                return "卡片操作";
+            case "ja_JP":
+                return "カード操作";
+            case "es_ES":
+                return "Acciones de tarjeta";
+            case "fr_FR":
+                return "Actions de carte";
+
+            default:
+                return "Card actions";
+        }
+    }
+    public get 自动刷新() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "自动刷新";
+            case "zh_CHT":
+                return "自動刷新";
+            case "ja_JP":
+                return "自動更新";
+            case "es_ES":
+                return "Actualización automática";
+            case "fr_FR":
+                return "Actualisation automatique";
+
+            default:
+                return "Auto refresh";
+        }
+    }
+    public get 全局搜索占位() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "搜索反链/提及（重查数据源，Enter）";
+            case "zh_CHT":
+                return "搜尋反鏈/提及（重新查詢資料來源，Enter）";
+            case "ja_JP":
+                return "バックリンク・言及を検索（再検索、Enter）";
+            case "es_ES":
+                return "Buscar referencias y menciones (reconsulta, Enter)";
+            case "fr_FR":
+                return "Rechercher réf. et mentions (relance la requête, Entrée)";
+
+            default:
+                return "Search refs & mentions (re-queries, Enter)";
+        }
+    }
+    public get 本地过滤占位() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "过滤下方卡片（仅筛选已显示，Enter）";
+            case "zh_CHT":
+                return "過濾下方卡片（僅篩選已顯示，Enter）";
+            case "ja_JP":
+                return "表示中のカードを絞り込む（表示のみ、Enter）";
+            case "es_ES":
+                return "Filtrar tarjetas mostradas (solo visualización, Enter)";
+            case "fr_FR":
+                return "Filtrer les cartes affichées (affichage seul, Entrée)";
+
+            default:
+                return "Filter shown cards (display-only, Enter)";
+        }
+    }
+    public get 点击应用查询() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "点击应用查询";
+            case "zh_CHT":
+                return "點擊應用查詢";
+            case "ja_JP":
+                return "クリックで適用";
+            case "es_ES":
+                return "Haz clic para aplicar";
+            case "fr_FR":
+                return "Cliquer pour appliquer";
+
+            default:
+                return "Click to apply";
+        }
+    }
+    public get 删除此查询() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "删除此查询";
+            case "zh_CHT":
+                return "刪除此查詢";
+            case "ja_JP":
+                return "このクエリを削除";
+            case "es_ES":
+                return "Eliminar esta consulta";
+            case "fr_FR":
+                return "Supprimer cette requête";
+
+            default:
+                return "Delete this query";
+        }
+    }
+    public get 组合点击提示() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "点击打开 · Alt=或 Shift=非 Ctrl=与";
+            case "zh_CHT":
+                return "點擊打開 · Alt=或 Shift=非 Ctrl=與";
+            case "ja_JP":
+                return "クリックで開く · Alt=OR Shift=NOT Ctrl=AND";
+            case "es_ES":
+                return "Clic para abrir · Alt=O Shift=NO Ctrl=Y";
+            case "fr_FR":
+                return "Cliquer pour ouvrir · Alt=OU Shift=NON Ctrl=ET";
+
+            default:
+                return "Click to open · Alt=OR Shift=NOT Ctrl=AND";
+        }
+    }
+    public get 路径段显示() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "路径段显示";
+            case "zh_CHT":
+                return "路徑段顯示";
+            case "ja_JP":
+                return "パスセグメントを表示";
+            case "es_ES":
+                return "Mostrar segmentos de ruta";
+            case "fr_FR":
+                return "Afficher les segments de chemin";
+
+            default:
+                return "Show path segments";
+        }
+    }
+    public get 列数() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "列数（留空=自动）";
+            case "zh_CHT":
+                return "列數（留空=自動）";
+            case "ja_JP":
+                return "列数（空欄=自動）";
+            case "es_ES":
+                return "Columnas (vacío = automático)";
+            case "fr_FR":
+                return "Colonnes (vide = auto)";
+
+            default:
+                return "Columns (blank = auto)";
+        }
+    }
+    public get 预览高度() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "预览高度";
+            case "zh_CHT":
+                return "預覽高度";
+            case "ja_JP":
+                return "プレビュー高さ";
+            case "es_ES":
+                return "Altura de vista previa";
+            case "fr_FR":
+                return "Hauteur d'aperçu";
+
+            default:
+                return "Preview height";
+        }
+    }
+    public get 范围() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "范围";
+            case "zh_CHT":
+                return "範圍";
+            case "ja_JP":
+                return "範囲";
+            case "es_ES":
+                return "Alcance";
+            case "fr_FR":
+                return "Portée";
+
+            default:
+                return "Scope";
+        }
+    }
+    public get 布局() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "布局";
+            case "zh_CHT":
+                return "佈局";
+            case "ja_JP":
+                return "レイアウト";
+            case "es_ES":
+                return "Diseño";
+            case "fr_FR":
+                return "Disposition";
+
+            default:
+                return "Layout";
+        }
+    }
+    public get 显示() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "显示";
+            case "zh_CHT":
+                return "顯示";
+            case "ja_JP":
+                return "表示";
+            case "es_ES":
+                return "Pantalla";
+            case "fr_FR":
+                return "Affichage";
+
+            default:
+                return "Display";
+        }
+    }
+    public get 概念() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "概念";
+            case "zh_CHT":
+                return "概念";
+            case "ja_JP":
+                return "概念";
+            case "es_ES":
+                return "Conceptos";
+            case "fr_FR":
+                return "Concepts";
+
+            default:
+                return "Concepts";
+        }
+    }
+    public get 排序() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "排序";
+            case "zh_CHT":
+                return "排序";
+            case "ja_JP":
+                return "並べ替え";
+            case "es_ES":
+                return "Ordenar";
+            case "fr_FR":
+                return "Trier";
+
+            default:
+                return "Sort";
+        }
+    }
+    // □4 面板宽度切换按钮（2026-09-02）：aria-label 描述点击后的动作语义
+    public get 宽度跟随编辑器() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "宽度：跟随编辑器";
+            case "zh_CHT":
+                return "寬度：跟隨編輯器";
+            case "ja_JP":
+                return "幅：エディタに合わせる";
+            case "es_ES":
+                return "Ancho: ajustar al editor";
+            case "fr_FR":
+                return "Largeur : aligner sur l'éditeur";
+
+            default:
+                return "Width: fit editor";
+        }
+    }
+    public get 宽度全屏展开() {
+        switch (this.lang) {
+            case "zh_CN":
+                return "宽度：全屏展开";
+            case "zh_CHT":
+                return "寬度：全屏展開";
+            case "ja_JP":
+                return "幅：全幅に広げる";
+            case "es_ES":
+                return "Ancho: pantalla completa";
+            case "fr_FR":
+                return "Largeur : pleine largeur";
+
+            default:
+                return "Width: full";
+        }
+    }
+}

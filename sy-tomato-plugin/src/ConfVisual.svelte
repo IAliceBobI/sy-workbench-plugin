@@ -1,0 +1,284 @@
+<script lang="ts">
+    // 设置域组件（□2 设置页重划）：可视化——思维导线（原 ConfMindWire 全部）+ 块关系图
+    // （自 ConfClock.svelte 块关系图段整块迁入）。各卡内部一行不动，共享样式见 IndexConf.css。
+    import TomatoVIP from "./TomatoVIP.svelte";
+    import {
+        mindWireBlockWire,
+        mindWireCheckbox,
+        mindWireColorfull,
+        mindWireDocMenu,
+        mindWireDynamicLine,
+        mindWireGlobalMenu,
+        mindWireHoverBar,
+        mindWireLine,
+        mindWireStarRefOnly,
+        mindWireWidth,
+        mindWireWordWire,
+        graphAddTopbarIcon,
+        graphBoxCheckbox,
+        graph_float,
+        graphFloatJumpClose,
+        graphDefaultExpandLevel,
+        graphHideStructEdges,
+        graphShowAllViewModes,
+        graphShowNumbers,
+        graphBlockMarkBar,
+        graph标记此块Menu,
+        graphMaxAllBlocks,
+        graphMaxPBlocks,
+        graph定位到图中的节点Menu,
+        graph打开块关系图Menu,
+    } from "./libs/stores";
+    import { siyuan } from "./libs/siyuanApi";
+    import { lastVerifyResult } from "./libs/user";
+    import { MindWire启用或禁用思维导线, MindWire启用或禁用文档思维导线, MindWire划词连线 } from "./MindWire";
+    import { GraphBox定位到图中的节点, GraphBox打开块关系图, GraphBox标记此块 } from "./GraphBox";
+    import { GraphFloatToggle, GraphFloatBallToggle } from "./GraphFloatBox";
+    import { tomatoI18n } from "./tomatoI18n";
+    import HotkeyCap from "./HotkeyCap.svelte";
+    import ConfHelpIcon from "./ConfHelpIcon.svelte";
+
+    let { codeValid }: { codeValid: boolean } = $props();
+    let codeNotValid = $derived(!codeValid);
+
+    // 线型三档（spec §4.8 行 6）：实线须 Pro 生效才算选中态——非 Pro 存量 line=true 时
+    // 渲染端走虚线/流动分支（MindWire.ts 实线判定带 lastVerifyResult），UI 与渲染同口径
+    type LineStyle = "dash" | "flow" | "solid";
+    let solidEffective = $derived($mindWireLine && lastVerifyResult());
+    let lineStyle: LineStyle = $derived(solidEffective ? "solid" : $mindWireDynamicLine ? "flow" : "dash");
+    function pickLineStyle(s: LineStyle) {
+        if (s === "solid" && !lastVerifyResult()) {
+            siyuan.pushMsg(tomatoI18n.Pro功能尾注); // 置灰可点+解释（spec §4.8 行 6 口径）
+            return;
+        }
+        $mindWireLine = s === "solid";
+        $mindWireDynamicLine = s === "flow";
+    }
+
+    // 关系色板图例（spec §4.8 行 9）：色 token 与 MindWire.ts RELATION_COLOR 同源，仅设置内查色
+    let relationLegend = $derived([
+        { color: "var(--b3-font-color5)", label: tomatoI18n.关联 },
+        { color: "var(--b3-font-color6)", label: tomatoI18n.首尾呼应 },
+        { color: "var(--b3-font-color8)", label: tomatoI18n.伏笔 },
+        { color: "var(--b3-font-color9)", label: tomatoI18n.比喻 },
+        { color: "var(--b3-font-color10)", label: tomatoI18n.对比 },
+        { color: "var(--b3-font-color11)", label: tomatoI18n.因果 },
+    ]);
+</script>
+
+<div class="settingBox">
+    <div class="section-title">
+        <input type="checkbox" class="b3-switch" bind:checked={$mindWireCheckbox} />
+        {tomatoI18n.思维导线}
+        <ConfHelpIcon token="QNArdYNuuoH34qxGHdCcHmE6nic" />
+    </div>
+    {#if $mindWireCheckbox}
+        <div>
+            {tomatoI18n.思维导线帮助}
+        </div>
+        <div>{tomatoI18n.menu不显示菜单不影响快捷键的使用}</div>
+        <div>
+            <input type="checkbox" class="b3-switch" bind:checked={$mindWireGlobalMenu} />
+            {tomatoI18n.menu添加右键菜单}:
+            {MindWire启用或禁用思维导线.langText()}
+            <HotkeyCap hk={MindWire启用或禁用思维导线} pluginName="sy-tomato-plugin"></HotkeyCap>
+        </div>
+        <div>
+            <input type="checkbox" class="b3-switch" bind:checked={$mindWireDocMenu} />
+            {tomatoI18n.menu添加右键菜单}:
+            {MindWire启用或禁用文档思维导线.langText()}
+            <HotkeyCap hk={MindWire启用或禁用文档思维导线} pluginName="sy-tomato-plugin"></HotkeyCap>
+        </div>
+        <div>
+            <input type="checkbox" class="b3-switch" bind:checked={$mindWireStarRefOnly} />
+            {tomatoI18n.只关联星号引用}
+        </div>
+        <div>
+            <input type="checkbox" class="b3-switch" bind:checked={$mindWireBlockWire} />
+            {tomatoI18n.块级连线}
+        </div>
+        <div>
+            <input type="checkbox" class="b3-switch" bind:checked={$mindWireWordWire} />
+            {tomatoI18n.划词连线}
+            <HotkeyCap hk={MindWire划词连线} pluginName="sy-tomato-plugin"></HotkeyCap>
+        </div>
+        <div>
+            <input type="checkbox" class="b3-switch" bind:checked={$mindWireHoverBar} />
+            {tomatoI18n.悬停显示选色条}
+        </div>
+        <div>
+            {tomatoI18n.线型}
+            <div class="tomato-chip-row">
+                <button
+                    class="tomato-chip"
+                    class:tomato-chip--selected={lineStyle === "dash"}
+                    onclick={() => pickLineStyle("dash")}>{tomatoI18n.虚线}</button
+                >
+                <button
+                    class="tomato-chip"
+                    class:tomato-chip--selected={lineStyle === "flow"}
+                    onclick={() => pickLineStyle("flow")}>{tomatoI18n.流动}</button
+                >
+                <button
+                    class="tomato-chip"
+                    class:tomato-chip--selected={lineStyle === "solid"}
+                    class:tomato-chip--disabled={!codeValid}
+                    onclick={() => pickLineStyle("solid")}>{tomatoI18n.实线}<TomatoVIP {codeValid}></TomatoVIP></button
+                >
+            </div>
+        </div>
+        <div>
+            <input class="b3-text-field" type="number" min="0.1" bind:value={$mindWireWidth} />
+            {tomatoI18n.线条宽度}
+            <span class="helpText">{tomatoI18n.线宽建议}</span>
+        </div>
+        <div class:codeNotValid>
+            <input
+                disabled={codeNotValid}
+                type="checkbox"
+                class="b3-switch"
+                bind:checked={$mindWireColorfull}
+            />
+            {tomatoI18n.使用多种颜色}<TomatoVIP {codeValid}></TomatoVIP>
+            <div class="helpText">{tomatoI18n.关系配色帮助}</div>
+            {#if $mindWireColorfull}
+                <div class="tomato-mind-wire-legend" aria-label={tomatoI18n.关系配色帮助}>
+                    {#each relationLegend as r (r.color)}
+                        <span class="tomato-mind-wire-legend-item">
+                            <span class="tomato-mind-wire-legend-dot" style="background:{r.color}"></span>
+                            {r.label}
+                        </span>
+                    {/each}
+                </div>
+            {/if}
+        </div>
+    {/if}
+</div>
+<!-- 块关系图 -->
+<div class="settingBox">
+    <div class="section-title">
+        <input type="checkbox" class="b3-switch" bind:checked={$graphBoxCheckbox} />
+        {tomatoI18n.块关系图}
+        <ConfHelpIcon token="UIRudM9EQoyri2x4okkcjbGZnug" />
+    </div>
+    {#if $graphBoxCheckbox}
+        <div>{tomatoI18n.menu不显示菜单不影响快捷键的使用}</div>
+        <div>
+            <input type="checkbox" class="b3-switch" bind:checked={$graph定位到图中的节点Menu} />
+            {tomatoI18n.menu添加右键菜单}: {GraphBox定位到图中的节点.langText()}
+            <HotkeyCap hk={GraphBox定位到图中的节点} pluginName="sy-tomato-plugin"></HotkeyCap>
+        </div>
+        <div>
+            <input type="checkbox" class="b3-switch" bind:checked={$graph打开块关系图Menu} />
+            {tomatoI18n.menu添加右键菜单}: {GraphBox打开块关系图.langText()}
+            <HotkeyCap hk={GraphBox打开块关系图} pluginName="sy-tomato-plugin"></HotkeyCap>
+        </div>
+        <div>
+            <input type="checkbox" class="b3-switch" bind:checked={$graph标记此块Menu} />
+            {tomatoI18n.menu添加右键菜单}: {GraphBox标记此块.langText()}
+            <HotkeyCap hk={GraphBox标记此块} pluginName="sy-tomato-plugin"></HotkeyCap>
+        </div>
+        <div>
+            <input type="checkbox" class="b3-switch" bind:checked={$graphBlockMarkBar} />
+            {tomatoI18n.标记左边条}
+        </div>
+        <div>
+            <input type="checkbox" class="b3-switch" bind:checked={$graphAddTopbarIcon} />
+            {tomatoI18n.添加顶栏图标}
+        </div>
+        <!-- graphfloat □3：悬浮图开关（球+浮窗；默认开，桌面端生效）。gfloatnav：开关行合挂
+             开合键帽（配置跟功能走——悬浮反链双键帽在反链域同款对称）；跳转收起=双击/
+             Alt点/右键跳转/树双击等「跳去读」动作后自动收面板（悬浮图当大纲用，默认开） -->
+        <div>
+            <input type="checkbox" class="b3-switch" bind:checked={$graph_float} />
+            {tomatoI18n.悬浮图}
+            <HotkeyCap hk={GraphFloatToggle} pluginName="sy-tomato-plugin"></HotkeyCap>
+            <span class="ft__on-surface ft__small">{tomatoI18n.悬浮图说明}</span>
+        </div>
+        <div>
+            <input type="checkbox" class="b3-switch" bind:checked={$graphFloatJumpClose} />
+            {tomatoI18n.跳转后收起悬浮图}
+            <span class="ft__on-surface ft__small">{tomatoI18n.跳转后收起悬浮图说明}</span>
+        </div>
+        <div>
+            {GraphFloatBallToggle.langText()}
+            <HotkeyCap hk={GraphFloatBallToggle} pluginName="sy-tomato-plugin"></HotkeyCap>
+        </div>
+        <div>
+            <input class="b3-text-field" bind:value={$graphMaxPBlocks} />
+            {tomatoI18n.最大连续段落块数量}
+        </div>
+
+        <div>
+            <input class="b3-text-field" bind:value={$graphMaxAllBlocks} />
+            {tomatoI18n.最大节点数量}
+        </div>
+        <div>
+            <!-- graphbox 期2：折叠机制默认展开层级（无持久化折叠态的文档首次打开按此推导；toggle 过的文档以 custom-graph-collapsed 为准）。
+                 graphmind □2：新默认 headings=展开到文档最深标题级（脑图标题骨架）。
+                 graphmind □4：口径=「显示到第 N 级标题」（1..6；旧口径值 N 实显 N-1 级已迁移，见 index.ts 装载段）。
+                 graphrelayout □7：新默认 auto=自适应最高标题级（有 h1 显示到 h1、只有 h2 显示到 h2）；
+                 存量显式档（headings/1..6/all）尊重不迁移 -->
+            <select class="b3-select" bind:value={$graphDefaultExpandLevel}>
+                <option value="auto">{tomatoI18n.自动}</option>
+                <option value="headings">{tomatoI18n.展开到标题层}</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="all">{tomatoI18n.全部展开}</option>
+            </select>
+            {tomatoI18n.默认展开层级}
+        </div>
+        <div>
+            <input type="checkbox" class="b3-switch" bind:checked={$graphHideStructEdges} />
+            {tomatoI18n.隐藏结构连线}
+        </div>
+        <div>
+            <input type="checkbox" class="b3-switch" bind:checked={$graphShowNumbers} />
+            章节自动编号（结构视图标题前缀 1 / 1.1）
+        </div>
+        <!-- graphmind □6（共识#1）视图收敛：主界面默认只出结构/只看标记两档；开启后工具栏
+             回显「方块总览/显示全部块」入口（即时热更）。旧文档存档档位不受影响——存过
+             full/treemap 的文档打开时会自动视为已开设置 -->
+        <div>
+            <input type="checkbox" class="b3-switch" bind:checked={$graphShowAllViewModes} />
+            {tomatoI18n.显示全部视图档位}
+            <span class="ft__on-surface ft__small">{tomatoI18n.显示全部视图档位说明}</span>
+        </div>
+        <div>
+            {@html tomatoI18n.块关系图帮助}
+        </div>
+    {/if}
+</div>
+
+<style>
+    /* 关系色板图例（spec §4.8 行 9）：只读 legend，色 token 与渲染层 RELATION_COLOR 同源 */
+    .tomato-mind-wire-legend {
+        display: flex;
+        flex-wrap: wrap;
+        column-gap: 10px;
+        row-gap: 4px;
+        margin-top: 4px;
+    }
+    .tomato-mind-wire-legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--b3-theme-on-surface-light, var(--b3-theme-on-surface));
+    }
+    .tomato-mind-wire-legend-dot {
+        flex: none;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+    }
+    /* 线型 chip 里的 VIP 徽标与档名拉开间距（chip 24px 行高内 14px 徽标贴字会糊） */
+    .tomato-chip :global(.tomato-vip-tag) {
+        margin-left: 4px;
+    }
+</style>

@@ -1,0 +1,450 @@
+/* remind □1：块提醒图标（protyle-attr 官方同构）+ popover 面板。
+   全局注入样式（纯 DOM 注入非 Svelte 挂载——scoped CSS 剪运行时挂的类须 :global 的坑，独立文件规避）。
+   平铺选择器（项目 css 惯例，无嵌套语法依赖）。 */
+
+/* 带提醒的块的属性行常显（官方默认 opacity:0 hover/设置才显——「时间平铺常显」拍板） */
+.protyle-attr:has(> .protyle-attr--remind) {
+    opacity: 1;
+}
+
+/* 官方 protyle-attr--name 同构：12px 图标+文字；点击开面板 */
+.protyle-attr--remind {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.protyle-attr--remind svg {
+    height: 12px;
+    width: 12px;
+    margin: 2px 2px 2px 0;
+}
+
+.protyle-attr--remind .pj-remind-at {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--b3-theme-on-surface);
+    white-space: nowrap;
+}
+
+.protyle-attr--remind:hover,
+.protyle-attr--remind:hover .pj-remind-at {
+    color: var(--b3-theme-on-background);
+}
+
+/* 到期红态（当天或已过）：主题错误色（明暗各自变量） */
+.protyle-attr--remind--due svg,
+.protyle-attr--remind--due .pj-remind-at {
+    color: var(--b3-card-error-color, var(--b3-theme-error));
+}
+
+/* tb2 H2 同步徽标（时间轴槽徽标同视觉的两态直显）：已同步=绿描边浅底；未同步=灰描边 */
+.pj-remind-sync {
+    margin-left: 6px; /* vision ⑧：2px 贴字——时间行与徽标留呼吸 */
+    font-size: 11px;
+    line-height: 1.4;
+    padding: 0 3px;
+    border-radius: 3px;
+    color: var(--b3-theme-on-surface);
+    border: 1px solid var(--b3-border-color);
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.pj-remind-sync--on {
+    /* P2（H2 批）：后备值家族性偏浅（3.5:1 低于 AA）——与日历槽徽标同步改深一档 */
+    color: var(--b3-card-success-color, #1d7a33);
+    border-color: color-mix(in srgb, var(--b3-card-success-color, #1d7a33) 40%, transparent);
+    background-color: color-mix(in srgb, var(--b3-card-success-color, #1d7a33) 12%, transparent);
+}
+
+/* popover 面板（自建浮层，z 同自建 tooltip 档 1000；host 由 panel.ts 定位） */
+.pj-remind-popover {
+    position: fixed;
+    z-index: 1000;
+    background-color: var(--b3-theme-surface);
+    border-radius: var(--b3-border-radius-b);
+    box-shadow: var(--b3-dialog-shadow, 0 12px 32px 4px rgb(0 0 0 / 12%), 0 2px 8px rgb(0 0 0 / 8%));
+    padding: 8px;
+    min-width: 230px;
+}
+
+.pj-remind-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pj-remind-panel__title {
+    font-size: 12px;
+    color: var(--b3-theme-on-surface);
+    line-height: 16px;
+}
+
+.pj-remind-panel__input {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 13px;
+    padding: 4px 8px;
+}
+
+/* □16 时间输入字段标签（vision P1-1：两框零指认只能靠排除法——每框上方 12px 标签） */
+.pj-remind-panel__fieldlabel {
+    font-size: 12px;
+    color: var(--b3-theme-on-surface);
+    line-height: 16px;
+    margin-bottom: -6px; /* 收窄与输入框的 gap（8px 布局间隙对 12px 标签过大） */
+}
+
+/* □16 结束时间 helper（框下灰字）；12px 对齐思源控件族最小字号（vision P2-1） */
+.pj-remind-panel__endlabel {
+    font-size: 12px;
+    color: var(--b3-theme-on-surface);
+    line-height: 16px;
+    margin-top: -6px; /* 收窄与输入框的 gap（8px 布局间隙对小字过大） */
+}
+
+/* □2 循环位：select 全宽 + 条件参数行（周几 chips/数字输入+单位） */
+.pj-remind-panel__repeat {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 13px;
+    padding: 4px 8px;
+}
+
+.pj-remind-panel__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.pj-remind-panel__chip {
+    min-width: 30px;
+    padding: 2px 6px;
+    height: 24px;
+    font-size: 12px;
+    line-height: 18px;
+    /* ⚠siyuan 的 .b3-button 基类默认=主色实心（vision P0-1 实锤：未选中也全蓝与选中不可辨）——
+       未选中态显式弱化为浅底主色字，选中态回基类实心 */
+    background-color: var(--b3-theme-primary-lightest);
+    color: var(--b3-theme-primary);
+}
+
+.pj-remind-panel__param {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pj-remind-panel__num {
+    width: 4.5em;
+    box-sizing: border-box;
+    font-size: 13px;
+    padding: 4px 8px;
+}
+
+.pj-remind-panel__unit {
+    font-size: 12px;
+    color: var(--b3-theme-on-surface);
+    line-height: 16px;
+}
+
+.pj-remind-panel__error {
+    font-size: 12px;
+    color: var(--b3-card-error-color, var(--b3-theme-error));
+}
+
+/* ── □24 段式时间控件（b3-text-field 同构外框；段=无边框小输入，聚焦段高亮） ── */
+.pj-timespinner {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--b3-border-color);
+    border-radius: var(--b3-border-radius);
+    background-color: var(--b3-theme-background);
+    padding: 2px 4px 2px 6px;
+    gap: 0;
+    min-height: 28px;
+}
+
+.pj-timespinner:focus-within {
+    border-color: var(--b3-theme-primary);
+}
+
+.pj-timespinner__seg {
+    border: none;
+    background: transparent;
+    text-align: center;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    padding: 2px 0;
+    width: 2.4ch;
+    color: var(--b3-theme-on-background);
+    border-radius: 2px;
+    box-sizing: content-box;
+}
+
+.pj-timespinner__seg--y {
+    width: 4.6ch;
+}
+
+.pj-timespinner__seg:focus {
+    background-color: var(--b3-theme-primary-lightest);
+    outline: none;
+}
+
+/* placeholder 弱一档但不穿透 AA：on-surface 直接取色（vision P1-1：on-surface-light 叠 opacity 双重弱化
+   =亮 4.35/暗 3.56 双双不过线；on-surface 亮 5.7/暗 5.29 过线且层级仍弱于正文一档） */
+.pj-timespinner__seg::placeholder {
+    color: var(--b3-theme-on-surface);
+}
+
+.pj-timespinner__sep {
+    color: var(--b3-theme-on-surface);
+    font-size: 13px;
+    line-height: 1;
+    user-select: none;
+    text-align: center;
+    width: 1.1ch;
+}
+
+/* ▲▼ 竖排（贴控件右缘；tabindex=-1 不进 tab 序——作用段=最近聚焦段保持）。
+   20×12+gap0=总高 24 ≤ 控件 28；视觉 12px 高但热区经 ::after 外扩至 16px 高
+   （vision 二轮 P1：命中区仍低于可用下限——布局受控件高约束，透明外扩不占位） */
+.pj-timespinner__btns {
+    display: flex;
+    flex-direction: column;
+    margin-left: 4px;
+    gap: 0;
+}
+
+.pj-timespinner__btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 12px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--b3-theme-on-surface);
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+/* 热区外扩（伪元素属按钮——命中即按钮）：上下各 +2px、左右各 +5px */
+.pj-timespinner__btn::after {
+    content: "";
+    position: absolute;
+    inset: -2px -5px;
+}
+
+.pj-timespinner__btn:hover {
+    background-color: var(--b3-theme-primary-lightest);
+    color: var(--b3-theme-primary);
+}
+
+.pj-timespinner__btn svg {
+    width: 8px;
+    height: 8px;
+    fill: currentColor;
+}
+
+/* 结束区标题行：标签+清空钮同一行（有值才现清空） */
+.pj-remind-panel__endhead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: -6px; /* 与 fieldlabel 同款收窄 */
+}
+
+.pj-remind-panel__endhead .pj-remind-panel__fieldlabel {
+    margin-bottom: 0;
+}
+
+.pj-remind-panel__clear {
+    border: none;
+    background: transparent;
+    padding: 0 2px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--b3-theme-on-surface);
+    cursor: pointer;
+}
+
+.pj-remind-panel__clear:hover {
+    color: var(--b3-card-error-color, var(--b3-theme-error));
+}
+
+/* 相对时长通道行：+ N 单位 设定 */
+.pj-remind-panel__rel {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pj-remind-panel__relplus {
+    font-size: 13px;
+    color: var(--b3-theme-on-surface);
+    line-height: 1;
+}
+
+.pj-remind-panel__relnum {
+    width: 5em;
+    box-sizing: border-box;
+    font-size: 13px;
+    padding: 4px 8px;
+}
+
+.pj-remind-panel__relunit {
+    flex: 1;
+    min-width: 0;
+    box-sizing: border-box;
+    font-size: 13px;
+    padding: 4px 4px 4px 8px; /* 左内边距对齐官方 b3-select 8px（vision P2-1：4px 压扁文字贴框） */
+}
+
+/* 时长摘要行（与 endlabel 同位互斥显示；12px 灰字平铺） */
+.pj-remind-panel__dur {
+    font-size: 12px;
+    color: var(--b3-theme-on-surface);
+    line-height: 16px;
+    margin-top: -6px;
+}
+
+.pj-remind-panel__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+/* 只有保存钮时右对齐（无删除钮=新设提醒场景） */
+.pj-remind-panel__row > button:only-child {
+    margin-left: auto;
+}
+
+/* 删除钮=红边文字（vision P1-1：.b3-button 基类默认主色蓝底实心，压过单类 danger；
+   提特异性接 --b3-card-error-color 保持明暗双轨红与图标/文案同源） */
+.b3-button.pj-remind-panel__danger {
+    background-color: transparent;
+    border: 1px solid var(--b3-card-error-color, var(--b3-theme-error));
+    color: var(--b3-card-error-color, var(--b3-theme-error));
+}
+
+/* dataview □7：任务块池/日期徽标（protyle-attr 官方同构——remind 徽标同族） */
+
+/* 带徽标的块的属性行常显（官方默认 opacity:0 hover 才显——徽标是常驻可点目标） */
+.protyle-attr:has(> .protyle-attr--pjpool),
+.protyle-attr:has(> .protyle-attr--pjdue) {
+    opacity: 1;
+}
+
+/* 官方 protyle-attr--name 同构：12px 文字；点击弹快捷菜单 */
+.protyle-attr--pjpool,
+.protyle-attr--pjdue {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+/* 池徽标文字前加池色圆点；徽标文字同染池色（dataview □7 外观三件：灰字改按池配色）。
+   色值单一事实源=taskBadgeMenu.ts POOL_COLORS/POOL_COLORS_DARK（AmmoQuadrantPanel
+   pool-dot 同族色单——四池性格色单事实源对齐），经注入器写的 CSS 变量桥消费：
+   --pj-badge-pool（亮）/ --pj-badge-pool-dark（暗）——暗色自动切由
+   html[data-theme-mode=dark] 分支换变量引用承担，CSS 侧不再复制色值（此前亮色四值
+   已与色单漂移）。圆点/文字 fallback=on-surface（变量缺写=旧灰态，fail-soft）。
+   ::before 必须自带 display:inline-block：内核把 .protyle-attr 子项 display 压成
+   flow-root（覆盖本文件 flex），flex 失效后伪元素退化为 inline 非替换元素——
+   width/height 不进布局、content=""=零 inline 盒，背景也不画（computed 有值≠绘制） */
+.protyle-attr--pjpool::before {
+    content: "";
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex: none;
+    margin-right: 3px;
+    background: var(--pj-badge-pool, var(--b3-theme-on-surface));
+}
+html[data-theme-mode="dark"] .protyle-attr--pjpool::before {
+    background: var(--pj-badge-pool-dark, var(--b3-theme-on-surface));
+}
+
+.protyle-attr--pjdue svg {
+    height: 12px;
+    width: 12px;
+    margin: 2px 2px 2px 0;
+}
+
+.protyle-attr--pjpool .pj-taskbadge-text,
+.protyle-attr--pjdue .pj-taskbadge-text {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--pj-badge-pool, var(--b3-theme-on-surface));
+    white-space: nowrap;
+}
+
+html[data-theme-mode="dark"] .protyle-attr--pjpool .pj-taskbadge-text {
+    color: var(--pj-badge-pool-dark, var(--b3-theme-on-surface));
+}
+
+/* 只读池色点（每日配置行——拖拽换池语义只在四象限面板，行内色点不接菜单）：
+   手型与 hover 变色一并关掉，别画一张点不动的饼 */
+.protyle-attr--pjpool[data-pj-readonly] {
+    cursor: default;
+}
+
+.protyle-attr--pjpool:not([data-pj-readonly]):hover,
+.protyle-attr--pjpool:not([data-pj-readonly]):hover .pj-taskbadge-text,
+.protyle-attr--pjdue:hover,
+.protyle-attr--pjdue:hover .pj-taskbadge-text {
+    color: var(--b3-theme-on-background);
+}
+
+/* ── 「更多…」任务属性面板（popover 内容；外壳=pj-remind-popover 复用同 chrome） ── */
+
+.pj-taskprops {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.pj-taskprops__title {
+    font-size: 12px;
+    color: var(--b3-theme-on-surface);
+    line-height: 16px;
+}
+
+.pj-taskprops__fieldlabel {
+    font-size: 12px;
+    color: var(--b3-theme-on-surface);
+    line-height: 16px;
+    margin-bottom: -6px; /* 收窄与输入框的 gap（pj-remind-panel__fieldlabel 同款） */
+}
+
+.pj-taskprops__input {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 13px;
+    padding: 4px 8px;
+}
+
+.pj-taskprops__hint {
+    font-size: 12px;
+    color: var(--b3-theme-on-surface);
+    line-height: 16px;
+    margin-top: -6px; /* 与 endlabel 同款收窄 */
+}
+
+.pj-taskprops__error {
+    font-size: 12px;
+    color: var(--b3-card-error-color, var(--b3-theme-error));
+}
+
+.pj-taskprops__row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}

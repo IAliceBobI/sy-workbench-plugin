@@ -1,0 +1,421 @@
+import { Plugin, Constants } from "siyuan";
+import { siyuan, timeUtil } from "./utils";
+import { READAT, READINGPOINT, RPCARD } from "./gconst";
+import { tomatoI18n } from "../tomatoI18n";
+import { OpenSyFile2 } from "./docUtils";
+import { getBookID, parseBookID } from "./progressive";
+import { readingAdd2Card, readingPointPerDoc } from "./stores";
+import { buildRPCardBlockMD, buildRPCardContent, mergeReadingPoints, siblingReadatBlocks, type RPEntry, type RPSQLRow, type RPRootAttrRow } from "./readingPointCore";
+import { supportsReadingPointBlock } from "../readingPointCardRender";
+import { debugLog } from "./logUtils";
+
+// 阅读点数据层（readpoint 战役重写，spec：docs/tomato-reading-point-spec.md）：
+// 新模型=原文块直挂 custom-tomato-readat 属性（值=时间戳），每文档一个；老模型=超级块挂
+// custom-tomato-readingpoint（值=bookID）惰性兼容——设/删时顺带清理（一次按键即迁移），不写迁移脚本。
+// rpcard 战役（2026-09-08）：制卡升级 custom 块载体（3.8.3+；<3.8.3 原文块直入卡现状不变）——
+// 原文块 IAL custom-tomato-rpcard=卡块ID 挂链，卡块 content=单行 JSON（模型在 readingPointCore）。
+
+/** 块所在文档的阅读点（新格式）：[{blockID, ts}] */
+async function newPointsOfDoc(docID: string) {
+    const rows = await siyuan.sqlAttr(`select block_id, value from attributes where name="${READAT}" and root_id="${docID}"`);
+    return rows.map(r => ({ blockID: r.block_id, ts: r.value }));
+}
+
+/** 老格式清理目标：书级（value=bookID，目录文档集中存放也能命中）∪ 本文档内物理存放（插在原文后的） */
+async function legacyPointIDsOfDoc(docID: string, bookID?: string) {
+    const key = bookID ?? (await getBookID(docID)).bookID;
+    const bookKey = key || docID;
+    const rows = await siyuan.sqlAttr(
+        `select block_id from attributes where name="${READINGPOINT}" and (value="${bookKey}" or root_id="${docID}") limit 10000000`,
+    );
+    return rows.map(r => r.block_id);
+}
+
+/** 同书其他分片文档的新格式阅读点块（一书一点老语义，readpoint □2-B 恢复）：渐进书/写作书
+ *  任何分片设点都顶掉全书其他分片的点（bear 老版行为口述+git 461f4513~1 实锤）。
+ *  全量查询必须尾置 limit：/api/query/sql 对无最外层 limit 的语句注入 Search.Limit=64 静默截尾
+ *  （内核 sql.go，先例 siyuanApi.ts getDocRowsByName）——大库下一书一点悄悄失效 */
+async function siblingReadatOf(docID: string, bookID?: string): Promise<string[]> {
+    // 非书文档零 SQL 早退（getBookID=单文档属性查询；setReadingPoint 已查过时透传复用）
+    if (bookID === undefined) bookID = (await getBookID(docID)).bookID;
+    if (!bookID) return [];
+    const [readatRows, markRows, writingRows] = await Promise.all([
+        siyuan.sqlAttr(`select block_id, root_id from attributes where name="${READAT}" limit 10000000`) as Promise<RPRootAttrRow[]>,
+        siyuan.sqlAttr(`select root_id, value from attributes where name="custom-progmark" limit 10000000`) as Promise<RPRootAttrRow[]>,
+        siyuan.sqlAttr(`select root_id, value from attributes where name="custom-book-writing" limit 10000000`) as Promise<RPRootAttrRow[]>,
+    ]);
+    // 写后立读竞态注记（anno-round2 □4 e2e 实锤 2026-09-16）：兄弟清扫的 readat 全表查询在
+    // 他片设点 ~2-4s 内读 0 行（SQL 索引窗，displaced 同款查询 +4s 即可见）——一书一点在
+    // 「秒级连设两点」下漏顶替。真实人速（切文档阅读再设点）不中招，故不修；修法预留=
+    // 清扫改 getBlockAttrs 直读或索引窗轮询（打磨档）
+    return siblingReadatBlocks(readatRows ?? [], markRows ?? [], writingRows ?? [], docID, parseBookID);
+}
+
+/** 制卡联动（readpoint □2-B 恢复；rpcard 升级双路径）：开关开+3.8.3+ = custom 卡块链
+ *  （addRPCardPointCard）；开关开+旧内核 = 原文块直入卡（v5.7.3 现状一行不改）；开关关 = 不碰卡。
+ *  清卡随开关（开关开=插件管理这批卡生命周期：设=加/顶=换/删=清；关=不碰卡）；
+ *  rpcard 卡块的清理不看开关（插件自产件随点走，见 removeRPCardChain）。
+ *  ⚠️riff 3.9.0 v2 重写预警：此链 API 面临重构，升级须重验 */
+async function addPointCard(blockID: string, ts: string, reuseCardID = "", reuseOldOrigin = "") {
+    if (!readingAdd2Card.get()) return;
+    if (supportsReadingPointBlock()) {
+        await addRPCardPointCard(blockID, ts, reuseCardID, reuseOldOrigin);
+        return;
+    }
+    await addOriginPointCard(blockID, ts);
+}
+
+/** v5.7.3 现状：原文块直入卡（<3.8.3 唯一路径；3.8.3+ 插块失败的回落路径） */
+async function addOriginPointCard(blockID: string, ts: string) {
+    const added = await siyuan.addRiffCards([blockID]);
+    // siyuan.call 吞 code!=0 返 null 不 throw：判 null 打失败点，不拖垮设点主链
+    if (!added) {
+        debugLog("rp_card_fail", `${blockID} addRiffCards null`, "readpoint");
+        return;
+    }
+    debugLog("rp_card_add", blockID, "readpoint");
+    // review 须等卡就绪（add 后立即评踩空，先例 addCardSetDueTime sleepMs=1000）；延迟尾链
+    // fire-and-forget——不拖设点主链与 navigator.locks 锁
+    setTimeout(() => {
+        void (async () => {
+            try {
+                // Rating: 2=Hard（内核 Again=1/Hard=2/Good=3；老版同传 2，保持行为等价）
+                await siyuan.reviewRiffCardByBlockID(blockID, 2);
+                await siyuan.batchSetRiffCardsDueTimeByBlockID([{ id: blockID, due: ts }]);
+                debugLog("rp_card_due", `${blockID} due=${ts}`, "readpoint");
+            } catch (e) {
+                console.error("[tomato][rp] addPointCard:", e);
+                debugLog("rp_card_fail", `${blockID} ${String(e)}`, "readpoint");
+            }
+        })();
+    }, 1000);
+}
+
+/** 挪点复用（rpinherit 战役 2026-09-09）：活卡块就地把 content 换到新点（origin/ts/excerpt）
+ *  +挪位+挂链换向。块 id 不变=卡不换 → 复习次数/遗忘次数/FSRS 状态全延续——老版超级块
+ *  「就地改写」的等价恢复（git 461f4513~1 addCardReadingPoint：挪点复用 oldIDs.pop() 那张块）。
+ *  尾链同老版：评一次 Hard+due=设点时刻（复习卡=「回原文继续读」的锚）。任一步失败返
+ *  false，调用方回落全新建卡（用户不断卡）。通道行为由契约测试「复用链通道」节钉死 */
+async function reuseRPCard(cardID: string, oldOrigin: string, originID: string, ts: string): Promise<boolean> {
+    try {
+        const excerpt = (await siyuan.sqlOne(`select content from blocks where id="${originID}"`))?.content ?? "";
+        // ① 就地改 content（updateBlock md 围栏通道，内核不重生成块 id——契约已钉）。
+        // ⚠️内核坑（annofeed0917 □6 同族，needs0923 换点实锤 2026-09-23）：updateBlock 重写
+        // 内容不迁移既有 custom-* 属性——卡块的 custom-riff-decks（闪卡成员籍）会被剥掉=
+        // 黄条消失/官方判「可快速制卡」，而 storage 卡仍活（复习次数照涨的假象）。两步制：
+        // 改前快照、改后回写+读回验证（挂链同款读回验证制；持续失败返 false 回落全新建卡，
+        // 宁弃进度不产僵尸卡）
+        const prevDecks = ((await siyuan.getBlockAttrs(cardID))?.["custom-riff-decks"]) ?? "";
+        const up = await siyuan.updateBlock(
+            cardID, buildRPCardBlockMD(buildRPCardContent({ v: 1, origin: originID, ts, excerpt })), "markdown");
+        if (!up) {
+            debugLog("rp_card_fail", `reuse ${cardID} update null`, "readpoint");
+            return false;
+        }
+        // 防御：若内核版本变化导致 update 重生成 id（契约塌），复用即失败回落新建
+        const upID = Array.isArray(up) ? up?.[0]?.doOperations?.[0]?.id
+            : (up as { doOperations?: Array<{ id?: string }> })?.doOperations?.[0]?.id;
+        if (upID && upID !== cardID) {
+            debugLog("rp_card_fail", `reuse ${cardID} id regen ${upID}`, "readpoint");
+            return false;
+        }
+        // 恢复/自愈：prevDecks 非空=原样恢复；空=老版换点已剥 IAL 的存量僵尸卡（storage 活、
+        // IAL 无），查 storage 活卡按插件自管口径恢复 QUICK 成员籍；确无 storage 卡（真死块）
+        // 返 false 回落全新建卡——复用一张不存在的卡=新点无卡的换点 bug 原形态
+        let decks = prevDecks;
+        if (!decks) {
+            const live = (await siyuan.getRiffCardsByBlockIDs([cardID]))?.get(cardID) ?? [];
+            decks = live.some(s => !!s.riffCardID) ? Constants.QUICK_DECK_ID : "";
+        }
+        if (!decks) return false;
+        await siyuan.setBlockAttrs(cardID, { "custom-riff-decks": decks } as AttrType);
+        if (((await siyuan.getBlockAttrs(cardID))?.["custom-riff-decks"] ?? "") !== decks) {
+            await siyuan.setBlockAttrs(cardID, { "custom-riff-decks": decks } as AttrType);
+            if (((await siyuan.getBlockAttrs(cardID))?.["custom-riff-decks"] ?? "") !== decks) {
+                debugLog("rp_card_fail", `reuse ${cardID} riff-decks restore miss`, "readpoint");
+                return false;
+            }
+        }
+        // ② 挪位：卡块跟点走（老版 transMoveBlocksAfter 同语义；写类端点返 null 非失败信号）
+        await siyuan.moveBlocksAfter([cardID], originID);
+        // ③ 挂链换向：老 origin 清、新 origin 挂（同 origin 重设点=只重挂自己）
+        const attrOps = [{ id: originID, attrs: { [RPCARD]: cardID } as AttrType }];
+        if (oldOrigin && oldOrigin !== originID) attrOps.push({ id: oldOrigin, attrs: { [RPCARD]: "" } as AttrType });
+        await siyuan.batchSetBlockAttrs(attrOps);
+        const linked = async () => ((await siyuan.getBlockAttrs(originID))?.[RPCARD] ?? "") === cardID;
+        if (!await linked()) {
+            await siyuan.setBlockAttrs(originID, { [RPCARD]: cardID } as AttrType);
+            if (!await linked()) debugLog("rp_card_fail", `${originID} attr miss`, "readpoint");
+        }
+        // ④ 尾链（老版行为等价）：评一次 Hard+due=ts。卡已活无需等新建入卡，直接
+        // fire-and-forget——失败只打点，不拖设点主链与锁
+        void (async () => {
+            try {
+                await siyuan.reviewRiffCardByBlockID(cardID, 2);
+                await siyuan.batchSetRiffCardsDueTimeByBlockID([{ id: cardID, due: ts }]);
+                debugLog("rp_card_due", `${cardID} due=${ts} (reused)`, "readpoint");
+            } catch (e) {
+                debugLog("rp_card_fail", `${cardID} ${String(e)}`, "readpoint");
+            }
+        })();
+        debugLog("rp_card_reuse", `${oldOrigin || originID} -> ${originID} card=${cardID}`, "readpoint");
+        return true;
+    } catch (e) {
+        debugLog("rp_card_fail", `reuse ${cardID} ${String(e)}`, "readpoint");
+        return false;
+    }
+}
+
+/** 3.8.3+ custom 卡链（rpcard 战役）：顶替清旧→取快照→插块（锚=原文块）→真实 ID 挂链→入卡
+ *  →1s 尾链 review Hard+due=now。任一步失败打 rp_card_fail 落 Loki，不拖设点主链与锁；
+ *  插块失败回落原文块直入卡（v5.7.3 语义，存量清理路径本就兼容无 rpcard 属性的原文块卡）。
+ *  rpinherit：传入/自查的活卡块优先复用（闪卡进度继承），失败回落本函数的全新建链 */
+async function addRPCardPointCard(originID: string, ts: string, reuseCardID = "", reuseOldOrigin = "") {
+    // 同 origin 旧卡块第一顺位（同块重设点场景）
+    if (!reuseCardID) {
+        const self = await findLiveRPCards([originID]);
+        const c = self.get(originID);
+        if (c) { reuseCardID = c; reuseOldOrigin = originID; }
+    }
+    if (reuseCardID && await reuseRPCard(reuseCardID, reuseOldOrigin, originID, ts)) return;
+    // 顶替：同 origin 旧卡块先清三件套（重设点/开关往复都会走到）
+    await removeRPCardChain([originID]);
+    // 快照=设点时原文纯文本（老版 addCardReadingPoint 的 div.textContent 同语义；在读块索引必已就绪）
+    const excerpt = (await siyuan.sqlOne(`select content from blocks where id="${originID}"`))?.content ?? "";
+    // md 通道不解析 IAL：围栏 md 插块，真实块 ID 只能从响应 doOperations[0].id 取
+    const r = await siyuan.insertBlockAfter(
+        buildRPCardBlockMD(buildRPCardContent({ v: 1, origin: originID, ts, excerpt })), originID);
+    const cardID = Array.isArray(r) ? r?.[0]?.doOperations?.[0]?.id : r?.doOperations?.[0]?.id;
+    if (!cardID) {
+        debugLog("rp_card_fail", `${originID} insert null`, "readpoint");
+        await addOriginPointCard(originID, ts); // 回落现状，用户不断卡
+        return;
+    }
+    // 挂链（attr 只服务清理发现正向通道；卡面跳转走 content JSON origin 不受影响）。
+    // setBlockAttrs 成功时内核返 data:null → wrapper 返 null，不能按返回值判成败——读回验证制
+    // （annoChat setupMakeCard 同款），失败重试一次再验
+    const linked = async () => ((await siyuan.getBlockAttrs(originID))?.[RPCARD] ?? "") === cardID;
+    await siyuan.setBlockAttrs(originID, { [RPCARD]: cardID } as AttrType);
+    if (!await linked()) {
+        await siyuan.setBlockAttrs(originID, { [RPCARD]: cardID } as AttrType);
+        if (!await linked()) debugLog("rp_card_fail", `${originID} attr miss`, "readpoint");
+    }
+    const added = await siyuan.addRiffCards([cardID]);
+    if (!added) {
+        debugLog("rp_card_fail", `${cardID} addRiffCards null`, "readpoint");
+        return;
+    }
+    debugLog("rp_card_add", `${originID} -> ${cardID}`, "readpoint");
+    setTimeout(() => {
+        void (async () => {
+            try {
+                await siyuan.reviewRiffCardByBlockID(cardID, 2);
+                await siyuan.batchSetRiffCardsDueTimeByBlockID([{ id: cardID, due: ts }]);
+                debugLog("rp_card_due", `${cardID} due=${ts}`, "readpoint");
+            } catch (e) {
+                debugLog("rp_card_fail", `${cardID} ${String(e)}`, "readpoint");
+            }
+        })();
+    }, 1000);
+}
+
+/** rpcard 卡块清理三件套（删卡→删块→清属性；先删卡后删块——blocktree 索引追上后
+ *  ValidateFlashcardBlockIDs 拒已删块=孤儿卡死锁，契约测试已钉）。不看 readingAdd2Card
+ *  开关：插件自产件随点走。发现双向通道：正向=origin IAL rpcard 值；反向=custom 块 content
+ *  JSON origin 精确匹配（兜底挂链失败/手改属性），LIKE 只按 origin id 粗筛再解析复核
+ *  （content 里 id 唯一性足够但防同文档引用误伤） */
+/** 查活卡块（removeRPCardChain 的发现半边，rpinherit 战役抽出）：origin→cardID 映射，
+ *  只含卡块仍存在的活链（陈旧属性指死块被存在性过滤掉——对死 id 发事务会 txerr 弹窗）。
+ *  双向通道与清理时一致：正向=origin IAL rpcard；反向=custom 块 content JSON origin
+ *  精确匹配（兜底挂链失败/手改属性），LIKE 只按 origin id 粗筛再解析复核 */
+async function findLiveRPCards(originIDs: string[]): Promise<Map<string, string>> {
+    const linked = new Map<string, string>(); // origin -> cardID
+    if (originIDs.length === 0) return linked;
+    const rows = await siyuan.sqlAttr(
+        `select block_id, value from attributes where name="${RPCARD}" and block_id in (${originIDs.map(id => `"${id}"`).join(",")})`);
+    for (const r of rows ?? []) {
+        if (r.value) linked.set(r.block_id, r.value);
+    }
+    // 反向：正向无链的 origin 查 custom 块（粗筛 content id 子串；解析用 markdown 列——
+    // content 列 HTML 转义 &quot; 无法 parse，markdown 列是净围栏文本，□1 实测两列形态）。
+    // ⚠️blocks 表 type=SQL 短码 "custom"，非 DOM data-type 的 "NodeCustomBlock"——两套词汇
+    // 交叉判恒 false 静默零命中（09-09 踩坑索引，本通道原写 NodeCustomBlock 反查从未生效）
+    for (const id of originIDs.filter(o => !linked.has(o))) {
+        const hits = await siyuan.sql(
+            `select id, markdown from blocks where type="custom" and content like "%${id}%" limit 10000000`);
+        for (const b of hits ?? []) {
+            try {
+                // markdown=围栏头\n{JSON}\n;;;（内核落盘自动补闭合）：取非围栏行 parse，origin 精确复核防子串误伤
+                const jsonLine = (b.markdown ?? "").split("\n").find(l => l && !l.startsWith(";;;"));
+                const data = jsonLine ? JSON.parse(jsonLine) : null;
+                if (data && typeof data === "object" && (data as { origin?: unknown }).origin === id) linked.set(id, b.id);
+            } catch { /* 坏 JSON 跳过（与渲染层降级同语义） */ }
+        }
+    }
+    // 存在性过滤：挂链值可能指向已删块（陈旧属性）
+    const cardIDs = [...new Set(linked.values())];
+    if (cardIDs.length === 0) return linked;
+    const existing = await siyuan.sql(
+        `select id from blocks where id in (${cardIDs.map(c => `"${c}"`).join(",")})`);
+    const live = new Set((existing ?? []).map(b => b.id));
+    for (const [o, c] of [...linked]) {
+        if (!live.has(c)) linked.delete(o);
+    }
+    return linked;
+}
+
+async function removeRPCardChain(originIDs: string[]) {
+    if (originIDs.length === 0) return;
+    const linked = await findLiveRPCards(originIDs);
+    if (linked.size === 0) return;
+    const cardIDs = [...new Set(linked.values())];
+    await siyuan.removeRiffCards(cardIDs, Constants.QUICK_DECK_ID);
+    await siyuan.deleteBlocks(cardIDs);
+    await siyuan.batchSetBlockAttrs([...linked.keys()].map(o => ({ id: o, attrs: { [RPCARD]: "" } as AttrType })));
+    debugLog("rp_card_chain", `origins=${originIDs.length} linked=${linked.size} removed=${cardIDs.length}`, "readpoint");
+}
+
+async function removePointCards(ids: string[]) {
+    if (ids.length == 0 || !readingAdd2Card.get()) return;
+    // deckID 必须显式限定 QUICK（默认 ""=跨全牌组删卡，会误删用户手动卡；老版即 QUICK 限定）
+    const removed = await siyuan.removeRiffCards(ids, Constants.QUICK_DECK_ID);
+    if (!removed) {
+        debugLog("rp_card_fail", `${ids.join(",")} removeRiffCards null`, "readpoint");
+        return;
+    }
+    debugLog("rp_card_remove", ids.join(","), "readpoint");
+}
+
+/** 设点：清同文档新格式旧属性+同书其他分片的点（一书一点；readingPointPerDoc 开=跳过
+ *  兄弟分片顶替）+同书老格式块 → 原文块挂 readat=now（+制卡联动）。返回 false=块无效 */
+export async function setReadingPoint(blockID: string): Promise<boolean> {
+    const docRow = await siyuan.getDocRowByBlockID(blockID);
+    if (!docRow?.id) return false;
+    const docID = docRow.id;
+    const ts = timeUtil.getYYYYMMDDHHmmss(timeUtil.nowts());
+    const olds = await newPointsOfDoc(docID);
+    const attrOps = olds
+        .filter(o => o.blockID != blockID)
+        .map(o => ({ id: o.blockID, attrs: { [READAT]: "" } as AttrType }));
+    attrOps.push({ id: blockID, attrs: { [READAT]: ts } as AttrType });
+    // 目标块若恰好是老点块（老点挂原文块上的场景）：不删它，只清别处的老点——先删后挂=挂到死 id 静默落空；
+    // 其自身的老属性名同事务摘除（完成该块的格式迁移）
+    const { bookID } = await getBookID(docID);
+    const legacyIDs = (await legacyPointIDsOfDoc(docID, bookID)).filter(id => id != blockID);
+    await cleanLegacyPoints(legacyIDs);
+    attrOps.pop();
+    attrOps.push({ id: blockID, attrs: { [READAT]: ts, [READINGPOINT]: "" } as AttrType });
+    // 书级唯一：同书其他分片的新格式点一并顶掉（同文档旧点已在 attrOps 里清）。
+    // 每文档独立开关（anno-round2 □4）：开=跳过兄弟分片顶替（含三次全量 SQL），一书多点、
+    // 每文档各留一点进复习节奏；同文档顶替/复用链不受开关影响
+    const siblings = readingPointPerDoc.get()
+        ? []
+        : (await siblingReadatOf(docID, bookID)).filter(id => id != blockID);
+    for (const id of siblings) attrOps.push({ id, attrs: { [READAT]: "" } as AttrType });
+    await siyuan.batchSetBlockAttrs(attrOps);
+    // 制卡联动：新点入卡；被顶掉的旧点/兄弟点清卡（顺序在后：挂属性成功才算「点成立」）
+    const displaced = olds.filter(o => o.blockID != blockID).map(o => o.blockID);
+    debugLog("rp_set", `doc=${docID} block=${blockID} sibs=${siblings.length} displaced=${displaced.length}`, "readpoint");
+    await removePointCards([...displaced, ...siblings]);
+    // rpinherit：被顶掉的点里若有活 rpcard 卡块，留一个给新点复用（闪卡复习进度继承），
+    // 其余照旧清三件套。原文块直入卡形态不参与（无独立块 id 可复用，该形态历来不继承）
+    const pool = [...displaced, ...siblings];
+    const liveCards = await findLiveRPCards(pool);
+    const first = liveCards.entries().next().value as [string, string] | undefined;
+    const reuseCardID = first?.[1] ?? "";
+    const reuseOldOrigin = first?.[0] ?? "";
+    await removeRPCardChain(pool.filter(id => id !== reuseOldOrigin));
+    // 被顶掉/兄弟点的 rpcard 卡块三件套（不看开关；addPointCard 内另有同 origin 顶替清）
+    await addPointCard(blockID, ts, reuseCardID, reuseOldOrigin);
+    return true;
+}
+
+/** 删块+删其闪卡（老格式阅读点块可能挂卡；老版即 QUICK 牌组限定，勿跨牌组误删手动卡）。
+ *  顺序必须先删卡后删块：内核 ValidateFlashcardBlockIDs 校验块树，块已删则删卡报
+ *  「不存在符合条件的内容块」静默失败→孤儿卡永久死锁（先例 cardUtils.ts skipThenRemoveCards） */
+async function cleanLegacyPoints(ids: string[]) {
+    if (ids.length == 0) return;
+    await siyuan.removeRiffCards(ids, Constants.QUICK_DECK_ID);
+    await siyuan.deleteBlocks(ids);
+}
+
+/** 文档最新阅读点块 id（新格式直取/老格式兜底；空=无点）——渐进手动书滚筒落点复用
+ *  （fbfeat □2「回原书阅读点」），与 gotoBookmark 同一解析口径防两处漂移 */
+export async function readPointBlockOfDoc(docID: string): Promise<string> {
+    const rows = await newPointsOfDoc(docID);
+    if (rows.length > 0) return rows[0].blockID;
+    const legacy = await siyuan.sqlAttr(`select block_id from attributes where name="${READINGPOINT}" and root_id="${docID}"`);
+    return legacy?.[0]?.block_id ?? "";
+}
+
+/** 跳到当前文档的阅读点：新格式直跳原文块；老格式兜底打开阅读点卡片（内含原文链接） */
+export async function gotoBookmark(docID: string, plugin: Plugin) {
+    const blockID = await readPointBlockOfDoc(docID);
+    if (blockID) {
+        await OpenSyFile2(plugin, blockID);
+        return;
+    }
+    await siyuan.pushMsg(tomatoI18n.当前文档无阅读点, 2000);
+}
+
+/** 删除当前文档的阅读点：新格式摘属性（+清卡+清 rpcard 卡块三件套），老格式删块+删卡。
+ *  返回删除的点数——0=该文档本来无点（调用方据此如实反馈，勿报假成功）。 */
+export async function removeReadingPoint(docID: string): Promise<number> {
+    const rows = await newPointsOfDoc(docID);
+    if (rows.length > 0) {
+        await siyuan.batchSetBlockAttrs(rows.map(r => ({ id: r.blockID, attrs: { [READAT]: "" } as AttrType })));
+        await removePointCards(rows.map(r => r.blockID));
+        await removeRPCardChain(rows.map(r => r.blockID));
+    }
+    const legacyIDs = await legacyPointIDsOfDoc(docID);
+    await cleanLegacyPoints(legacyIDs);
+    return rows.length + legacyIDs.length;
+}
+
+/** 面板列表：新老两查合并（排序/去重在 readingPointCore 纯函数层）。
+ *  注意 attributes.id 是属性行自身 ID，目标块在 block_id 列（2026-09-05 e2e 实锤，join 错列全落空） */
+export async function listReadingPoints(): Promise<RPEntry[]> {
+    const [newRows, legacyRows] = await Promise.all([
+        siyuan.sql(`select a.block_id, a.value, a.root_id, a.box, b.content, b.hpath from attributes a left join blocks b on a.block_id=b.id where a.name="${READAT}" limit 10000000`) as Promise<RPSQLRow[]>,
+        siyuan.sql(`select a.block_id, a.value, a.root_id, a.box, b.content, b.hpath, b.updated from attributes a left join blocks b on a.block_id=b.id where a.name="${READINGPOINT}" limit 10000000`) as Promise<RPSQLRow[]>,
+    ]);
+    return mergeReadingPoints(newRows ?? [], legacyRows ?? []);
+}
+
+/** 面板单条删除：新点摘属性（+清卡+清 rpcard 卡块三件套）；老点删块+删卡 */
+export async function deleteReadingPointEntry(e: RPEntry) {
+    if (e.legacy) {
+        await cleanLegacyPoints([e.blockID]);
+    } else {
+        await siyuan.setBlockAttrs(e.blockID, { [READAT]: "" } as AttrType);
+        await removePointCards([e.blockID]);
+        await removeRPCardChain([e.blockID]);
+    }
+}
+
+/** 状态栏钮态：当前文档有无阅读点（含老格式兜底），有则带回时间戳供 tooltip */
+export async function currentDocReadingPoint(docID: string): Promise<{ blockID: string, ts: string } | null> {
+    if (!docID) return null;
+    const rows = await newPointsOfDoc(docID);
+    if (rows.length > 0) return { blockID: rows[0].blockID, ts: rows[0].ts };
+    const legacy = await siyuan.sqlAttr(`select block_id from attributes where name="${READINGPOINT}" and root_id="${docID}"`);
+    if (legacy.length > 0) return { blockID: legacy[0].block_id, ts: "" };
+    return null;
+}
+
+export async function rmTodoBookmark(docID: string) {
+    const rows = await siyuan.sqlAttr(`select * from attributes where name='bookmark' and value='🚩' and root_id='${docID}'`);
+    await siyuan.batchSetBlockAttrs(rows.map(row => {
+        return { id: row.block_id, attrs: { bookmark: "" } as AttrType };
+    }));
+}
+
+export async function addTodoBookmark(ids: string[]) {
+    for (const id of ids) {
+        const attr = await siyuan.getBlockAttrs(id);
+        if (attr.bookmark == "🚩")
+            await siyuan.setBlockAttrs(id, { bookmark: "" } as AttrType);
+        else if (!attr.bookmark)
+            await siyuan.setBlockAttrs(id, { bookmark: "🚩" } as AttrType);
+    }
+}
