@@ -44,7 +44,7 @@
 <div class="pj-conf__section">
     <div class="pj-conf__title pj-conf__title--row">
         {t.calSyncTitle}
-        <PjConfHelpIcon token="OaGVdwVAyowubAxqoXycRR61nN6" label={t.help} />
+        <PjConfHelpIcon token="STU0dYKKso0XEexQHjkca5xjnPe" label={t.help} />
     </div>
     <div class="pj-conf__lead">{t.calSyncLead}</div>
     {#if panel && panel.rows.length > 0}

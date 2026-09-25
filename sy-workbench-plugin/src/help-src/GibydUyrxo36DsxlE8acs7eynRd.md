@@ -24,6 +24,7 @@
 **提醒与联动**
 
 - [提醒与飞书日历](https://my.feishu.cn/docx/OaGVdwVAyowubAxqoXycRR61nN6)
+- [飞书日历同步与对账](https://my.feishu.cn/docx/STU0dYKKso0XEexQHjkca5xjnPe)
 
 **界面与扩展**
 

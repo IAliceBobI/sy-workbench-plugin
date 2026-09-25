@@ -101,7 +101,7 @@
 
 ## 反馈与支持
 
-- 📖 [工作台完整帮助](https://my.feishu.cn/docx/GibydUyrxo36DsxlE8acs7eynRd) — 从快速上手到九大功能，12 篇图文指南
+- 📖 [工作台完整帮助](https://my.feishu.cn/docx/GibydUyrxo36DsxlE8acs7eynRd) — 从快速上手到九大功能，13 篇图文指南
 - 📖 [飞书日历同步配置教程](https://my.feishu.cn/docx/WXbFdaTCVoSNoAx5EZQcchXpnPg) — 授权、回调、常见问题逐步说明
 - 💬 [QQ 频道](https://pd.qq.com/s/r3jz0g16) / [飞书群](https://applink.feishu.cn/client/chat/chatter/add_by_link?link_token=f08gff0c-d6b0-4a0d-8323-c8a0553e4fff&qr_code=true) — 反馈、催更、蹲新功能
 - 📱 扫码进群：![群二维码（左：QQ 频道，右：飞书）](group-qr.png)

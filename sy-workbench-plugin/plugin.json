@@ -2,7 +2,7 @@
   "name": "sy-workbench-plugin",
   "author": "IAliceBobI",
   "url": "https://github.com/IAliceBobI/sy-workbench-plugin",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "minAppVersion": "3.7.0",
   "disabledInPublish": false,
   "kernels": [
