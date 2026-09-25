@@ -697,5 +697,6 @@
     "fmDiaryPath": "Project/日志",
     "fmDayConfigPath": "Project/每日配置",
     "fmAversionPath": "Project/不想做",
-    "diaryJumpHint": "Diary not created yet — it appears on first schedule write"
+    "diaryJumpHint": "Diary not created yet — it appears on first schedule write",
+    "help": "Help"
 }

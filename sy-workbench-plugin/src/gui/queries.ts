@@ -447,6 +447,10 @@ export interface LedgerRow {
     conflicts: number;
     syncedAt: string | null;
     eventId: string;
+    /** 账本锚键（entries 对象键）——行唯一身份。eventId 不可作 key：adopt 逐日展开
+     *  （schedMirror 多日全天每日一行）同 eventId 多锚是合法形态，09-25 □4 曾以
+     *  eventId 作 each key → each_key_duplicate → 渲染批挂掉整页停空态 */
+    anchor: string;
 }
 
 export interface LedgerPanelModel {
@@ -487,7 +491,7 @@ export function ledgerToRows(raw: CalendarLedger | null | undefined): LedgerPane
         const state = conflicts > 0
             ? "conflict"
             : e.sySnap && e.fsSnap && e.sySnap !== e.fsSnap ? "drift" : "ok";
-        rows.push({ source, summary, syTime, fsTime, state, conflicts, syncedAt: e.syncedAt ?? null, eventId: e.eventId });
+        rows.push({ source, summary, syTime, fsTime, state, conflicts, syncedAt: e.syncedAt ?? null, eventId: e.eventId, anchor: key });
         sources[source].count++;
     }
     return { sources, rows };

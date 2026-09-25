@@ -369,10 +369,14 @@
             clearing = false;
         }
     }
+    import PjConfHelpIcon from "./PjConfHelpIcon.svelte";
 </script>
 
 <div class="pj-conf__section">
-    <div class="pj-conf__title">{t.confCalendarTitle}</div>
+    <div class="pj-conf__title pj-conf__title--row">
+        {t.confCalendarTitle}
+        <PjConfHelpIcon token="OaGVdwVAyowubAxqoXycRR61nN6" label={t.help} />
+    </div>
     <div class="pj-conf__lead">{t.confCalendarLead}</div>
     <div class="pj-conf__status">
         {#if status}
@@ -617,6 +621,12 @@
         font-weight: 400;
         color: var(--b3-theme-on-background);
     }
+    /* 标题行挂帮助图标（期1 workbench-help）：标题+图标同行基线对齐 */
+    .pj-conf__title--row {
+        display: flex;
+        align-items: center;
+    }
+
 
     .pj-conf__lead {
         font-size: 13px;

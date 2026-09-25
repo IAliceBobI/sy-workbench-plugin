@@ -697,5 +697,6 @@
     "fmDiaryPath": "Project/日志",
     "fmDayConfigPath": "Project/每日配置",
     "fmAversionPath": "Project/不想做",
-    "diaryJumpHint": "日志还没建——第一次排班时会自动创建"
+    "diaryJumpHint": "日志还没建——第一次排班时会自动创建",
+    "help": "帮助"
 }

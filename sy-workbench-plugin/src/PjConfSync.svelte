@@ -38,10 +38,14 @@
             panel = ledgerToRows(await loadLedger().catch(() => null));
         })();
     });
+    import PjConfHelpIcon from "./PjConfHelpIcon.svelte";
 </script>
 
 <div class="pj-conf__section">
-    <div class="pj-conf__title">{t.calSyncTitle}</div>
+    <div class="pj-conf__title pj-conf__title--row">
+        {t.calSyncTitle}
+        <PjConfHelpIcon token="OaGVdwVAyowubAxqoXycRR61nN6" label={t.help} />
+    </div>
     <div class="pj-conf__lead">{t.calSyncLead}</div>
     {#if panel && panel.rows.length > 0}
         {#each SOURCE_META as src (src.key)}
@@ -53,7 +57,8 @@
                     </span>
                     <span class="pj-conf__lsrc-count">{panel.sources[src.key].count}</span>
                 </div>
-                {#each panel.rows.filter((r) => r.source === src.key) as row (row.eventId)}
+                <!-- key=锚键非 eventId：adopt 逐日展开同 eventId 多锚合法（queries.ts LedgerRow 注释） -->
+                {#each panel.rows.filter((r) => r.source === src.key) as row (row.anchor)}
                     <div class="pj-conf__lrow">
                         <span class="pj-conf__lrow-summary" title={row.summary}>{row.summary || "—"}</span>
                         <span class="pj-conf__lrow-time">
@@ -86,6 +91,12 @@
         font-weight: 400;
         color: var(--b3-theme-on-background);
     }
+    /* 标题行挂帮助图标（期1 workbench-help）：标题+图标同行基线对齐 */
+    .pj-conf__title--row {
+        display: flex;
+        align-items: center;
+    }
+
 
     .pj-conf__lead {
         font-size: 13px;

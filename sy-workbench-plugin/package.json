@@ -1,6 +1,6 @@
 {
   "name": "sy-workbench-plugin",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "项目=工作上下文容器：打开项目=恢复工作现场",
   "private": true,
   "type": "module",

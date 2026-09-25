@@ -9,6 +9,8 @@
     import { onDestroy, onMount, tick, untrack } from "svelte";
     import "../../sy-tomato-plugin/src/IndexConf.css";
     import { debugLog } from "./libs/debugLog";
+    import helpDocs from "./help.json";
+    import { openHelpDialog } from "../../sy-tomato-plugin/src/libs/helpDialog";
     import PjConfMcp from "./PjConfMcp.svelte";
     import PjConfPrompts from "./PjConfPrompts.svelte";
     import PjConfCalendar from "./PjConfCalendar.svelte";
@@ -78,6 +80,10 @@
     ];
     let navActive = $state(NAV_PAGES[0].id);
     const NavKeyItemKey = "pj_settings_NavKeyItemKey_7vRkQwTzN4bJhXm2LdYpA8s";
+
+    // 目录欢迎篇 doc token（help-src/GibydUyrxo36DsxlE8acs7eynRd.md 同源）
+    const openCatalogHelp = () =>
+        openHelpDialog("https://my.feishu.cn/docx/GibydUyrxo36DsxlE8acs7eynRd?from=from_copylink", helpDocs);
 
     // ── pjux □1 搜索栏状态（tomato/渐进同款语义） ──
     let settingsDiv = $state<HTMLElement>();
@@ -278,6 +284,12 @@
                     onclick={() => navGo(p.id)}
                 >{p.label()}</button>
             {/each}
+            <!-- 帮助入口（期1 workbench-help）：导航底部常驻可见项（非页——点击开插件内
+                 目录弹窗，非切页），打开目录欢迎篇快照（help.json 落包离线可看） -->
+            <button class="tomato-nav-item pj-nav-help" onclick={openCatalogHelp}>
+                <svg aria-hidden="true"><use xlink:href="#iconHelp"></use></svg>
+                <span>{t.help}</span>
+            </button>
         </nav>
         <div class="tomato-nav-content">
             {#each NAV_PAGES as p (p.id)}
@@ -335,5 +347,24 @@
     /* 四页常驻 DOM 的最后一页底缘呼吸（conf-group 只出 margin-top） */
     .pj-conf-shell .tomato-nav-content > section:last-child {
         margin-bottom: 12px;
+    }
+
+    /* 导航底部帮助项：与页项同按钮形态，图标+文字行；细分隔线+间距与页项区隔
+       （vision P2-1 采纳：常驻非页项的身份感）。带 .tomato-settings-dialog 升特异性
+       (0,3,0)：IndexConf.css 的 .tomato-settings-dialog .tomato-nav-item {border:none}
+       同值域 (0,2,0) 且源序在后，裸 .pj-nav-help 会被其 border 简写压掉 */
+    .tomato-settings-dialog .pj-nav-help {
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px solid var(--b3-border-color, #eee);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--b3-theme-on-surface-light, var(--b3-theme-on-surface));
+    }
+    .pj-nav-help svg {
+        width: 14px;
+        height: 14px;
+        flex: none;
     }
 </style>
