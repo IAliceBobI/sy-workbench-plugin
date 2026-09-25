@@ -359,6 +359,14 @@
         align-items: center;
         gap: 2px;
     }
+
+    /* 同步胶囊（运行时 mount 进工具区，:global 出条约；button 抬特异性压组件 scoped 同分）：
+       组件自带 max-width:42% 收缩帽以本容器（content-sized）为解析基准=帽值 46px 反成绞索，
+       「已同步」被裁剩首字残形（09-25 主实例实锤）——悬浮窗头栏让位由 title(flex:1+省略号)
+       承担，胶囊恒自然宽；收缩帽只留给 dock 宽头栏场景 */
+    .pj-ammo-float-panel__tools :global(button.pj-live-sync) {
+        max-width: none;
+    }
     .pj-ammo-float-panel__opacity {
         flex-shrink: 0;
         width: 88px;

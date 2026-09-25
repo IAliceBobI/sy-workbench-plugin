@@ -99,8 +99,27 @@
 - **双向同步**：两边互写。在飞书日历里拖时间、改标题、删事件，自动回写班表，两本日历保持一致——**拖动本身就是学习信号**，AI 看得懂你在把生活往哪边挪。
 - 思源开着时每小时自动补一轮同步；白天的实况打点也可一键同步成日历回填。
 
+## 反馈与支持
+
+- 📖 [飞书日历同步配置教程](https://my.feishu.cn/docx/WXbFdaTCVoSNoAx5EZQcchXpnPg) — 授权、回调、常见问题逐步说明
+- 💬 [QQ 频道](https://pd.qq.com/s/r3jz0g16) / [飞书群](https://applink.feishu.cn/client/chat/chatter/add_by_link?link_token=f08gff0c-d6b0-4a0d-8323-c8a0553e4fff&qr_code=true) — 反馈、催更、蹲新功能
+- 📱 扫码进群：![群二维码（左：QQ 频道，右：飞书）](group-qr.png)
+- 📦 [源码仓库](https://github.com/IAliceBobI/sy-workbench-plugin) — 所见即所得：发布包由 GitHub Actions 从源码远程构建
+
 ## 免费与许可
 
 **全部功能免费**——没有付费版，没有功能锁定，没有激活码。
 
-本插件采用专有许可（见 [LICENSE](LICENSE)）：个人使用免费；禁止再分发、修改后分发与绕过授权机制；商用需书面授权——飞书用户群或 GitHub Issues 联系。
+本插件采用专有许可（见 [LICENSE](LICENSE)）：个人使用免费；禁止再分发、修改后分发与绕过授权机制；商用需书面授权——[飞书群](https://applink.feishu.cn/client/chat/chatter/add_by_link?link_token=f08gff0c-d6b0-4a0d-8323-c8a0553e4fff&qr_code=true)或 [GitHub Issues](https://github.com/IAliceBobI/sy-workbench-plugin/issues) 联系。
+
+## 支持作者
+
+全部功能免费。如果它帮到了你，可以请作者喝杯快乐水：
+
+<div>
+<img src="https://player-pubpic.oss-cn-beijing.aliyuncs.com/static/wx1.png" alt="微信收款码" width="300" />
+</div>
+<br>
+<div>
+<img src="https://player-pubpic.oss-cn-beijing.aliyuncs.com/static/zfb1.jpg" alt="支付宝收款码" width="300" />
+</div>

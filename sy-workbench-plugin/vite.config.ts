@@ -25,6 +25,7 @@ export default defineConfig({
         { src: "./README*.md", dest: "./" },
         { src: "./icon.png", dest: "./" },
         { src: "./preview.png", dest: "./" },
+        { src: "./group-qr.png", dest: "./" },
         { src: "./plugin.json", dest: "./" },
         { src: "./src/i18n/**", dest: "./i18n/" },
         { src: "./skills/**", dest: "./skills/" },
