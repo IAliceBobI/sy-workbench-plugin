@@ -9,6 +9,11 @@
 // B/E/F/G/M/O/S/Q/6）。
 // 生命周期（BkFloat 收起模式）：收起=unmount 正文+工具区组件（停 AmmoPanelHost 30s 分钟针）
 // 再翻 open store；重开=重挂+首拉（rpc 单发成本≈0，不保挂）。
+// 开合记忆持久化（lsfix 2026-10-13 家族战役）：petal 档 uiState.ts AMMO_FLOAT_OPEN_FILE
+// （index.ts saveAmmoFloatOpen 写盘、经 AmmoFloatDeps 注入）——思源桌面 Electron 壳每次
+// 启动给内置内核随机端口（origin 含端口），localStorage 按 origin 隔离=跨重启必丢；
+// localStorage 降级为旧档一次性收编源（qeBall.loadQEBallPos 同款：收编时读取、收编后
+// 不回写）。
 // 联动链（□9 验收项）：悬浮窗开始/停止→AmmoPanelHost→kernel ammo-start/stop→引擎广播
 // AMMO_STATE_CHANNEL→index.ts 转 window「pj-ammo-state」→dock 时间线 refresh——内存事件链，
 // 本类零额外代码（□7 已接好两端）。
@@ -19,10 +24,36 @@ import AmmoPanelHost from "./AmmoPanelHost.svelte";
 import AmmoLiveSyncButton from "./AmmoLiveSyncButton.svelte";
 import { debugLog } from "./libs/debugLog";
 
-/** 开合记忆（全局一份；几何/透明度在外壳组件内自带 LS=pj-ammo-float-panel） */
+/** 开合记忆旧档收编源（lsfix 前的主档，仅 loadAmmoFloatOpenWish 读；几何/透明度在外壳
+ *  组件内自带 LS=pj-ammo-float-panel——另一站点） */
 const LS_OPEN = "pj-ammo-float-open";
 
 const sleepAmmo = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+// ---------- 开合记忆纯函数层（单测 tests/unit/ammoFloatOpen.test.ts） ----------
+
+/** 旧 localStorage 开合档解析："1"=开 / "0"=关（旧版两态原值）；null/坏值=无旧档（不猜） */
+export function parseLegacyAmmoFloatOpen(raw: string | null): boolean | null {
+    if (raw === "1") return true;
+    if (raw === "0") return false;
+    return null;
+}
+
+/** 开合记忆读档（onload 恢复 Wish 用，qeBall.loadQEBallPos 同款语义）：petal 档优先；
+ *  无档时收编旧 localStorage 档并落新档（收编后不回写不删除）。loadOpen=null=petal 档
+ *  不存在（宿主接 loadData 原始返回判别——归一后 false 与无档不可区分，判据须在档侧）。
+ *  返回恢复 Wish（true=开面板） */
+export async function loadAmmoFloatOpenWish(
+    loadOpen: () => Promise<boolean | null>,
+    saveOpen: (v: boolean) => void,
+): Promise<boolean> {
+    const stored = await loadOpen();
+    if (stored !== null) return stored;
+    const legacy = parseLegacyAmmoFloatOpen(localStorage.getItem(LS_OPEN));
+    if (legacy === null) return false;
+    saveOpen(legacy);
+    return legacy;
+}
 
 export interface AmmoFloatDeps {
     /** i18n 文案包（ammo 族+ammoFloat 族键——zh/en 双语由宿主注入） */
@@ -37,6 +68,13 @@ export interface AmmoFloatDeps {
     onOpenDayConfig?: () => void;
     /** 头栏跳当日日记（mainfix0923 □5——plugin.openTodayDiary：定位不到=toast 不懒建；缺=钮不出） */
     onOpenDiary?: () => void;
+    /** 开合记忆读档（lsfix：petal 档 uiState.ts AMMO_FLOAT_OPEN_FILE 归一值；null=档不存在
+     *  ——触发旧 localStorage 收编。异步：petal loadData 本身异步，读档恢复 Wish 晚一帧无感） */
+    loadOpen: () => Promise<boolean | null>;
+    /** 开合记忆写盘（lsfix：宿主接 index.ts saveAmmoFloatOpen 立即落盘；写失败由接线
+     *  闭包吞错=会话内生效，原 localStorage try/catch 同语义。unload 收尾 persist=false
+     *  不调本回调——重载不重置用户开合记忆） */
+    saveOpen: (v: boolean) => void;
 }
 
 /** 收起钮 tooltip 键位后缀：现读 keymap（改键跟随；BkFloat panelKeyHint 同款语义）。
@@ -93,10 +131,25 @@ export class AmmoFloatBox {
                 },
             },
         });
-        // reload 恢复 Wish：开合记忆 onload 读档（BkFloat/graphfloat 同款）——首拉由正文
-        // mount 自带；无 protyle 依赖（全局面非文档面），可直接开不必等事件
-        if (localStorage.getItem(LS_OPEN) === "1") this.openPanel();
-        debugLog("ammo", `float onload open=${this.panelOpen}`);
+        // reload 恢复 Wish：开合记忆读档（BkFloat/graphfloat 同款）——首拉由正文 mount 自带；
+        // 无 protyle 依赖（全局面非文档面），可直接开不必等事件。petal 档 loadData 异步，
+        // 晚一帧开无感（restoreOpenWish 内 alive 闸兜底）
+        void this.restoreOpenWish();
+        debugLog("ammo", "float onload");
+    }
+
+    /** 读档恢复 Wish（onload 尾调）：petal 档优先，无档收编旧 localStorage 档（lsfix，
+     *  qeBall.loadQEBallPos 同款）。收编写盘过「用户抢先」闸——读档窗口内用户已开过面板
+     *  （panelOpen=true）则用户值优先，旧档收编让位不覆盖 */
+    private async restoreOpenWish(): Promise<void> {
+        const open = await loadAmmoFloatOpenWish(
+            this.deps.loadOpen,
+            (v) => {
+                if (!this.panelOpen) this.deps.saveOpen(v);
+            },
+        );
+        if (open && this.alive) this.openPanel();
+        debugLog("ammo", `float onload open=${open}`);
     }
 
     togglePanel(): void {
@@ -108,9 +161,7 @@ export class AmmoFloatBox {
         if (!this.alive || this.panelOpen) return;
         this.panelOpen = true;
         this.panelOpenStore.set(true);
-        try {
-            localStorage.setItem(LS_OPEN, "1");
-        } catch { /* 会话内生效 */ }
+        this.deps.saveOpen(true); // petal 档立即落盘（写失败=会话内生效，接线闭包吞错）
         void this.mountContent();
     }
 
@@ -121,11 +172,7 @@ export class AmmoFloatBox {
         this.unmountContent();
         this.panelOpen = false;
         this.panelOpenStore.set(false);
-        if (persist) {
-            try {
-                localStorage.setItem(LS_OPEN, "0");
-            } catch { /* 会话内生效 */ }
-        }
+        if (persist) this.deps.saveOpen(false);
         debugLog("ammo", "float close");
     }
 

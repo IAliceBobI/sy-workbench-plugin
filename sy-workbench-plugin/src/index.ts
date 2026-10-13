@@ -51,6 +51,28 @@ import { escapeHtml } from "./gui/fe";
 import { reloadSelfPlugin } from "../../sy-tomato-plugin/src/libs/pluginReload";
 import { DEFAULT_ENTRY_TOGGLES, ENTRY_TOGGLES_FILE, normalizeEntryToggles, type EntryToggles } from "./entryToggles";
 import { GANTT_PREFS_FILE } from "./ganttPrefs";
+// lsfix 2026-10-13 家族战役：UI 跨重启状态档（localStorage→petal——桌面端 Electron 随机端口
+// origin 下 localStorage 跨重启必丢，头注见 uiState.ts）
+import {
+    AMMO_FLOAT_GEO_FILE,
+    AMMO_FLOAT_OPEN_FILE,
+    AUTH_NOTIFY_DEDUP_FILE,
+    EMPTY_SCHED_FIRED,
+    SCHED_FIRED_FILE,
+    STAY_ARCHIVE_FILE,
+    WEEKLY_READ_FILE,
+    normalizeAmmoFloatGeo,
+    normalizeAmmoFloatOpen,
+    normalizeAuthNotifyDedup,
+    normalizeSchedFired,
+    normalizeStayArchive,
+    normalizeWeeklyRead,
+    type AmmoFloatGeo,
+    type AuthNotifyDedup,
+    type SchedFired,
+    type StayArchive,
+    type WeeklyRead,
+} from "./uiState";
 import { applyDragRow, boardRowsToItems, buildRecon, genSchedKey, mergeBoardDayRows, normalizeSchedule, type DragRecord, type SchedAddKeyOp, type SchedEditOp, type SchedItem, type SchedStore } from "./kernel/core/schedule";
 import { buildHandoffPacket } from "./handoffSeed";
 import OnboardDialog from "./OnboardDialog.svelte";
@@ -100,8 +122,6 @@ const PROJECT_SWITCHED_EVENT = "pj-project-switched";
 const CALENDAR_STATUS_EVENT = "pj-calendar-status";
 /** kernel 动作段改写广播→驾驶舱动作区直刷的 window 事件名（detail=ActionsUpdatedPayload） */
 const ACTIONS_UPDATED_EVENT = "pj-actions-updated";
-/** 授权坏提醒去重（同因当天一次）：localStorage 记 {code,day} */
-const AUTH_NOTIFY_KEY = "pj-auth-notify";
 
 /** setBlockAttrs 直写（data 恒 null 非 failure；与 reminder/render.ts 同通道——属性写不走 kernel rpc） */
 async function writeBlockAttrsDirect(blockId: string, attrs: Record<string, string>): Promise<void> {
@@ -136,6 +156,14 @@ export default class ProjectPlugin extends Plugin {
     private hourlyTimer: ReturnType<typeof setInterval> | null = null;
     /** pjux □2：命令与入口开关（petal entry-toggles.json；onload 载入，右键/slash 消费点活读） */
     private entryToggles: EntryToggles = { ...DEFAULT_ENTRY_TOGGLES };
+    /** lsfix 2026-10-13 家族战役：UI 跨重启状态内存态（petal 档镜像——onload 预载进内存，
+     *  消费者读内存态、写走 save* 方法族立即落盘；档定义与旧 localStorage 收编源见 uiState.ts） */
+    private uiAmmoFloatOpen = false;
+    private uiAmmoFloatGeo: AmmoFloatGeo | null = null;
+    private uiWeeklyRead: WeeklyRead = {};
+    private uiStayArchive: StayArchive = {};
+    private uiSchedFired: SchedFired = EMPTY_SCHED_FIRED;
+    private uiAuthNotifyDedup: AuthNotifyDedup | null = null;
     /** □3 setRemind 存量空条目待迁移标志（setupRemind 判形置位，onload 末尾统一串行清账） */
     private needSetRemindMigrate = false;
     /** 重载竞态窗守卫：onunload 后 openSetting 早退（review P2-3） */
@@ -233,6 +261,11 @@ export default class ProjectPlugin extends Plugin {
             this.entryToggles = normalizeEntryToggles(await this.loadData(ENTRY_TOGGLES_FILE));
         } catch { /* 无档=全开默认 */ }
 
+        // lsfix 2026-10-13 家族战役：UI 跨重启状态档预载（localStorage→petal 迁移基建——
+        // 桌面端 Electron 随机端口 origin 下 localStorage 跨重启必丢，见 uiState.ts 头注）。
+        // 消费者已全部接管：读=内存态优先，无档时经各自 load* 收编 localStorage 旧档一次
+        await this.loadUiStatePrefs();
+
         if (this.entryToggles.saveScene) {
             // addCommand 官方 API（非裸 commands.push）：才会建 keymap.plugin 条目（HotkeyCap
             // 改键写回的前提——裸 push 在 keymap 里整插件缺席，pjux □2 e2e 实锤）+注册命令面板
@@ -297,6 +330,18 @@ export default class ProjectPlugin extends Plugin {
             // mainfix0923 □5：文件地图跳转（定位不到=toast 不懒建；恒走 openDocNoFocus）
             onOpenDayConfig: () => void this.openDayConfigDoc(),
             onOpenDiary: () => void this.openTodayDiary(),
+            // lsfix 2026-10-13：开合记忆 petal 档接线（uiState.ts AMMO_FLOAT_OPEN_FILE）——读=
+            // loadData 原始返回判档存在性再归一（归一层 false 与无档不可区分，旧 localStorage
+            // 收编判据须在档侧）；写=saveAmmoFloatOpen 立即落盘，失败仅 debugLog=会话内生效
+            // （原 localStorage try/catch 同语义）
+            loadOpen: async () => {
+                const raw = await this.loadData(AMMO_FLOAT_OPEN_FILE).catch(() => null);
+                return raw === null || raw === undefined ? null : normalizeAmmoFloatOpen(raw);
+            },
+            saveOpen: (v) => {
+                void this.saveAmmoFloatOpen(v).catch((e) =>
+                    debugLog("fe", `ammo 开合记忆写盘失败（会话内生效）：${String(e)}`));
+            },
         });
         this.ammoFloat.onload();
         {
@@ -347,7 +392,7 @@ export default class ProjectPlugin extends Plugin {
 
         this.setupRemind();
         this.setupTaskBadge(); // dataview □7：任务块池/日期徽标（点击弹快捷菜单=参数编辑就地）
-        stayTracker.setup(this); // sloop □3：文档停留采集（switch-protyle/visibilitychange+localStorage 按天）
+        stayTracker.setup(this); // sloop □3：文档停留采集（switch-protyle/visibilitychange+petal 档按天，lsfix 已迁 localStorage）
         this.schedNotifier.setup(this); // sloop □7：班表到点提醒（toast/弹窗通道，30s 轻拍）
 
         // dataview □6：全局速记命令（契约 §6 手动入口三件之一——弹小窗，回车=解析→落当前
@@ -683,6 +728,71 @@ export default class ProjectPlugin extends Plugin {
         return saved;
     }
 
+    // ── lsfix 2026-10-13 家族战役：UI 跨重启状态档（档定义与旧 localStorage 收编源见
+    //    uiState.ts；写盘走官方两参 saveData=恒带 app 本窗免重载，AGENTS petal 写纪律） ──
+
+    /** onload 预载六档进内存态（缺档/坏档=默认值起步，不炸） */
+    private async loadUiStatePrefs(): Promise<void> {
+        const [open, geo, weekly, stay, fired, dedup] = await Promise.all([
+            this.loadData(AMMO_FLOAT_OPEN_FILE).catch(() => null),
+            this.loadData(AMMO_FLOAT_GEO_FILE).catch(() => null),
+            this.loadData(WEEKLY_READ_FILE).catch(() => null),
+            this.loadData(STAY_ARCHIVE_FILE).catch(() => null),
+            this.loadData(SCHED_FIRED_FILE).catch(() => null),
+            this.loadData(AUTH_NOTIFY_DEDUP_FILE).catch(() => null),
+        ]);
+        this.uiAmmoFloatOpen = normalizeAmmoFloatOpen(open);
+        this.uiAmmoFloatGeo = normalizeAmmoFloatGeo(geo);
+        this.uiWeeklyRead = normalizeWeeklyRead(weekly);
+        this.uiStayArchive = normalizeStayArchive(stay);
+        this.uiSchedFired = normalizeSchedFired(fired);
+        this.uiAuthNotifyDedup = normalizeAuthNotifyDedup(dedup);
+        debugLog(
+            "fe",
+            `uiState prefs loaded (ammoOpen=${this.uiAmmoFloatOpen} geo=${this.uiAmmoFloatGeo ? "hit" : "none"}` +
+                ` weeklyRead=${Object.keys(this.uiWeeklyRead).length} stayDays=${Object.keys(this.uiStayArchive).length}` +
+                ` schedFired=${this.uiSchedFired.keys.length} authDedup=${this.uiAuthNotifyDedup ? this.uiAuthNotifyDedup.day : "none"})`,
+        );
+    }
+
+    /** 弹药库悬浮窗开合记忆写盘（AmmoFloatBox openPanel/closePanel 消费；旧档
+     *  pj-ammo-float-open；插件 unload 收尾不调本方法=persist=false 语义保持） */
+    async saveAmmoFloatOpen(v: boolean): Promise<void> {
+        this.uiAmmoFloatOpen = v;
+        await this.saveData(AMMO_FLOAT_OPEN_FILE, JSON.stringify(v));
+    }
+
+    /** 弹药库悬浮窗几何写盘（AmmoFloatPanel 拖拽/resize/透明度消费；旧档
+     *  pj-ammo-float-panel；null=清档回默认落位） */
+    async saveAmmoFloatGeo(v: AmmoFloatGeo | null): Promise<void> {
+        this.uiAmmoFloatGeo = v;
+        await this.saveData(AMMO_FLOAT_GEO_FILE, JSON.stringify(v));
+    }
+
+    /** 周报已读周集写盘（TimelineTab 周报 chip 点击消费；旧档 pj-weekly-read-<weekStart> 前缀族） */
+    async saveWeeklyRead(v: WeeklyRead): Promise<void> {
+        this.uiWeeklyRead = v;
+        await this.saveData(WEEKLY_READ_FILE, JSON.stringify(v));
+    }
+
+    /** 文档停留按天档写盘（tracker 结算/翻日消费——高频写路径；旧档 sy-project-stay-<day> 前缀族） */
+    async saveStayArchive(v: StayArchive): Promise<void> {
+        this.uiStayArchive = v;
+        await this.saveData(STAY_ARCHIVE_FILE, JSON.stringify(v));
+    }
+
+    /** 当日已触发提醒键集写盘（SchedNotifier tick 触发消费；旧档 pj-sched-fired） */
+    async saveSchedFired(v: SchedFired): Promise<void> {
+        this.uiSchedFired = v;
+        await this.saveData(SCHED_FIRED_FILE, JSON.stringify(v));
+    }
+
+    /** 授权坏提醒去重写盘（onCalendarStatus 消费；旧档 pj-auth-notify） */
+    async saveAuthNotifyDedup(v: AuthNotifyDedup): Promise<void> {
+        this.uiAuthNotifyDedup = v;
+        await this.saveData(AUTH_NOTIFY_DEDUP_FILE, JSON.stringify(v));
+    }
+
     /** P3 □4：顶栏切换器+驾驶舱页签注册（onload 尾部调用，需 switcherButton 先建好） */
     private setupGui(): void {
         this.switcherButton = this.addTopBar({
@@ -771,6 +881,12 @@ export default class ProjectPlugin extends Plugin {
                         // adoptForeign 不接=与 Calendar 页签现状一致（该链 期2③ 全映射后退役，
                         // 组件侧 {#if false} 钮+菜单 rebuild 项靠 !adoptForeign 守卫静默 no-op）
                         loadWeekly: () => plugin.loadWeeklyStore(),
+                        // 周报已读周集通道（lsfix 2026-10-13 家族战役收官接线）：无桥则已读态
+                        // 仅会话内、重启角标复现（迁移工禁碰注册文件，桥留至此处补）
+                        weeklyReadStore: {
+                            get: () => plugin.uiWeeklyRead,
+                            save: (v) => void plugin.saveWeeklyRead(v),
+                        },
                         readDayBoard: (day: string) => plugin.readDayBoard(day),
                         createRemindEntry: (day: string, start: string) => plugin.createRemindEntry(day, start),
                         moveRemindBlock: (id: string, day: string, start: string, end: string | null) => plugin.moveRemindBlock(id, day, start, end),
@@ -2516,15 +2632,32 @@ export default class ProjectPlugin extends Plugin {
         void this.remindInjector.refreshSyncState(); // tb2 H2：每轮同步完重拉账本刷块面徽标
         if (status?.authErrorCode === undefined) return;
         const day = getLogicalDay(new Date());
-        try {
-            const rec = JSON.parse(localStorage.getItem(AUTH_NOTIFY_KEY) || "null");
-            if (rec?.code === status.authErrorCode && rec?.day === day) return; // 同因当天已提醒过
-            localStorage.setItem(AUTH_NOTIFY_KEY, JSON.stringify({ code: status.authErrorCode, day }));
-        } catch {
-            // localStorage 不可用=退化为每轮都提醒（可接受）
-        }
+        // lsfix：petal 档（内存态镜像）优先判重；无档时一次性收编 localStorage 旧档（qeBall.loadQEBallPos 同款）
+        const dedup = this.uiAuthNotifyDedup ?? this.adoptLegacyAuthNotifyDedup();
+        if (dedup?.code === status.authErrorCode && dedup?.day === day) return; // 同因当天已提醒过
+        this.saveAuthNotifyDedup({ code: status.authErrorCode, day }).catch((e) => {
+            debugLog("cal", `!! auth-dedup save failed: ${String(e)}`); // 落盘失败=本会话判重仍有效（内存态已置），重启重弹一次可接受
+        });
         showMessage(this.i18n.calAuthFailNotice, 7000, "error");
         debugLog("cal", `!! auth broken code=${status.authErrorCode}, notified`);
+    }
+
+    /** 旧档收编（lsfix 2026-10-13）：localStorage "pj-auth-notify" → petal 档一次性搬家
+     *  （桌面端 Electron 随机端口 origin 下 localStorage 跨重启必丢，头注见 uiState.ts；
+     *  坏/缺档=null 无旧档，合法档顺手落盘——收编后本键不再读写） */
+    private adoptLegacyAuthNotifyDedup(): AuthNotifyDedup | null {
+        let legacy: AuthNotifyDedup | null = null;
+        try {
+            legacy = normalizeAuthNotifyDedup(localStorage.getItem("pj-auth-notify"));
+        } catch {
+            // localStorage 不可用=无旧档（原退化语义「每轮都提醒」由无档承担）
+        }
+        if (legacy) {
+            this.saveAuthNotifyDedup(legacy).catch((e) => {
+                debugLog("cal", `!! auth-dedup adopt save failed: ${String(e)}`);
+            });
+        }
+        return legacy;
     }
 
     /** 按钮化 c：一键重授权 B 档——临时回调服务自动收 code→rpc calendar-auth 换证。

@@ -3180,6 +3180,30 @@ export class TomatoI18n extends TomatoI18nABC {
             default: return "Re-read (from Start)";
         }
     }
+    /** manualfin 件2：手动书右键「标记已读完」（存储位 finishedManual，标后退出轮转） */
+    public get 标记已读完() {
+        switch (this.lang) {
+            case "zh_CN": return "标记已读完";
+            case "zh_CHT": return "標記已讀完";
+            case "es_ES": return "Marcar como leído";
+            case "fr_FR": return "Marquer comme lu";
+            case "ja_JP": return "読み終えたとマーク";
+            case "en_US":
+            default: return "Mark as Finished";
+        }
+    }
+    /** manualfin 件2：标记成功 toast（退出轮转=滚筒 finishedIDs 收编，撤销走「重新阅读（从头）」） */
+    public get 已标记读完退出轮转() {
+        switch (this.lang) {
+            case "zh_CN": return "已标记读完，退出轮转";
+            case "zh_CHT": return "已標記讀完，退出輪轉";
+            case "es_ES": return "Marcado como leído, fuera de la rotación";
+            case "fr_FR": return "Marqué comme lu, hors rotation";
+            case "ja_JP": return "読了としてマークし、ローテーションから外れました";
+            case "en_US":
+            default: return "Marked as finished, removed from rotation";
+        }
+    }
     public get 从这里开始学() {
         switch (this.lang) {
             case "zh_CN": return "从这里开始学";
@@ -6972,6 +6996,34 @@ export class TomatoI18n extends TomatoI18nABC {
         }
     }
 
+    // need-0926-06 槽树面板（本书槽/入槽选槽三处同构）：搜索占位/收回钮/收回 tip
+    public get 搜索槽名占位() {
+        switch (this.lang) {
+            case "zh_CN": return "搜索槽名…";
+            case "zh_CHT": return "搜索槽名…";
+            case "en_US":
+            default: return "Search slots…";
+        }
+    }
+
+    public get 槽树收回钮() {
+        switch (this.lang) {
+            case "zh_CN": return "收回";
+            case "zh_CHT": return "收回";
+            case "en_US":
+            default: return "Reset";
+        }
+    }
+
+    public get tip槽树收回() {
+        switch (this.lang) {
+            case "zh_CN": return "一键收回：折叠记忆清零，恢复只展开第一层";
+            case "zh_CHT": return "一鍵收回：折疊記憶清零，恢復只展開第一層";
+            case "en_US":
+            default: return "Collapse all back to the first level (clears fold memory)";
+        }
+    }
+
     public get 写作槽不支持删除类操作() {
         switch (this.lang) {
             case "zh_CN": return "写作槽是定稿文档，不支持删除/重插类操作";
@@ -7429,6 +7481,26 @@ export class TomatoI18n extends TomatoI18nABC {
         }
     }
 
+    // ===== need-0930-01 摘抄/素材导航首尾循环：边界环绕 toast（650189 拍板直接跳） =====
+
+    public get 已到最新一条转入最早一条摘抄() {
+        switch (this.lang) {
+            case "zh_CN": return "已到最新一条，转入最早一条摘抄";
+            case "zh_CHT": return "已到最新一條，轉入最早一條摘抄";
+            case "en_US":
+            default: return "Newest digest reached, jumping to the earliest";
+        }
+    }
+
+    public get 已到最早一条转入最新一条摘抄() {
+        switch (this.lang) {
+            case "zh_CN": return "已到最早一条，转入最新一条摘抄";
+            case "zh_CHT": return "已到最早一條，轉入最新一條摘抄";
+            case "en_US":
+            default: return "Earliest digest reached, jumping to the newest";
+        }
+    }
+
     public get 未找到本条摘抄() {
         switch (this.lang) {
             case "zh_CN": return "未找到本条摘抄";
@@ -7512,6 +7584,24 @@ export class TomatoI18n extends TomatoI18nABC {
             case "zh_CHT": return "已是最新一條素材";
             case "en_US":
             default: return "Already the newest material";
+        }
+    }
+
+    public get 已到最新一条转入最早一条素材() {
+        switch (this.lang) {
+            case "zh_CN": return "已到最新一条，转入最早一条素材";
+            case "zh_CHT": return "已到最新一條，轉入最早一條素材";
+            case "en_US":
+            default: return "Newest material reached, jumping to the earliest";
+        }
+    }
+
+    public get 已到最早一条转入最新一条素材() {
+        switch (this.lang) {
+            case "zh_CN": return "已到最早一条，转入最新一条素材";
+            case "zh_CHT": return "已到最早一條，轉入最新一條素材";
+            case "en_US":
+            default: return "Earliest material reached, jumping to the newest";
         }
     }
 
@@ -7939,6 +8029,15 @@ export class TomatoI18n extends TomatoI18nABC {
         }
     }
     public get 移动端菜单显示开始学习() {
+        switch (this.lang) {
+            case "zh_CN": return "移动端菜单显示";
+            case "zh_CHT": return "行動端選單顯示";
+            case "en_US":
+            default: return "Mobile menu shows";
+        }
+    }
+    // need-1001-02 移动端复访入口：渐进菜单「到期复访」项开关行（照上条开始学习形式）
+    public get 移动端菜单显示到期复访() {
         switch (this.lang) {
             case "zh_CN": return "移动端菜单显示";
             case "zh_CHT": return "行動端選單顯示";
@@ -8473,6 +8572,17 @@ export class TomatoI18n extends TomatoI18nABC {
             case "zh_CHT": return "把長文檔按標題切分為多個子文檔，便於查閱與保存。原文檔保留為目錄殼，正文移入各卷";
             case "en_US":
             default: return "Split a long doc into child docs by headings for easier browsing and storage. The original doc stays as the folder shell; its content moves into volumes";
+        }
+    }
+    /** □1 卷落点校验失配中止提示（飞书 2026-10 数据丢失事故防线）：建卷后逐卷验落点，
+     *  失配立即中止不动原文——此文案=用户看到的行动指引（Dialog 依 VOL_LANDING_MISMATCH
+     *  前缀识别推 toast，非通用失败文案） */
+    public get 卷落点异常已中止() {
+        switch (this.lang) {
+            case "zh_CN": return "卷落点异常已中止，原文未动。已创建的卷可能在笔记本根部同名文档下，可手动移回；建议将书重命名后再试";
+            case "zh_CHT": return "卷落點異常已中止，原文未動。已創建的卷可能在筆記本根部同名文檔下，可手動移回；建議將書重命名後再試";
+            case "en_US":
+            default: return "Volume landing mismatch, aborted — the original doc is untouched. Created volumes may sit under a same-named doc at the notebook root and can be moved back manually; renaming the book and retrying is recommended";
         }
     }
     public get 每卷字数上限() {
@@ -9473,6 +9583,44 @@ export class TomatoI18n extends TomatoI18nABC {
             case "zh_CHT": return "開啟後摘抄卡不再附「摘自哪裡」的回溯引用行";
             case "en_US":
             default: return "Digest cards no longer get a \"digested from\" backtrace ref line";
+        }
+    }
+    public get tip设置提取回溯() {
+        switch (this.lang) {
+            case "zh_CN": return "开启后「提取所有分片的笔记」产物不再附跳转原文的星号链接";
+            case "zh_CHT": return "開啟後「提取所有分片的筆記」產物不再附跳轉原文的星號鏈接";
+            case "en_US":
+            default: return "Extract-all results no longer get the asterisk links jumping back to source blocks";
+        }
+    }
+    // need-0927 □6（姊妹队列观察项）：提取全部定位失败可读提示（原静默 return 无产物无提示）
+    public get 提取产物定位失败() {
+        switch (this.lang) {
+            case "zh_CN": return "提取产物定位失败，请重试一次；持续失败请反馈";
+            case "zh_CHT": return "提取產物定位失敗，請重試一次；持續失敗請反饋";
+            case "es_ES": return "No se pudo localizar el destino de extracción: reintente; si persiste, repórtelo";
+            case "fr_FR": return "Impossible de localiser la cible d'extraction : réessayez ; si cela persiste, signalez-le";
+            case "ja_JP": return "抽出先の特定に失敗しました。もう一度お試しください。続く場合はご報告ください";
+            case "en_US":
+            default: return "Could not locate the extraction target; please retry once, and report if it persists";
+        }
+    }
+    // need-0927-04 楼20 拍板①：提取到底（⇧⌥R）/提取笔记（⌘F5）的星号回链开关 tip
+    public get tip设置笔记回溯() {
+        switch (this.lang) {
+            case "zh_CN": return "开启后「提取笔记到底部」「提取笔记」产物不再附跳转原文的星号链接（提取全部另受上一开关控制）";
+            case "zh_CHT": return "開啟後「提取筆記到底部」「提取筆記」產物不再附跳轉原文的星號鏈接（提取全部另受上一開關控制）";
+            case "en_US":
+            default: return "Extract-to-bottom and Extract-notes results no longer get the asterisk backlinks (extract-all has its own switch above)";
+        }
+    }
+    // need-0927-04 楼20 拍板②：条间空行开关 tip
+    public get tip设置条间空行() {
+        switch (this.lang) {
+            case "zh_CN": return "开启后提取产物条与条之间不再插空行（默认空行分隔，更易阅读）";
+            case "zh_CHT": return "開啟後提取產物條與條之間不再插空行（默認空行分隔，更易閱讀）";
+            case "en_US":
+            default: return "Extracted entries are stacked without blank lines between them (blank-line separation is the default)";
         }
     }
     public get tip设置dailycard() {
@@ -13893,6 +14041,119 @@ export class TomatoI18n extends TomatoI18nABC {
             default: return "Copy selected fragment instead of whole block";
         }
     }
+    // A1 复制收集落点三档（陆杰 2026-10-11）：select 行+三选项；仅「复制到 dailynote」链生效
+    public get 复制收集落点() {
+        switch (this.lang) {
+            case "zh_CN": return "复制收集落点";
+            case "zh_CHT": return "複製收集落點";
+            case "es_ES": return "Destino de la copia";
+            case "fr_FR": return "Destination de la copie";
+            case "ja_JP": return "コピー収集の宛先";
+            case "en_US":
+            default: return "Copy collection target";
+        }
+    }
+    public get 落点当日日记() {
+        switch (this.lang) {
+            case "zh_CN": return "当日日记";
+            case "zh_CHT": return "當日日記";
+            case "es_ES": return "Diario del día";
+            case "fr_FR": return "Journal du jour";
+            case "ja_JP": return "当日の日記";
+            case "en_US":
+            default: return "Today's daily note";
+        }
+    }
+    public get 落点固定文档() {
+        switch (this.lang) {
+            case "zh_CN": return "固定文档";
+            case "zh_CHT": return "固定文檔";
+            case "es_ES": return "Documento fijo";
+            case "fr_FR": return "Document fixe";
+            case "ja_JP": return "固定ドキュメント";
+            case "en_US":
+            default: return "Fixed document";
+        }
+    }
+    public get 落点来源子文档() {
+        switch (this.lang) {
+            case "zh_CN": return "来源文档下建子文档「收集 YYYYMMDD」";
+            case "zh_CHT": return "來源文檔下建子文檔「收集 YYYYMMDD」";
+            case "es_ES": return "Subdocumento «收集 YYYYMMDD» bajo el original";
+            case "fr_FR": return "Sous-document « 收集 YYYYMMDD » sous le document source";
+            case "ja_JP": return "元ドキュメント下に「収集 YYYYMMDD」サブドキュメント";
+            case "en_US":
+            default: return "Child doc \"收集 YYYYMMDD\" under the source";
+        }
+    }
+    // A2 划词片段纯净档（片段级，勿与块级「简单复制」混淆）：开关行+说明
+    public get 划词片段纯净落块() {
+        switch (this.lang) {
+            case "zh_CN": return "划词片段纯净落块（片段级）";
+            case "zh_CHT": return "劃詞片段純淨落塊（片段級）";
+            case "es_ES": return "Copia limpia del fragmente (nivel fragmento)";
+            case "fr_FR": return "Copie épurée du fragment (niveau fragment)";
+            case "ja_JP": return "フラグメントをクリーンに落塊（フラグメント単位）";
+            case "en_US":
+            default: return "Plain fragment copy (fragment level)";
+        }
+    }
+    public get 划词片段纯净落块说明() {
+        switch (this.lang) {
+            case "zh_CN": return "不套收集壳、不挂任何属性与源锚：片段直落段落、条间空行、保留行内样式；不进时间间隔统计与近期列表（与速记纯文本同口径）";
+            case "zh_CHT": return "不套收集殼、不掛任何屬性與源錨：片段直落段落、條間空行、保留行內樣式；不進時間間隔統計與近期列表（與速記純文本同口徑）";
+            case "es_ES": return "Sin contenedor ni atributos ni ancla al origen: el fragmento cae como párrafo directo, con línea en blanco entre entradas y estilos en línea conservados; no entra en las estadísticas de intervalos ni en la lista reciente (mismo criterio que el texto plano de las notas rápidas)";
+            case "fr_FR": return "Sans conteneur, sans attributs ni ancre source : le fragment tombe en paragraphe direct, une ligne vide entre entrées, styles en ligne conservés ; hors statistiques d'intervalles et liste récente (même règle que le texte simple des notes rapides)";
+            case "ja_JP": return "収集シェルも属性もソースアンカーも付けない：フラグメントは段落として直接落ち、エントリ間に空行、インラインスタイルは保持。時間間隔統計と最近リストには入らない（速記プレーンテキストと同じ扱い）";
+            case "en_US":
+            default: return "No container shell, no attributes, no source anchor: the fragment lands as a bare paragraph with a blank line between entries, inline styles kept; excluded from interval stats and the recent list (same as plain quick-note text)";
+        }
+    }
+    // A3 复制锚三态：select 行+三选项（旧布尔「使用引用来回溯」迁移而来）
+    public get 复制锚形态() {
+        switch (this.lang) {
+            case "zh_CN": return "复制锚形态";
+            case "zh_CHT": return "複製錨形態";
+            case "es_ES": return "Forma del ancla al copiar";
+            case "fr_FR": return "Forme de l'ancre de copie";
+            case "ja_JP": return "コピーアンカー形式";
+            case "en_US":
+            default: return "Copy anchor form";
+        }
+    }
+    public get 锚形态引用() {
+        switch (this.lang) {
+            case "zh_CN": return "引用";
+            case "zh_CHT": return "引用";
+            case "es_ES": return "Referencia";
+            case "fr_FR": return "Référence";
+            case "ja_JP": return "参照";
+            case "en_US":
+            default: return "Reference";
+        }
+    }
+    public get 锚形态超链接() {
+        switch (this.lang) {
+            case "zh_CN": return "超链接";
+            case "zh_CHT": return "超連結";
+            case "es_ES": return "Hipervínculo";
+            case "fr_FR": return "Hyperlien";
+            case "ja_JP": return "ハイパーリンク";
+            case "en_US":
+            default: return "Hyperlink";
+        }
+    }
+    public get 锚形态不挂锚() {
+        switch (this.lang) {
+            case "zh_CN": return "不挂锚";
+            case "zh_CHT": return "不掛錨";
+            case "es_ES": return "Sin ancla";
+            case "fr_FR": return "Aucune ancre";
+            case "ja_JP": return "アンカーなし";
+            case "en_US":
+            default: return "No anchor";
+        }
+    }
     public get 搬运官方速记到日记() {
         switch (this.lang) {
             case "zh_CN": return "搬运官方速记到日记";
@@ -13906,13 +14167,36 @@ export class TomatoI18n extends TomatoI18nABC {
     }
     public get 官方速记未配置合并路径() {
         switch (this.lang) {
-            case "zh_CN": return "官方速记未配置合并保存路径（设置-闪念速记-保存位置），配置日期模板后可自动搬运";
-            case "zh_CHT": return "官方速記未配置合併保存路徑（設定-速記-保存位置），配置日期模板後可自動搬運";
-            case "es_ES": return "Las notas rápidas oficiales no tienen ruta de guardado combinada (Ajustes-Notas rápidas), configúrela con plantilla de fecha";
-            case "fr_FR": return "Les notes rapides officielles n'ont pas de chemin d'enregistrement combiné (Paramètres-Notes rapides), configurez un modèle de date";
-            case "ja_JP": return "公式速記に統合保存パスが未設定です（設定-速記-保存場所）、日付テンプレートを設定すると自動移動できます";
+            case "zh_CN": return "官方速记未定位到中转文档——官方保存位置仅移动端可配，请核对移动端（思源设置-闪念速记-保存位置）的路径模板，并在本插件设置的「官方速记中转路径模板」填入同款模板";
+            case "zh_CHT": return "官方速記未定位到中轉文檔——官方保存位置僅移動端可配，請核對移動端（思源設定-速記-保存位置）的路徑模板，並在本插件設定的「官方速記中轉路徑模板」填入同款模板";
+            case "es_ES": return "No se localizó el documento de tránsito: la ubicación oficial solo se configura en móvil; revise la plantilla móvil (Ajustes-Notas rápidas) y ponga la misma en «Plantilla de ruta de tránsito» de este plugin";
+            case "fr_FR": return "Document de transit introuvable : l'emplacement officiel ne se règle que sur mobile ; vérifiez le modèle mobile (Paramètres-Notes rapides) et reportez-le dans « Modèle de route de transit » du plugin";
+            case "ja_JP": return "中継ドキュメントを特定できません——公式の保存場所はモバイルでのみ設定できます。モバイル側（設定-速記-保存場所）のパスを確認し、同じものを本プラグインの「中継パステンプレート」に入力してください";
             case "en_US":
-            default: return "Official quick notes have no merged save path (Settings-Quick notes); set a date template to enable auto-move";
+            default: return "Transit doc not located: the official save location is mobile-only; check the mobile template (Settings-Quick notes) and put the same one into this plugin's \"Transit path template\"";
+        }
+    }
+    // need-0926-19 官方速记中转路径模板：设置行标题+说明（桌面端无官方入口的自存兜底通道）
+    public get 官方速记中转路径模板() {
+        switch (this.lang) {
+            case "zh_CN": return "官方速记中转路径模板";
+            case "zh_CHT": return "官方速記中轉路徑模板";
+            case "es_ES": return "Plantilla de ruta de tránsito";
+            case "fr_FR": return "Modèle de route de transit";
+            case "ja_JP": return "中継パステンプレート";
+            case "en_US":
+            default: return "Transit path template";
+        }
+    }
+    public get 中转路径模板说明() {
+        switch (this.lang) {
+            case "zh_CN": return "官方「闪念速记-保存位置」仅移动端可设置且不随同步分发，桌面端插件用本模板定位中转文档：填入与移动端一致的路径模板（如 /闪念速记/{{now | date \"2006-01-02\"}}，支持日期模板变量），留空则仅用本机官方配置";
+            case "zh_CHT": return "官方「閃念速記-保存位置」僅移動端可設置且不隨同步分發，桌面端插件用本模板定位中轉文檔：填入與移動端一致的路徑模板（如 /閃念速記/{{now | date \"2006-01-02\"}}，支持日期模板變量），留空則僅用本機官方配置";
+            case "es_ES": return "La ubicación oficial de notas rápidas solo se configura en móvil y no se sincroniza: el plugin de escritorio usa esta plantilla para localizar el documento de tránsito; ponga la misma ruta que en móvil (p. ej. /闪念速记/{{now | date \"2006-01-02\"}}, admite variables de fecha); vacío = solo configuración oficial local";
+            case "fr_FR": return "L'emplacement officiel des notes rapides se règle uniquement sur mobile et ne se synchronise pas : le plugin desktop utilise ce modèle pour localiser le document de transit ; mettez la même route que sur mobile (ex. /闪念速记/{{now | date \"2006-01-02\"}}, variables de date admises) ; vide = configuration officielle locale seule";
+            case "ja_JP": return "公式の速記保存場所はモバイル専用で同期されないため、デスクトップのプラグインはこのテンプレートで中継ドキュメントを特定します。モバイルと同じパスを入力してください（例 /闪念速记/{{now | date \"2006-01-02\"}}、日付テンプレート変数対応）。空欄なら端末ローカルの公式設定のみ使用";
+            case "en_US":
+            default: return "The official quick-note save location is mobile-only and not synced: the desktop plugin uses this template to locate the transit doc; put the same path as on mobile (e.g. /闪念速记/{{now | date \"2006-01-02\"}}, date template vars supported); empty = local official config only";
         }
     }
     public get 已搬运速记到日记() {
@@ -13924,6 +14208,101 @@ export class TomatoI18n extends TomatoI18nABC {
             case "ja_JP": return "速記{n}件を日記へ移動しました";
             case "en_US":
             default: return "Moved {n} quick notes to diary";
+        }
+    }
+    // need-0926-07「开同步后不生效」提示批：开关行说明+移动端一次性提示+手动三分支诊断
+    public get 官方速记搬运说明() {
+        switch (this.lang) {
+            case "zh_CN": return "自动搬运在桌面端同步结束后触发；移动端只把速记写进中转文档、不自动搬运，整理请在桌面端进行";
+            case "zh_CHT": return "自動搬運在桌面端同步結束後觸發；移動端只把速記寫進中轉文檔、不自動搬運，整理請在桌面端進行";
+            case "es_ES": return "El movimiento automático se dispara al terminar la sincronización en el escritorio; en móvil solo se escribe en el documento de tránsito, no se mueve";
+            case "fr_FR": return "Le déplacement automatique se déclenche à la fin de la synchronisation sur desktop ; sur mobile, seule l'écriture dans le document de transit, pas de déplacement";
+            case "ja_JP": return "自動移動はデスクトップ側の同期完了後に発火します。モバイルは中継ドキュメントに書き込むだけで移動せず、整理はデスクトップで行います";
+            case "en_US":
+            default: return "Auto-move triggers after sync finishes on desktop; mobile only writes to the transit doc and never auto-moves";
+        }
+    }
+    public get 官方速记搬运移动端提示() {
+        switch (this.lang) {
+            case "zh_CN": return "移动端不自动搬运官方速记：速记先写进中转文档，回到桌面端同步后自动整理进日记";
+            case "zh_CHT": return "移動端不自動搬運官方速記：速記先寫進中轉文檔，回到桌面端同步後自動整理進日記";
+            case "es_ES": return "El móvil no mueve automáticamente las notas rápidas: se escriben en el documento de tránsito y el escritorio las pasa al diario tras sincronizar";
+            case "fr_FR": return "Le mobile ne déplace pas automatiquement les notes rapides : elles vont dans le document de transit, puis le desktop les intègre au journal après synchronisation";
+            case "ja_JP": return "モバイルは公式速記を自動移動しません：速記は中継ドキュメントに書き込まれ、デスクトップ同期後に日記へ整理されます";
+            case "en_US":
+            default: return "Mobile does not auto-move quick notes: they go to the transit doc first, then desktop moves them into the diary after sync";
+        }
+    }
+    // need-0926-11 搬运速记按记录时间归位：开关行+说明（官方速记搬运与队列闪念合并两链共用）
+    public get 搬运速记按记录时间归位() {
+        switch (this.lang) {
+            case "zh_CN": return "搬运速记按记录时间归位";
+            case "zh_CHT": return "搬運速記按記錄時間歸位";
+            case "es_ES": return "Mover notas rápidas a su hora registrada";
+            case "fr_FR": return "Placer les notes rapides selon l'heure d'enregistrement";
+            case "ja_JP": return "速記を記録時刻の位置へ移動";
+            case "en_US":
+            default: return "Move quick notes to their recorded time position";
+        }
+    }
+    public get 按记录时间归位说明() {
+        switch (this.lang) {
+            case "zh_CN": return "开启后搬进日记的速记插到记录时刻对应的位置（找同日更晚的速记块插其前面，而非日记末尾）；不重排已有内容，找不到更晚位置时仍追加到末尾";
+            case "zh_CHT": return "開啟後搬進日記的速記插到記錄時刻對應的位置（找同日更晚的速記塊插其前面，而非日記末尾）；不重排已有內容，找不到更晚位置時仍追加到末尾";
+            case "es_ES": return "Al activarlo, las notas rápidas movidas se insertan en la posición de su hora registrada (delante de la primera nota más tardía del día, no al final del diario); no reordena el contenido existente y, sin posición posterior, se añade al final";
+            case "fr_FR": return "Activé, une note rapide déplacée s'insère à la position de son heure d'enregistrement (avant la première note plus tardive du jour, pas en fin de journal) ; rien n'est réordonné, et sans position ultérieure l'ajout se fait en fin";
+            case "ja_JP": return "有効にすると、日記へ移動した速記は記録時刻の位置（同じ日のより遅い速記ブロックの前）に挿入され、日記の末尾には行きません。既存の内容は並べ替えず、より遅い位置が無い場合は末尾に追加します";
+            case "en_US":
+            default: return "When on, moved quick notes insert at their recorded time position (before the first later note of the day) instead of the diary end; existing content is never reordered, and with no later anchor the note still appends at the end";
+        }
+    }
+    // need-0926-13 自定义图标「别名型」声明语法：设置项说明行（@别名 后缀=不建引用文档）；
+    // need-0928-01 补尾 @ 不计时声明（再叠一个 @=该类不落时间记录属性、不隔断相邻记录
+    // 的间隔统计，分类标记保留——陆杰飞书 om_x100b64940882dcacb2631b2f714bb32）；
+    // need-1011-01 补尾 ! 时间链断点声明（该条=新链起点，与上一条的间隔不计入、
+    // 自身照常计时，分类标记与时间记录照落——陆杰 10-01 分割线提案窄化版）
+    public get 图标别名后缀说明() {
+        switch (this.lang) {
+            case "zh_CN": return "词尾加 @别名 声明为别名型图标：不建引用文档，文字型正文开头留「名称：」前缀，emoji 型正文零标记；词尾再叠 @（如「喝水@」「喝水@别名@」）=该类不计时：不落时间记录属性、不隔断相邻记录的间隔统计，分类标记保留；词尾再叠 !（如「午休!」「午休!@」）=时间链断点：该条视为新链起点，与上一条之间的间隔不计入，该条自身照常计时（分类标记与时间记录照落）——但 @ 与 ! 标记均走块属性通道，emoji 型或带 @别名 的别名型才生效，纯文字词默认引用型不生效（需要时先加 @别名 转为别名型）；不带后缀照旧建引用";
+            case "zh_CHT": return "詞尾加 @別名 聲明為別名型圖標：不建引用文檔，文字型正文開頭留「名稱：」前綴，emoji 型正文零標記；詞尾再疊 @（如「喝水@」「喝水@別名@」）=該類不計時：不落時間記錄屬性、不隔斷相鄰記錄的間隔統計，分類標記保留；詞尾再疊 !（如「午休!」「午休!@」）=時間鏈斷點：該條視為新鏈起點，與上一條之間的間隔不計入，該條自身照常計時（分類標記與時間記錄照落）——但 @ 與 ! 標記均走塊屬性通道，emoji 型或帶 @別名 的別名型才生效，純文字詞默認引用型不生效（需要時先加 @別名 轉為別名型）；不帶後綴照舊建引用";
+            case "es_ES": return "Añade @别名 al final de una palabra para declararla tipo alias: no crea documento de referencia; los tipos de texto anteponen «nombre:» al cuerpo, los emoji lo dejan limpio. Una @ final adicional (p. ej. «agua@», «agua@别名@») declara la categoría sin cronometraje: sin atributos de hora, sin cortar el cálculo de intervalos entre registros vecinos, y la etiqueta de categoría se conserva. Un ! final adicional (p. ej. «siesta!», «siesta!@») declara ruptura de la cadena temporal: esa entrada se considera inicio de una nueva cadena y su intervalo con la anterior no se cuenta, aunque la propia entrada sí se cronometra como siempre (etiqueta de categoría y registro de hora se mantienen) — pero tanto @ como ! funcionan vía atributos de bloque: solo surten efecto en tipos emoji o alias (con @别名); los tipos de texto puro, de tipo referencia por defecto, no se ven afectados (añade primero @别名 para convertirlos); sin sufijo se sigue creando la referencia";
+            case "fr_FR": return "Ajoutez @别名 en fin de mot pour le déclarer type alias : aucun document de référence créé ; les types texte préfixent le corps avec « nom : », les emoji le laissent tel quel. Un @ final supplémentaire (ex. « eau@ », « eau@别名@ ») déclare la catégorie non chronométrée : pas d'attribut horaire, pas de coupure dans le calcul des intervalles entre enregistrements voisins, l'étiquette de catégorie est conservée. Un ! final supplémentaire (ex. « sieste! », « sieste!@ ») déclare une rupture de chaîne temporelle : cette entrée devient le départ d'une nouvelle chaîne, l'intervalle avec la précédente n'est pas compté, mais l'entrée elle-même reste chronométrée normalement (étiquette de catégorie et relevé d'heure conservés) — mais @ comme ! passent par les attributs de bloc : ils ne prennent effet que sur les types emoji ou alias (avec @别名) ; les types texte pur, de type référence par défaut, ne sont pas concernés (ajoutez d'abord @别名 pour convertir) ; sans suffixe, la référence est créée comme avant";
+            case "ja_JP": return "語尾に @别名 を付けると別名型アイコン：参照文書を作成せず、テキスト型は本文の先頭に「名称：」接頭辞、emoji 型は本文ゼロマーク。さらに語尾に @ を重ねる（例「水@」「水@别名@」）と非計時カテゴリ：時刻記録属性を持たせず、隣接記録の間隔計算も遮断せず、分類マークは保持。語尾にさらに ! を重ねる（例「昼休み!」「昼休み!@」）と時間チェーンの断点：その記録は新しいチェーンの起点とみなされ、前の記録との間隔は計算に入れませんが、その記録自体は通常どおり計時されます（分類マークと時刻記録はそのまま）——ただし @ と ! のマークはいずれもブロック属性チャネルで動作し、emoji 型または @别名 付きの別名型のみ有効、テキスト型のデフォルト参照型では無効です（必要なら先に @别名 を付けて別名型に）。接尾辞なしは従来どおり参照を作成";
+            case "en_US":
+            default: return "Suffix @别名 declares an alias kind: no ref doc created; text kinds prefix the body with \"name:\", emoji kinds keep the body clean. An extra trailing @ (e.g. \"water@\", \"water@别名@\") marks the kind untimed: no time attrs, no breaking interval stats between neighboring records, while the category label stays. An extra trailing ! (e.g. \"lunch!\", \"lunch!@\") marks a time-chain breakpoint: the entry counts as the start of a new chain, so its interval from the previous one is excluded, while the entry itself is timed as usual (category label and time record stay) — but both @ and ! markers ride block attributes: they only take effect on emoji kinds or alias kinds (with @别名); plain-text kinds default to the ref type and are not affected (add @别名 first to convert); without suffixes a reference is created as before";
+        }
+    }
+    public get 官方速记今日无中转文档() {
+        switch (this.lang) {
+            case "zh_CN": return "今日中转文档尚未创建：今天还没有速记记录，或尚未同步到本机——记一条速记并完成同步后再搬运";
+            case "zh_CHT": return "今日中轉文檔尚未創建：今天還沒有速記記錄，或尚未同步到本機——記一條速記並完成同步後再搬運";
+            case "es_ES": return "El documento de tránsito de hoy no existe todavía: no hay notas rápidas hoy o aún no se han sincronizado a este dispositivo";
+            case "fr_FR": return "Le document de transit du jour n'existe pas encore : aucune note rapide aujourd'hui, ou pas encore synchronisée avec cet appareil";
+            case "ja_JP": return "今日の中継ドキュメントはまだ作成されていません：今日の速記がないか、この端末にまだ同期されていません";
+            case "en_US":
+            default: return "Today's transit doc does not exist yet: no quick notes today, or not yet synced to this device";
+        }
+    }
+    public get 官方速记路径不在解析笔记本() {
+        switch (this.lang) {
+            case "zh_CN": return "中转文档 {path} 位于「{box}」笔记本下、不在日记落点笔记本解析范围——请把官方速记保存位置指定为同一笔记本";
+            case "zh_CHT": return "中轉文檔 {path} 位於「{box}」筆記本下、不在日記落點筆記本解析範圍——請把官方速記保存位置指定為同一筆記本";
+            case "es_ES": return "El documento de tránsito {path} está en el cuaderno «{box}», fuera del cuaderno de destino del diario — fije la ubicación de guardado oficial en el mismo cuaderno";
+            case "fr_FR": return "Le document de transit {path} est dans le carnet « {box} », hors du carnet cible du journal — réglez l'emplacement officiel sur le même carnet";
+            case "ja_JP": return "中継ドキュメント {path} はノートブック「{box}」にあり、日記フォール先ノートブックの解析範囲外です——公式速記の保存場所を同じノートブックに指定してください";
+            case "en_US":
+            default: return "Transit doc {path} lives in notebook \"{box}\", outside the diary notebook resolution — set the official save location to that same notebook";
+        }
+    }
+    public get 官方速记无待搬运() {
+        switch (this.lang) {
+            case "zh_CN": return "今日没有待搬运的速记（可能已全部搬运完成）";
+            case "zh_CHT": return "今日沒有待搬運的速記（可能已全部搬運完成）";
+            case "es_ES": return "No hay notas rápidas pendientes de mover hoy (posiblemente ya se movieron todas)";
+            case "fr_FR": return "Aucune note rapide à déplacer aujourd'hui (probablement déjà toutes déplacées)";
+            case "ja_JP": return "今日、移動待ちの速記はありません（すでに全部移動済みの可能性）";
+            case "en_US":
+            default: return "No quick notes waiting to be moved today (probably all already moved)";
         }
     }
     // □4 拍照闪念输入体验翻新（dailynote-pipeline 2026-09-06）：设置行+小窗 placeholder+上传提示
@@ -16355,6 +16734,234 @@ export class TomatoI18n extends TomatoI18nABC {
             case "zh_CHT": return "打開前綴文檔樹面板";
             case "en_US":
             default: return "Open prefix tree panel";
+        }
+    }
+
+    // ---- navcompass（2026-10-11）：十字罗盘导航=第四悬浮球（设置域/罗盘 UI/四方向命令文案） ----
+    public get 十字罗盘() {
+        switch (this.lang) {
+            case "zh_CN": return "十字罗盘";
+            case "zh_CHT": return "十字羅盤";
+            case "en_US":
+            default: return "Nav compass";
+        }
+    }
+    public get 十字罗盘说明() {
+        switch (this.lang) {
+            case "zh_CN": return "第四颗悬浮球：点球变身十字 D-pad，在文档树上方向导航（默认 ↑父文档 ↓第一个子文档 ←前一个兄弟 →后一个兄弟），边界方向键置灰不回绕；罗盘可整体拖动，点外部/Esc/点中心收起回球。";
+            case "zh_CHT": return "第四顆懸浮球：點球變身十字 D-pad，在文檔樹上方向導航（默認 ↑父文檔 ↓第一個子文檔 ←前一個兄弟 →後一個兄弟），邊界方向鍵置灰不回繞；羅盤可整體拖動，點外部/Esc/點中心收起回球。";
+            case "en_US":
+            default: return "The 4th floating ball: tap to morph into a D-pad compass for tree navigation (default: ↑ parent, ↓ first child, ← prev sibling, → next sibling). Boundary keys are greyed out without wrapping; drag the whole compass; tap outside / Esc / tap center to collapse back to the ball.";
+        }
+    }
+    public get 桌面端启用十字罗盘() {
+        switch (this.lang) {
+            case "zh_CN": return "桌面端启用十字罗盘";
+            case "zh_CHT": return "桌面端啟用十字羅盤";
+            case "en_US":
+            default: return "Enable nav compass on desktop";
+        }
+    }
+    public get 手机端启用十字罗盘() {
+        switch (this.lang) {
+            case "zh_CN": return "手机端启用十字罗盘";
+            case "zh_CHT": return "手機端啟用十字羅盤";
+            case "en_US":
+            default: return "Enable nav compass on mobile";
+        }
+    }
+    public get 方向流派() {
+        switch (this.lang) {
+            case "zh_CN": return "方向流派";
+            case "zh_CHT": return "方向流派";
+            case "en_US":
+            default: return "Direction scheme";
+        }
+    }
+    public get 树形流派() {
+        switch (this.lang) {
+            case "zh_CN": return "树形流派（↑父 ↓首子 ←前兄 →后兄）";
+            case "zh_CHT": return "樹形流派（↑父 ↓首子 ←前兄 →後兄）";
+            case "en_US":
+            default: return "Tree scheme (↑ parent ↓ first child ← prev → next sibling)";
+        }
+    }
+    public get 霸主流派() {
+        switch (this.lang) {
+            case "zh_CN": return "霸主流派（←→父子 ↑↓前后篇）";
+            case "zh_CHT": return "霸主流派（←→父子 ↑↓前後篇）";
+            case "en_US":
+            default: return "Hierarchy scheme (←→ parent/child ↑↓ prev/next doc)";
+        }
+    }
+    public get 展开或收起十字罗盘() {
+        switch (this.lang) {
+            case "zh_CN": return "展开或收起十字罗盘";
+            case "zh_CHT": return "展開或收起十字羅盤";
+            case "en_US":
+            default: return "Toggle nav compass";
+        }
+    }
+    public get 罗盘向上导航() {
+        switch (this.lang) {
+            case "zh_CN": return "十字罗盘 · 向上导航";
+            case "zh_CHT": return "十字羅盤 · 向上導航";
+            case "en_US":
+            default: return "Nav compass · up";
+        }
+    }
+    public get 罗盘向下导航() {
+        switch (this.lang) {
+            case "zh_CN": return "十字罗盘 · 向下导航";
+            case "zh_CHT": return "十字羅盤 · 向下導航";
+            case "en_US":
+            default: return "Nav compass · down";
+        }
+    }
+    public get 罗盘向左导航() {
+        switch (this.lang) {
+            case "zh_CN": return "十字罗盘 · 向左导航";
+            case "zh_CHT": return "十字羅盤 · 向左導航";
+            case "en_US":
+            default: return "Nav compass · left";
+        }
+    }
+    public get 罗盘向右导航() {
+        switch (this.lang) {
+            case "zh_CN": return "十字罗盘 · 向右导航";
+            case "zh_CHT": return "十字羅盤 · 向右導航";
+            case "en_US":
+            default: return "Nav compass · right";
+        }
+    }
+    public get 罗盘导航到父文档() {
+        switch (this.lang) {
+            case "zh_CN": return "父文档";
+            case "zh_CHT": return "父文檔";
+            case "en_US":
+            default: return "Parent";
+        }
+    }
+    public get 罗盘导航到首子文档() {
+        switch (this.lang) {
+            case "zh_CN": return "首子文档";
+            case "zh_CHT": return "首子文檔";
+            case "en_US":
+            default: return "First child";
+        }
+    }
+    public get 罗盘导航到前一篇() {
+        switch (this.lang) {
+            case "zh_CN": return "前一篇";
+            case "zh_CHT": return "前一篇";
+            case "en_US":
+            default: return "Previous doc";
+        }
+    }
+    public get 罗盘导航到后一篇() {
+        switch (this.lang) {
+            case "zh_CN": return "后一篇";
+            case "zh_CHT": return "後一篇";
+            case "en_US":
+            default: return "Next doc";
+        }
+    }
+    // ---- navflip（2026-10-11）：翻页模式=浏览历史回退/前进+最新处续读 ----
+    public get 罗盘导航到上一个浏览() {
+        switch (this.lang) {
+            case "zh_CN": return "上一个浏览";
+            case "zh_CHT": return "上一個瀏覽";
+            case "en_US":
+            default: return "Previously viewed";
+        }
+    }
+    public get 罗盘导航到下一个浏览() {
+        switch (this.lang) {
+            case "zh_CN": return "下一个浏览";
+            case "zh_CHT": return "下一個瀏覽";
+            case "en_US":
+            default: return "Next viewed";
+        }
+    }
+    // ---- navflip-r2：进入子文件夹位置记忆（落到该文档下上次浏览的子文档） ----
+    public get 罗盘导航到上次浏览() {
+        switch (this.lang) {
+            case "zh_CN": return "上次浏览";
+            case "zh_CHT": return "上次瀏覽";
+            case "en_US":
+            default: return "Last viewed";
+        }
+    }
+    public get 翻页模式() {
+        switch (this.lang) {
+            case "zh_CN": return "翻页模式";
+            case "zh_CHT": return "翻頁模式";
+            case "en_US":
+            default: return "Flip mode";
+        }
+    }
+    public get 翻页跟随文件夹序() {
+        switch (this.lang) {
+            case "zh_CN": return "文件夹顺序（前后篇）";
+            case "zh_CHT": return "文件夾順序（前後篇）";
+            case "en_US":
+            default: return "Folder order (prev/next)";
+        }
+    }
+    public get 翻页跟随浏览历史() {
+        switch (this.lang) {
+            case "zh_CN": return "浏览历史（回退翻看，最新处续读下一篇）";
+            case "zh_CHT": return "瀏覽歷史（回退翻看，最新處續讀下一篇）";
+            case "en_US":
+            default: return "Browsing history (back; resume next at latest)";
+        }
+    }
+    public get 罗盘加载中() {
+        switch (this.lang) {
+            case "zh_CN": return "加载中…";
+            case "zh_CHT": return "載入中…";
+            case "en_US":
+            default: return "Loading…";
+        }
+    }
+    public get 罗盘加载失败点击重试() {
+        switch (this.lang) {
+            case "zh_CN": return "加载失败，点击方向键重试";
+            case "zh_CHT": return "載入失敗，點擊方向鍵重試";
+            case "en_US":
+            default: return "Failed to load; tap a direction key to retry";
+        }
+    }
+    public get 罗盘当前文档() {
+        switch (this.lang) {
+            case "zh_CN": return "当前文档";
+            case "zh_CHT": return "當前文檔";
+            case "en_US":
+            default: return "Current doc";
+        }
+    }
+    public get 罗盘目标已失效() {
+        switch (this.lang) {
+            case "zh_CN": return "目标文档已不存在，已刷新罗盘";
+            case "zh_CHT": return "目標文檔已不存在，已刷新羅盤";
+            case "en_US":
+            default: return "Target doc no longer exists; compass refreshed";
+        }
+    }
+    public get 长按球打开十字罗盘设置() {
+        switch (this.lang) {
+            case "zh_CN": return "长按 0.5 秒打开十字罗盘设置";
+            case "zh_CHT": return "長按 0.5 秒打開十字羅盤設置";
+            case "en_US":
+            default: return "Long-press 0.5s to open nav compass settings";
+        }
+    }
+    public get 无方向可导航() {
+        switch (this.lang) {
+            case "zh_CN": return "无";
+            case "zh_CHT": return "無";
+            case "en_US":
+            default: return "None";
         }
     }
 }

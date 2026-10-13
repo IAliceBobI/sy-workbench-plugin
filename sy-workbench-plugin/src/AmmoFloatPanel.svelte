@@ -3,11 +3,14 @@
      打包图+共享 CSS 跨插件互相压制的坑家族），project 自持一份（p/s/r 抄送副本先例）。
      position:fixed 单例挂 body；头栏=标题+工具区+透明度滑杆+收起钮；正文容器由宿主
      AmmoFloat.ts mount AmmoPanelHost；右下 SE 角 resize 手柄。拖拽/resize/几何/透明度
-     localStorage 记忆。显隐走 hidden class 而非 {#if}：bodyEl 恒在，正文组件生命周期
+     ammo-float-geo petal 档记忆（lsfix 2026-10-13：原 localStorage 桌面端随机端口下
+     跨重启必丢，读写收拢 ammoFloatGeoIo.ts 并一次性收编旧档）。显隐走 hidden class 而非 {#if}：bodyEl 恒在，正文组件生命周期
      完全由宿主管（BkFloatPanel 同款——收起重开零重拉）。 -->
 <script lang="ts">
     import { onMount } from "svelte";
     import type { Writable } from "svelte/store";
+    import { loadAmmoFloatGeo, saveAmmoFloatGeo } from "./ammoFloatGeoIo";
+    import type { AmmoFloatGeo } from "./uiState";
 
     interface Props {
         open: Writable<boolean>;
@@ -29,7 +32,6 @@
     }
     let { open, title, onCollapse, onBody, panelKeyHint, onTools, onGeoChange, collapseLabel = "收起", opacityLabel = "透明度" }: Props = $props();
 
-    const LS_KEY = "pj-ammo-float-panel";
     /** 面板最小尺寸（BkFloatPanel MIN_W/MIN_H 同档）与默认宽高：四池两列+中央圈信息
      *  密度高于反链正文（520×420 档装不下四池 minmax(120px) 两行），取 640×560；
      *  默认落位右下角、离底 60px 让开状态栏 */
@@ -48,14 +50,6 @@
     let y = 0;
     let w = DEF_W;
     let h = DEF_H;
-
-    interface Geo {
-        x: number;
-        y: number;
-        w: number;
-        h: number;
-        o: number;
-    }
 
     function clampV(v: number, min: number, max: number) {
         return Math.max(min, Math.min(max, v));
@@ -76,40 +70,30 @@
     }
 
     function loadGeo() {
-        const fallback = () => {
+        // 读档收拢 ammoFloatGeoIo（store 档优先，旧 localStorage 档一次性收编）；无档/坏档
+        // 回默认：右下角、离底 60px 让开状态栏（容错守卫在归一侧，此处拿到即有效）。
+        // o 归一层不 clamp（消费侧口径）——滑杆值域 [0.4,1] 此处夹紧
+        const p = loadAmmoFloatGeo();
+        if (p) {
+            x = p.x;
+            y = p.y;
+            w = p.w;
+            h = p.h;
+            opacity = clampV(p.o, MIN_OPACITY, 1);
+        } else {
             w = DEF_W;
             h = DEF_H;
             opacity = 1;
             x = Math.max(0, window.innerWidth - DEF_W - EDGE);
             y = Math.max(0, window.innerHeight - DEF_H - BOTTOM_CLEAR);
-        };
-        try {
-            const raw = localStorage.getItem(LS_KEY);
-            if (raw) {
-                const p = JSON.parse(raw) as Partial<Geo>;
-                w = Number(p?.w);
-                h = Number(p?.h);
-                x = Number(p?.x);
-                y = Number(p?.y);
-                const o = Number(p?.o);
-                opacity = Number.isFinite(o) ? clampV(o, MIN_OPACITY, 1) : 1;
-                if (![w, h, x, y].every(Number.isFinite)) fallback();
-            } else {
-                fallback();
-            }
-        } catch {
-            fallback();
         }
         applyGeo();
     }
 
     function saveGeo() {
-        try {
-            const p: Geo = { x, y, w, h, o: opacity };
-            localStorage.setItem(LS_KEY, JSON.stringify(p));
-        } catch {
-            /* 存储满/隐私模式：几何仅会话内生效 */
-        }
+        // 落盘收拢 ammoFloatGeoIo（登记方法族=内存态 set+官方两参 saveData write 一体）
+        const p: AmmoFloatGeo = { x, y, w, h, o: opacity };
+        saveAmmoFloatGeo(p);
     }
 
     // ---- 头栏拖动（DialogSvelte pointer 实现同族，BkFloatPanel 同款） ----

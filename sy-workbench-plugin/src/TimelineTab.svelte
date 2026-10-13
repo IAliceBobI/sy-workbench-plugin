@@ -19,6 +19,10 @@
     import type { InstanceRow } from "./kernel/core/calendarMirror";
     import { type SchedEditOp, type SchedItem, type SchedStore } from "./kernel/core/schedule";
     import type { WeeklyStore } from "./kernel/core/report";
+    // lsfix 2026-10-13 家族战役：周报已读周集 localStorage→petal 档（读写门面+通道类型；
+    // 头注见 uiWeeklyRead.ts/uiState.ts——桌面端随机端口 origin 下 localStorage 跨重启必丢）
+    import { clipReadWeeks, loadReadWeeks, type WeeklyReadChannel } from "./uiWeeklyRead";
+    import type { WeeklyRead } from "./uiState";
     import { addDays } from "./kernel/core/dates";
     import type { RemindScanRow, TaskDueRow } from "./gui/queries";
     // ammo □7：实况段（日账打点=回望形态槽）+实况手动同步钮（三宿主同一引擎同一状态源）
@@ -47,6 +51,7 @@
         schedEdit,
         adoptForeign,
         loadWeekly,
+        weeklyReadStore,
         readDayBoard,
         createRemindEntry,
         moveRemindBlock,
@@ -78,6 +83,10 @@
         adoptForeign?: (eventId: string) => Promise<{ ok: boolean; error?: string } | null>;
         // 周报表只读（托盘周报 chip 开文档映射+未读角标数据源）
         loadWeekly?: () => Promise<WeeklyStore | null>;
+        /** lsfix 2026-10-13：周报已读周集 store 通道（petal 档 weekly-read.json——挂载方注入
+         *  { get: () => plugin.uiWeeklyRead, save: (v) => void plugin.saveWeeklyRead(v) }；
+         *  缺=无桥降级：已读态仅会话内，角标重启后复现） */
+        weeklyReadStore?: WeeklyReadChannel | null;
         // 当日班表块 rpc 读（IAL 直读恒新鲜；拖动/addrow 的板面真值）
         readDayBoard?: (day: string) => Promise<BoardReadShape | null>;
         // 轴右键创建=kernel 插带时间空段落块（remind 链全家桶——bear 段落块拍板）
@@ -109,8 +118,12 @@
     let instanceRows = $state<InstanceRow[]>([]);
     // 周报表（chip 开文档映射+未读角标源；kernel 写→pj-schedule-updated 广播同刷）
     let weekly = $state<WeeklyStore | null>(null);
-    /** 已读周集（weekStart→true；点击周报 chip 置位+localStorage 持久——轻 push 角标只消本机） */
+    /** 已读周集视图（weekStart→true；点击周报 chip 置位——轻 push 角标只消本机。lsfix
+     *  2026-10-13：持久化走 petal 档 weekly-read.json（weeklyReadStore 通道），视图只含周报表
+     *  weeks 内的周，全量镜像在 readStore） */
     let readWeeks = $state<Record<string, boolean>>({});
+    /** 已读周集 petal 档全量镜像（不裁剪——写路径以此为准叠加，防表外已读周被视图裁剪丢档） */
+    let readStore: WeeklyRead = {};
     let addSummary = $state("");
     let addTime = $state("");
     let addHard = $state(false);
@@ -247,13 +260,11 @@
     //    （期① 落块后 chip key=块 id——wr- 前缀匹配恒不中，改按 origin+day 查周报表） ──
     function applyWeekly(w: WeeklyStore | null): void {
         weekly = w;
-        const rw: Record<string, boolean> = {};
-        for (const wk of Object.keys(w?.weeks ?? {})) {
-            try {
-                if (localStorage.getItem(`pj-weekly-read-${wk}`)) rw[wk] = true;
-            } catch { /* localStorage 不可用=角标常亮，无碍 */ }
-        }
-        readWeeks = rw;
+        // lsfix 2026-10-13：读路径=store 档优先（petal 档随工作空间走，跨重启不丢）；无档时
+        // 收编 localStorage 旧档（pj-weekly-read-<weekStart> 动态键族——loadReadWeeks 内扫
+        // 前缀一次性收编落盘，收编后不再回写）；已读集以周报表 weeks 键集为准裁剪
+        readStore = loadReadWeeks(weeklyReadStore);
+        readWeeks = clipReadWeeks(readStore, Object.keys(w?.weeks ?? {}));
     }
     /** 落在该日的周报周键（周报表 weeks[].day=周日落日——班表 chip 的 date 同值） */
     function reportWeekKeyOfDay(day: string): string | null {
@@ -269,10 +280,11 @@
         const rec = wk && weekly?.weeks[wk] ? weekly.weeks[wk] : null;
         if (!rec || !wk) return;
         openBlock(rec.docId);
-        try {
-            localStorage.setItem(`pj-weekly-read-${wk}`, "1");
-        } catch { /* 无碍 */ }
+        // lsfix 2026-10-13：写路径=置位后立即经通道落盘（saveWeeklyRead 方法族=内存态+saveData
+        // 两参官方通道；全量镜像叠加，非裁剪视图）；无桥=仅会话内生效（不写 localStorage）
+        readStore = { ...readStore, [wk]: true };
         readWeeks = { ...readWeeks, [wk]: true };
+        weeklyReadStore?.save(readStore);
     }
 
     $effect(() => {

@@ -346,6 +346,88 @@ export function intervalMinutesBetween(a: { created?: string; time: string }, b:
     return Math.ceil(Math.abs(atime - btime) / (1000 * 60));
 }
 
+// ── 速记间隔归属（need-0926-18）──────────────────────────────────────────────
+// 「间隔计算模式」两档（对齐用户参照插件的「时间计算模式」）：
+//   start=开始模式（默认=存量语义）：间隔算「本条到下一条」、写在较早条身上；
+//   end=结束模式：间隔算「上一条到当前」、写在较晚条身上。
+// 存量属性不迁移；模式只决定「归属写入位置」，间隔分钟数与先后判定逻辑零改动。
+export type IdeaIntervalMode = "start" | "end";
+
+/** 模式值收拢（存量/手改坏值退回默认 start；strUtils 落点=calcTimeInterval 单测同文件域） */
+export function coerceIdeaIntervalMode(v: unknown): IdeaIntervalMode {
+    return v === "end" ? "end" : "start";
+}
+
+/** 间隔归属条目形态（ID_Time 结构子集；interval=盘上现值，仅 calc diff 用，规划本身不读） */
+export interface IdeaIntervalEntry {
+    id: string;
+    time: string;
+    created?: string;
+}
+
+/** a 是否早于 b——**红线：照搬 NoteBox.updateTimeInterval 原比较逻辑（created 全时间戳
+ *  优先，跨天搬运块正确性依赖它；缺/畸形任一侧退回 "2020-01-01 "+HH:MM 平面），只搬不改** */
+export function isEarlierIdea(a: IdeaIntervalEntry, b: IdeaIntervalEntry): boolean {
+    const at = parseIDTimestamp(a.created ?? "");
+    const bt = parseIDTimestamp(b.created ?? "");
+    return (!isNaN(at) && !isNaN(bt))
+        ? at < bt
+        : (new Date("2020-01-01 " + a.time)).getTime() < (new Date("2020-01-01 " + b.time)).getTime();
+}
+
+/** 间隔归属规划（need-0926-18 纯函数，单测覆盖）：输入按文档序排好的速记条，输出
+ *  「每条应有的间隔值」map——在 map 里=应写该值，不在 map 里=应清除（模式切换后旧
+ *  位置的残留靠全量 diff 清掉，空串清值由 cssStyle :not([=""]) 兜底零渲染）。
+ *  start=写在较早条（升序文档序下=最新一条恒无间隔，存量语义）；end=写在较晚条
+ *  （=最早一条无间隔，「距上一条」直觉语义）。相邻对时间相等=早退不写维持原值
+ *  （intervalMinutesBetween null 语义原样）。
+ *  need-1011-01 增可选 breakIDs（时间链断点 id 集，calcTimeInterval 从类型标记名集
+ *  查出）：相邻对中较晚者（时间序，isEarlierIdea 判定）∈断点集 → 该对不算——断点条
+ *  =新链起点，它与上一条之间的间隔归空白；断点条与下一条之间的间隔照算（新链内部，
+ *  较早者命中不跳）。start/end 两模式同规则；end 模式下断点条自身 interval 缺项=被
+ *  全量 diff 清掉（用户场景：上午末条与下午首条〔断点〕之间的午休空白不再误算）。
+ *  breakIDs 缺省/空集=现状零变化 */
+export function planIdeaIntervals(times: IdeaIntervalEntry[], mode: IdeaIntervalMode, breakIDs?: Set<string>): Map<string, string> {
+    const desired = new Map<string, string>();
+    for (let i = 1; i < times.length; i++) {
+        const a = times[i - 1], b = times[i];
+        if (breakIDs != null && breakIDs.has((isEarlierIdea(a, b) ? b : a).id)) continue;
+        const minutes = intervalMinutesBetween(a, b);
+        if (minutes == null) continue;
+        const interval = convertMinutesToTimeFormat(minutes);
+        const aEarlier = isEarlierIdea(a, b);
+        // start=较早者身上（现状 aEarlier 分支）；end=较晚者身上
+        const target = (mode === "start") === aEarlier ? a : b;
+        desired.set(target.id, interval);
+    }
+    return desired;
+}
+
+/** need-0928-01：存量不计时摘除规划（纯函数，单测覆盖）——calcTimeInterval 拉链时对
+ *  挂 custom-tomato-idea-time 且类型标记（idea-type/alias 属性值）命中不计时声明名单
+ *  的存量块摘 time+interval（陆杰飞书 om_x100b64940882dcacb2631b2f714bb32：喝水类高频
+ *  分类记录隔断真正要统计间隔的时间记录链；摘后分类标记保留=可统计次数）。
+ *  入参：ids=拉链候选（挂 idea-time 的块）、attrOf=各块类型标记查表（调用方从
+ *  attributes 表快照构造）、notTimedNames=设置串声明的不计时显示名集
+ *  （parseNoteKindDecls 预展开，kindNotTimedDeclared 的批量版）。返回=命中摘除 id 列表
+ *  （调用方从拉链剔除+盘上摘两键，摘属性前 getBlockAttrs IAL 直读复核——读写竞态
+ *  家族纪律）。引用型存量块（分类标记=引用锚非属性）天然不命中；类型标记在但不在
+ *  名单=正常计时不动；值空白不算（trim 口径对齐属性读取链） */
+export function planNotTimedStrips(
+    ids: string[],
+    attrOf: (id: string) => { ideaType?: string; alias?: string },
+    notTimedNames: Set<string>,
+): string[] {
+    const hit = (v?: string) => {
+        const t = (v ?? "").trim();
+        return !!t && notTimedNames.has(t);
+    };
+    return ids.filter(id => {
+        const { ideaType, alias } = attrOf(id);
+        return hit(ideaType) || hit(alias);
+    });
+}
+
 export class TabBuilder {
     private md: string[];
     private colSize: number;

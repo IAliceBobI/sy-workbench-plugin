@@ -36,6 +36,7 @@ import { createFrontendToolCaller } from "./agentToolBridge";
 import type { ToolCaller } from "./libs/agentTools";
 import { tomatoI18n } from "./tomatoI18n";
 import IndexConf from "./IndexConf.svelte";
+import { preselectSettingsDomain } from "./libs/settingsDomain";
 import { destroyPanelTip } from "./libs/panelTip";
 import { DestroyManager } from "./libs/destroyer";
 import { loadCss } from "./cssStyle";
@@ -46,10 +47,11 @@ import { installReadonlyHotkeyBridge, uninstallReadonlyHotkeyBridge } from "./li
 import { cpBox } from "./CpBox";
 import { pairBarBox } from "./PairBarBox";
 import { backLinkBottomBox } from "./BackLinkBottomBox";
+import { navFloatBox, NavFloatBox } from "./NavFloat";
 import { tag2RefBox } from "./Tag2RefBox";
 import { spaceRefBox } from "./SpaceRefBox";
 import { punctTidyBox } from "./PunctTidyBox";
-import { getTargetID, noteBox } from "./NoteBox";
+import { bindLifelogContentSync, getTargetID, noteBox, requestIdeaIntervalCalc } from "./NoteBox";
 import { quickNoteBox } from "./QuickNote";
 import { bindShorthandRelay, relayShorthands } from "./libs/shorthandRelay";
 import { listBox } from "./ListBox";
@@ -60,7 +62,7 @@ import { OpenAIClient, buildMessages, appendChunk, stripThinkTag, getOfficialCon
 import { imgBox } from "./ImgBox";
 import { fastNoteBox } from "./FastNoteBox";
 import * as plugin from "siyuan";
-import { addSelectionBtnsDesktop, addSelectionBtnsMobile, aiBoxCheckbox, aiBoxMenuShow, aiBoxPrompts, aiPanelCheckbox, agentMaxTurns, agentReviewEdit, agentReviewRunJs, agentKnowledgeDocs, agentSkillDocs, agentHistoryMsgs, agentDocSnapshotLimit, punctTidyEnable, punctTidyExtRules, punctTidyCustomMap, auto_card_priority, avoiding_cloud_synchronization_conflicts, awaysExitFocusStore, back_link_concept_fold, back_link_copy, back_link_dailynote_off, back_link_default_off, back_link_embed, back_link_goto_bottom_btn, back_link_max_size, back_link_mention_count, back_link_move_here, back_link_move_to_dailynote, back_link_move_with_backlink, back_link_passup_heading, back_link_passup_quote, back_link_passup_super, back_link_protyle_height, back_link_ref, back_link_refresh_off, back_link_remove_refs, bk_refresh_interval_sec, bk_visible_only, bigReloadTopbar, back_link_show_path, back_link_follow_width, backLinkBottomBoxCheckbox, bk启用禁用文档的底部反链menu, card_priority_slider_hide, card_priority_stopBtn_hide, cardBoxAddConcepts, cardBoxCheckbox, cardBoxReviewDocMenu, refCleanMenu, cardBoxSpradEvenlyPostpone, cardBoxDelayDays, cardBoxDeleteNoConfirm, cardBoxSuperCard, cardPriorityBoxAutoHide, cardPriorityBoxCheckbox, cardPriorityBoxPostponeCardMenu, cardPriorityBoxPriorityMenu, cardPriBarPos, cardPriorityBoxSpradDelayMenu, commentBoxAddFlashCard, commentBoxAnnoBg, commentBoxAnnoDraftNotebook, commentBoxAnnoLineType, commentBoxAnnoMarkStyle, commentBoxBackwardRef, commentBoxAnnotations, commentBoxCheckbox, commentBoxForwardRef, commentBoxAnnoUnderlineThickness, commentBoxMaxProtyleHeight, commentBoxMenu, commentBoxAnnoToolbar, commentBoxShowID, commentBoxStaticOutlink, commentBoxPanelSkin, commentBoxAnnoEditorMode, commentBoxAnnoEditorFontSize, commentBoxAnnoViewFontSize, commentBoxAnnoReplyFontSize, commentBoxAnnoQuoteFontSize, commentBoxVirtualRef,  cssFlashThoughts, cssHomeEndIconLeft, cssListBackgound, cssNattyList, cssRefAsTags, cssRefEffect, cssRefSquareBrackets, cssRefStyle, cssShowFlashCardBlank, cssShowHomeEndIcon, cssShowMemo, uiCleanTabClose, uiCleanTabBarBtns, uiCleanTopbarStatus, uiCleanEmptyHelp, uiCleanDocTreeBadge, uiCleanDocTreeCompact, dailyNoteBoxCheckbox, dailyNoteCopyAnchorText, dailyNoteCopyFlashCard, dailyNoteCopyFragment, dailyNoteCopyInsertPR, dailyNoteCopyMenu, dailyNoteCopyShowPath, dailyNoteCopySimple, dailyNoteCopyUpdateBG, dailyNoteCopyUseRef, dailyNoteGoToBottom, dailyNoteGoToBottomMenu, dailyNoteMoveToBottom, dailyNotetopbarleft, dailyNotetopbarright, flashThoughtsBlurClose, dailyNoteReviewTopbar, quickNoteCheckbox, quickNoteOpenMode, quickNoteRect, dbBkBoxCheckbox, dbBkBoxHideDatetime, dbBkBoxMaxBacklinkSize, dbBkBoxRefreshMenu, dbBkBoxMenuTools, dont_break_list, fastNoteBoxAdd2Flashcard, fastNoteBoxCheckbox, fastNoteBoxDelAfterCreating, fastNoteBoxDisableBK, flash_thoughts_2_top, flash_thoughts_target_file, flashThoughtUseDialog, shorthandRelayEnabled, flashStatTag, flashBlockForm, graphAddTopbarIcon, graphBoxCheckbox, graphDefaultExpandLevel, graphHideStructEdges, graphMaxAllBlocks, graphMaxPBlocks, graph定位到图中的节点Menu, graph打开块关系图Menu, imgBoxCheckbox, imgBoxShowMenu, imgOverlayCheckbox, keepLazyLoadStore, linkBoxAttrIconOnHide, linkBoxBilinkMenu,  linkBoxLnkTitle,  linkBoxSyncBlockAuto, linkBoxSyncScanDeep, linkBoxSyncRemapChildID, linkBoxSyncHref, linkBoxSyncRef, linkBoxUseLnkOrRef, pairBarEnabled, pairBarDefaultFunc, pairBarLastFunc, pairBarLastSrcID, pairBarEntryHotkey, pairBarEntryIconMenu, pairBarEntryMenu, pairBarEntryStatus, listBoxCheckbox, mindWireBlockWire, mindWireCheckbox, mindWireColorfull, mindWireDocMenu, mindWireDynamicLine, mindWireEnable, mindWireGlobalMenu, mindWireHoverBar, mindWireLine, mindWireStarRefOnly, mindWireWordWire, readingFloatBar, readingFloatBallHidden, readingAdd2Card, readingFloatBallPos, readingPointPerDoc, mixBoxCheckbox, mixBoxPinyin, noteBoxAllKinds, noteBoxCheckbox, noteBoxMobileSync, readingAddDeleteMenu, readingAddJumpMenu, readingAddRPmenu, readingPointBoxCheckbox, readingShowAllFolders, readingStatusBar, readingTopBar, showDocAttrs, spaceRefEnabled, spaceRefLinkType, storeCopyStdMD, storeFillMemoMenu, storeInsertXml, storeMergeDoc, storeMoveDocContentHere, storeNoteBox_fastnote, storeNoteBox_keep, storeNoteBox_noteAreaText, storeNoteBox_pin, storeNoteBox_recentText, storeNoteBox_selectedNotebook, storeNoteBox_selectedNoteType, storeOpenRefsClick, storeOpenRefsMenu, storeRefreshStaticBkLnk, tag2RefBoxCheckbox, tag2RefSearchLnk, tag2RefSearchRef, tag_to_ref_add_card, tag_to_ref_add_pinyin, tomato_clocks, tomato_clocks_change_bg, tomato_clocks_change_bg_dark, tomato_clocks_force_dialog, tomato_clocks_force_notice, tomato_clocks_opacity, tomato_clocks_position_right, tomato_clocks_loop, tomato_clocks_break, tomato_clocks_notice, tomato_clocks_focus, tomato_microbreak, tomato_microbreak_min, tomato_microbreak_max, tomato_microbreak_duration, tomato_microbreak_dialog, tomato_microbreak_notice, tomato_microbreak_notification, tomatoClockCheckbox, copyIdCheckbox, foldCmdCheckbox, toolbarEN2CHBtn, toolbarlocatedoc, toolbarrefreshVr, toolbarspacerepeat, toolbarTidy, userID, userToken, licenseCloudSynced, annoCollectScope, annoCollectDest, annoCollectTargetDoc, annoCollectAnchor, annoCollectColor, annoAutoArchive, mindWireWidth, cssSuperBlockBorder, cardPrioritySetPriInterval, foldTypes, foldTypesSuperBlock, foldTypesBLOCKQUOTE, foldTypesNODE_LIST, foldTypesNODE_TABLE, foldTypesNODE_HEADING, tomato_clocks_audio, exportPath, exportIntervalSec, exportCleanFiles, markdownExportBoxCheckbox, exportWhiteList, exportBlackList, hiddenMenuItems, commandToggles, markdownExportPics, exportCleanPath, exportIntervalSecOn, exportCleanFilesOn, floatingballEnable, floatingballDocList, floatingballKeyboardList, floatingballBallList, floatingballDocMenu, prefixArticlesEnable, prefixArticlesMenu, dailyNoteMoveLeaveLnk, prefixArticlesSoftLimit, fastNoteBoxDocPrefix, floatingballDocTabMenu, floatingballDocOpenBottom, floatingballKeepBall, prefixArticlesTagsShow, prefixArticlesTagsGroup, exportPathWin, knowledgeBoxCheckbox, knowledgeMenu, exportFilesMenu, knowledgeAutoSyncMin, zhipuApiKey, zhipuKbName, cardBoxSettingsShow, cardBoxCardtab, card_refresh_visible_only, foldTypesNODE_listITEM, deleteBlocksMenu, toolbarTidyExt, superRefBoxCheckBox, superRefBoxGlobalFixMenu, superRefBoxGlobalLnkMenu, blockEditorMenu, blockEditorBox, qeFloatBall, exportWL4All, getNavSourceBlock, navSourceBlock, refEffectFromLegacy, settingsSaveAllowed, back_link_float, back_link_float_ball_stay, graph_float, graphFloatJumpClose, graphShowNumbers, graphShowAllViewModes, graph标记此块Menu, graphBlockMarkBar } from "./libs/stores";import { dbBkBox } from "./DbBkBox";
+import { addSelectionBtnsDesktop, addSelectionBtnsMobile, aiBoxCheckbox, aiBoxMenuShow, aiBoxPrompts, aiPanelCheckbox, agentMaxTurns, agentReviewEdit, agentReviewRunJs, agentKnowledgeDocs, agentSkillDocs, agentHistoryMsgs, agentDocSnapshotLimit, punctTidyEnable, punctTidyExtRules, punctTidyCustomMap, auto_card_priority, avoiding_cloud_synchronization_conflicts, awaysExitFocusStore, back_link_concept_fold, back_link_copy, back_link_dailynote_off, back_link_default_off, back_link_embed, back_link_goto_bottom_btn, back_link_max_size, back_link_mention_count, back_link_move_here, back_link_move_to_dailynote, back_link_move_with_backlink, back_link_passup_heading, back_link_passup_quote, back_link_passup_super, back_link_protyle_height, back_link_ref, back_link_refresh_off, back_link_remove_refs, bk_refresh_interval_sec, bk_visible_only, bigReloadTopbar, back_link_show_path, back_link_follow_width, backLinkBottomBoxCheckbox, bk启用禁用文档的底部反链menu, card_priority_slider_hide, card_priority_stopBtn_hide, cardBoxAddConcepts, cardBoxCheckbox, cardBoxReviewDocMenu, refCleanMenu, cardBoxSpradEvenlyPostpone, cardBoxDelayDays, cardBoxDeleteNoConfirm, cardBoxSuperCard, cardPriorityBoxAutoHide, cardPriorityBoxCheckbox, cardPriorityBoxPostponeCardMenu, cardPriorityBoxPriorityMenu, cardPriBarPos, cardPriorityBoxSpradDelayMenu, commentBoxAddFlashCard, commentBoxAnnoBg, commentBoxAnnoDraftNotebook, commentBoxAnnoLineType, commentBoxAnnoMarkStyle, commentBoxBackwardRef, commentBoxAnnotations, commentBoxCheckbox, commentBoxForwardRef, commentBoxAnnoUnderlineThickness, commentBoxMaxProtyleHeight, commentBoxMenu, commentBoxAnnoToolbar, commentBoxShowID, commentBoxStaticOutlink, commentBoxPanelSkin, commentBoxAnnoEditorMode, commentBoxAnnoEditorFontSize, commentBoxAnnoViewFontSize, commentBoxAnnoReplyFontSize, commentBoxAnnoQuoteFontSize, commentBoxVirtualRef,  cssFlashThoughts, cssFlashThoughtsTask, cssHomeEndIconLeft, cssListBackgound, cssNattyList, cssRefAsTags, cssRefEffect, cssRefSquareBrackets, cssRefStyle, cssShowFlashCardBlank, cssShowHomeEndIcon, cssShowMemo, uiCleanTabClose, uiCleanTabBarBtns, uiCleanTopbarStatus, uiCleanEmptyHelp, uiCleanDocTreeBadge, uiCleanDocTreeCompact, dailyNoteBoxCheckbox, dailyNoteCopyAnchorMode, dailyNoteCopyAnchorText, dailyNoteCopyFlashCard, dailyNoteCopyFlashMenu, dailyNoteCopyFragment, dailyNoteCopyFragmentPlain, dailyNoteCopyInsertPR, dailyNoteCopyMenu, dailyNoteCopyShowPath, dailyNoteCopySimple, dailyNoteCopyTarget, dailyNoteCopyTargetDoc, dailyNoteCopyUpdateBG, dailyNoteCopyUseRef, dailyNoteGoToBottom, dailyNoteGoToBottomMenu, dailyNoteMoveToBottom, dailyNotetopbarleft, dailyNotetopbarright, flashThoughtsBlurClose, dailyNoteReviewTopbar, quickNoteCheckbox, quickNoteOpenMode, quickNoteRect, dbBkBoxCheckbox, dbBkBoxHideDatetime, dbBkBoxMaxBacklinkSize, dbBkBoxRefreshMenu, dbBkBoxMenuTools, dont_break_list, fastNoteBoxAdd2Flashcard, fastNoteBoxCheckbox, fastNoteBoxDelAfterCreating, fastNoteBoxDisableBK, flash_thoughts_2_top, flash_thoughts_target_file, flashThoughtUseDialog, shorthandRelayEnabled, shorthandRelayMobileHinted, shorthandRelayPathTpl, flashStatTag, flashBlockForm, ideaIntervalMode, flashRelayByTime, graphAddTopbarIcon, graphBoxCheckbox, graphDefaultExpandLevel, graphHideStructEdges, graphMaxAllBlocks, graphMaxPBlocks, graph定位到图中的节点Menu, graph打开块关系图Menu, imgBoxCheckbox, imgBoxShowMenu, imgOverlayCheckbox, keepLazyLoadStore, linkBoxAttrIconOnHide, linkBoxBilinkMenu,  linkBoxLnkTitle,  linkBoxSyncBlockAuto, linkBoxSyncScanDeep, linkBoxSyncRemapChildID, linkBoxSyncHref, linkBoxSyncRef, linkBoxUseLnkOrRef, pairBarEnabled, pairBarDefaultFunc, pairBarLastFunc, pairBarLastSrcID, pairBarEntryHotkey, pairBarEntryIconMenu, pairBarEntryMenu, pairBarEntryStatus, listBoxCheckbox, mindWireBlockWire, mindWireCheckbox, mindWireColorfull, mindWireDocMenu, mindWireDynamicLine, mindWireEnable, mindWireGlobalMenu, mindWireHoverBar, mindWireLine, mindWireStarRefOnly, mindWireWordWire, readingFloatBar, readingFloatBallHidden, readingAdd2Card, readingFloatBallPos, readingPointPerDoc, mixBoxCheckbox, mixBoxPinyin, noteBoxAllKinds, noteBoxCheckbox, noteBoxMobileSync, readingAddDeleteMenu, readingAddJumpMenu, readingAddRPmenu, readingPointBoxCheckbox, readingShowAllFolders, readingStatusBar, readingTopBar, showDocAttrs, spaceRefEnabled, spaceRefLinkType, storeCopyStdMD, storeFillMemoMenu, storeInsertXml, storeMergeDoc, storeMoveDocContentHere, storeNoteBox_fastnote, storeNoteBox_keep, storeNoteBox_noteAreaText, storeNoteBox_pin, storeNoteBox_recentText, storeNoteBox_selectedNotebook, storeNoteBox_selectedNoteType, storeOpenRefsClick, storeOpenRefsMenu, storeRefreshStaticBkLnk, tag2RefBoxCheckbox, tag2RefSearchLnk, tag2RefSearchRef, tag_to_ref_add_card, tag_to_ref_add_pinyin, tomato_clocks, tomato_clocks_change_bg, tomato_clocks_change_bg_dark, tomato_clocks_force_dialog, tomato_clocks_force_notice, tomato_clocks_opacity, tomato_clocks_position_right, tomato_clocks_loop, tomato_clocks_break, tomato_clocks_notice, tomato_clocks_focus, tomato_microbreak, tomato_microbreak_min, tomato_microbreak_max, tomato_microbreak_duration, tomato_microbreak_dialog, tomato_microbreak_notice, tomato_microbreak_notification, tomatoClockCheckbox, copyIdCheckbox, foldCmdCheckbox, toolbarEN2CHBtn, toolbarlocatedoc, toolbarrefreshVr, toolbarspacerepeat, toolbarTidy, userID, userToken, licenseCloudSynced, claimActive, annoCollectScope, annoCollectDest, annoCollectTargetDoc, annoCollectAnchor, annoCollectColor, annoAutoArchive, mindWireWidth, cssSuperBlockBorder, cardPrioritySetPriInterval, foldTypes, foldTypesSuperBlock, foldTypesBLOCKQUOTE, foldTypesNODE_LIST, foldTypesNODE_TABLE, foldTypesNODE_HEADING, tomato_clocks_audio, exportPath, exportIntervalSec, exportCleanFiles, markdownExportBoxCheckbox, exportWhiteList, exportBlackList, hiddenMenuItems, commandToggles, markdownExportPics, exportCleanPath, exportIntervalSecOn, exportCleanFilesOn, floatingballEnable, floatingballDocList, floatingballKeyboardList, floatingballBallList, floatingballDocMenu, prefixArticlesEnable, prefixArticlesMenu, dailyNoteMoveLeaveLnk, prefixArticlesSoftLimit, fastNoteBoxDocPrefix, floatingballDocTabMenu, floatingballDocOpenBottom, floatingballKeepBall, prefixArticlesTagsShow, prefixArticlesTagsGroup, exportPathWin, knowledgeBoxCheckbox, knowledgeMenu, exportFilesMenu, knowledgeAutoSyncMin, zhipuApiKey, zhipuKbName, cardBoxSettingsShow, cardBoxCardtab, card_refresh_visible_only, foldTypesNODE_listITEM, deleteBlocksMenu, toolbarTidyExt, superRefBoxCheckBox, superRefBoxGlobalFixMenu, superRefBoxGlobalLnkMenu, blockEditorMenu, blockEditorBox, qeFloatBall, qeBallPos, blockEditorSideLayout, blockEditorSideRatio, bkFloatPanelOpen, bkFloatBallHidden, graphFloatPanelOpen, graphFloatBallHidden, bkFloatPanelGeo, floatBallPos, navHistory, quickNoteDraft, exportWL4All, getNavSourceBlock, navSourceBlock, refEffectFromLegacy, anchorModeFromLegacy, settingsSaveAllowed, back_link_float, back_link_float_ball_stay, graph_float, graphFloatJumpClose, graphShowNumbers, graphShowAllViewModes, graph标记此块Menu, graphBlockMarkBar, nav_compass_desktop, nav_compass_mobile, nav_compass_scheme, nav_compass_flip } from "./libs/stores";import { dbBkBox } from "./DbBkBox";
 import { graphBox } from "./GraphBox";
 import { destroyGraphPreview } from "./libs/graphPreview";
 import { resetKey, verifyKeyTomato, lastVerifyResult } from "./libs/user";
@@ -99,10 +101,15 @@ function loadStore(plugin: BaseTomatoPlugin) {
     userToken.load(plugin);
     userID.load(plugin);
     licenseCloudSynced.load(plugin);
+    claimActive.load(plugin);
     navSourceBlock.load(plugin);
     blockEditorBox.load(plugin);
     blockEditorMenu.load(plugin);
     qeFloatBall.load(plugin);
+    qeBallPos.load(plugin);
+    // lsfix 2026-10-13 家族战役：块编辑器侧边布局/侧栏比例（原 localStorage，桌面端跨重启必丢）
+    blockEditorSideLayout.load(plugin);
+    blockEditorSideRatio.load(plugin);
     superRefBoxCheckBox.load(plugin);
     superRefBoxGlobalLnkMenu.load(plugin);
     superRefBoxGlobalFixMenu.load(plugin);
@@ -146,6 +153,9 @@ function loadStore(plugin: BaseTomatoPlugin) {
     quickNoteCheckbox.load(plugin);
     quickNoteOpenMode.load(plugin);
     quickNoteRect.load(plugin);
+    // lsfix 2026-10-13 家族战役：小窗草稿（原 localStorage quicknote-draft，经
+    // BroadcastChannel 协议中转——quicknote.html 是零插件加载的独立小窗）
+    quickNoteDraft.load(plugin);
     mindWireWordWire.load(plugin);
     mindWireBlockWire.load(plugin);
     mindWireHoverBar.load(plugin);
@@ -329,10 +339,32 @@ function loadStore(plugin: BaseTomatoPlugin) {
     dailyNoteCopyFragment.load(plugin);
     dailyNoteCopyAnchorText.load(plugin);
     dailyNoteCopyUseRef.load(plugin);
+    // A3 锚三态迁移（A 组 2026-10-11）：旧布尔 → ref/href 一次性推导。has-stored 守卫必须
+    // 在新键 load 之前取（load 会把默认值写进 cfg）；.set 只写内存幂等，未持久化也每次
+    // 启动重跑无副作用，一旦用户在面板改过即持久化命中守卫（cssRefEffect 迁移同款）。
+    // ⚠不回写旧键（dailyNoteCopyFlashCard 手法不适用）：布尔双真值无安全哨兵值，回写
+    // false 会在用户改 none 后的下轮启动把档位顶回 href——旧键留盘只作读源
+    const hasAnchorMode = (plugin.settingCfg as any)?.dailyNoteCopyAnchorMode != null;
+    dailyNoteCopyAnchorMode.load(plugin);
+    dailyNoteCopyTarget.load(plugin);
+    dailyNoteCopyTargetDoc.load(plugin);
+    dailyNoteCopyFragmentPlain.load(plugin);
+    if (!hasAnchorMode) {
+        dailyNoteCopyAnchorMode.set(anchorModeFromLegacy(dailyNoteCopyUseRef.get() === true));
+    }
     dailyNoteCopyUpdateBG.load(plugin);
     dailyNoteCopyInsertPR.load(plugin);
     dailyNoteCopyShowPath.load(plugin);
     dailyNoteCopyFlashCard.load(plugin);
+    dailyNoteCopyFlashMenu.load(plugin);
+    // 一次性迁移（2026-10-04 双菜单改造，幂等）：老键 dailyNoteCopyFlashCard true → 开
+    // 新键 dailyNoteCopyFlashMenu 并回写老键 false；不回写老键=用户日后关菜单项会被
+    // 残留旧值顶回（下次启动再迁移回来）。loadStore 同步上下文，write 落盘 fire-and-forget
+    if (dailyNoteCopyFlashCard.get()) {
+        dailyNoteCopyFlashMenu.set(true);
+        dailyNoteCopyFlashCard.set(false);
+        void dailyNoteCopyFlashCard.write(false);
+    }
     markdownExportBoxCheckbox.load(plugin);
     imgOverlayCheckbox.load(plugin);
     backLinkBottomBoxCheckbox.load(plugin);
@@ -349,6 +381,23 @@ function loadStore(plugin: BaseTomatoPlugin) {
     back_link_goto_bottom_btn.load(plugin);
     back_link_float.load(plugin);
     back_link_float_ball_stay.load(plugin);
+    // lsfix 2026-10-13 家族战役：悬浮反链/悬浮图/罗盘族记忆迁移（原 localStorage 桌面端
+    // 跨重启必丢）——面板开合重开态×2、球显隐意图×2、共用面板几何、三球位置字典
+    //（floatBallPos 键=原 lsKey，BkFloatBall/NavCompass 调用方零改动；旧档收编在消费侧）
+    bkFloatPanelOpen.load(plugin);
+    bkFloatBallHidden.load(plugin);
+    graphFloatPanelOpen.load(plugin);
+    graphFloatBallHidden.load(plugin);
+    bkFloatPanelGeo.load(plugin);
+    floatBallPos.load(plugin);
+    // navcompass（2026-10-11）：十字罗盘导航——分端启用+方向流派+翻页模式（设置四步第 3 步）
+    nav_compass_desktop.load(plugin);
+    nav_compass_mobile.load(plugin);
+    nav_compass_scheme.load(plugin);
+    nav_compass_flip.load(plugin);
+    // lsfix 2026-10-13 家族战役：罗盘浏览轨迹（原 localStorage sy-tomato-plugin__nav-history-v1；
+    // 写频高，消费侧 navHistory.ts 须防抖落盘——见 stores.ts navHistory 注释两难说明）
+    navHistory.load(plugin);
     back_link_concept_fold.load(plugin);
     back_link_copy.load(plugin);
     back_link_move_to_dailynote.load(plugin);
@@ -388,11 +437,16 @@ function loadStore(plugin: BaseTomatoPlugin) {
     avoiding_cloud_synchronization_conflicts.load(plugin);
     flash_thoughts_2_top.load(plugin);
     cssFlashThoughts.load(plugin);
+    cssFlashThoughtsTask.load(plugin);
     flashThoughtUseDialog.load(plugin);
     flash_thoughts_target_file.load(plugin);
     shorthandRelayEnabled.load(plugin);
+    shorthandRelayMobileHinted.load(plugin);
+    shorthandRelayPathTpl.load(plugin);
     flashStatTag.load(plugin);
     flashBlockForm.load(plugin);
+    ideaIntervalMode.load(plugin);
+    flashRelayByTime.load(plugin);
     listBoxCheckbox.load(plugin);
     dont_break_list.load(plugin);
     aiBoxCheckbox.load(plugin);
@@ -513,6 +567,12 @@ export default class ThePlugin extends BaseTomatoPlugin {
                 diagnose: diagnoseAIAsync, // 问 AI 分态诊断（验收/排障通道）
             };
             loadStore(this);
+            // 订单号信任制租约心跳（2026-09-25；2026-10-02 降频一天一查）：必须在 loadStore
+            // 之后——userToken/claimActive 未灌值时启动会被「本地无码」守卫误拦（onload 同步段
+            // 启动的旧位就是此竞态，首跳从未真正发出过）。到期续短码/转正换终身码；本地终身码、
+            // claimActive !== true（严格门 2026-10-06：false=已探明无租约、null=历史残留用户
+            // 零心跳——FC 探测流量费用主体清零）与终态（rejected/banned）不启动
+            startClaimHeartbeat("tomato");
             setGlobal(TomatoPluginConfig, this.settingCfg)
             return this.settingCfg;
         });
@@ -591,6 +651,14 @@ export default class ThePlugin extends BaseTomatoPlugin {
         await syncSettingsFromDisk(this, STORAGE_SETTINGS).catch(() => undefined);
         siyuan.pushMsg(tomatoI18n.设置读取异常未保存);
         return false;
+    }
+
+    /** navcompass（2026-10-11）：手机长按罗盘球 0.5s 的直达入口——预选十字罗盘设置域
+     *  再开面板（IndexConf mount 恢复 navActive 即读到）；NavFloat 经 (plugin as any)
+     *  调用，公开面 */
+    public openNavCompassSettings() {
+        preselectSettingsDomain("navcompass");
+        this.openSettings();
     }
 
     private openSettings() {
@@ -681,9 +749,6 @@ export default class ThePlugin extends BaseTomatoPlugin {
         addFoldCmd(this);
         addFoldingAttrBarBtns()
         this.uninitNav = initDocNavigator();
-        // 订单号信任制租约心跳（2026-09-25）：30min 续短码/转正换终身码；本地终身码与
-        // 无申报（404）自动停，终态（rejected/banned）不再重启（新申报经 markClaimPending）
-        startClaimHeartbeat("tomato");
     }
 
     private uninitNav: Func;
@@ -761,7 +826,8 @@ export default class ThePlugin extends BaseTomatoPlugin {
             },
         });
 
-        bindShorthandRelay(this, getTargetID);
+        // need-0926-18：搬运后主动重算日记间隔（免等下次打开；真搬运成功才回调）
+        bindShorthandRelay(this, getTargetID, (dayID) => requestIdeaIntervalCalc(dayID));
 
         this.eventBus.on(EventType.click_blockicon, this.blockIconEventBindThis);
 
@@ -815,10 +881,13 @@ export default class ThePlugin extends BaseTomatoPlugin {
                 langKey: "shorthandRelayManual",
                 langText: tomatoI18n.搬运官方速记到日记,
                 callback: () => {
-                    void relayShorthands(true, getTargetID);
+                    void relayShorthands(true, getTargetID, (dayID) => requestIdeaIntervalCalc(dayID));
                 },
             });
         }
+        // need-0926-03：lifelog-content 编辑同步监听——无条件链（不随 NoteBox 面板开关走，
+        // 速记块有多落块通道；见 NoteBox.ts bindLifelogContentSync 注释）
+        bindLifelogContentSync(this);
         initPrefixArticles();
         initKnowledgeBox();
         await boxStep("clock", () => tomatoClock.onload(this));
@@ -919,6 +988,11 @@ export default class ThePlugin extends BaseTomatoPlugin {
         await boxStep("superRef", () => superRefBox.onload());
         await boxStep("blockEditor", () => blockEditor.onload());
         await boxStep("punctTidy", () => punctTidyBox.onload());
+        // navcompass（2026-10-11）：十字罗盘导航第四球——置于链尾：既有悬浮面板（反链/
+        // 图）已挂 DOM，NavFloat 让位观察器才能一次收全（分端总开关 onload 读死）
+        if (NavFloatBox.on()) {
+            await boxStep("navcompass", () => navFloatBox.onload(this));
+        }
         // featgate □6（review P2-B）：Box 链收尾清 commandToggles 陈旧键（退役命令残留，
         // 防 langKey 复用被静默禁用）——onload 期执行保证，不依赖用户访问「命令开关」域
         pruneStaleCommandToggles();
@@ -939,6 +1013,8 @@ export default class ThePlugin extends BaseTomatoPlugin {
         utils.removeBkDomResidue();
         // 悬浮反链收尾（球/面板 unmount+状态栏钮 remove+statusBarIcons splice）
         backLinkBottomBox.onunload();
+        // 十字罗盘收尾（球/罗盘 unmount+宿主容器/观察器/键盘事件监听全清）
+        navFloatBox.unload();
         annotations.unload();
         commentBox.onunload();
         quickNoteBox.onunload();

@@ -1,11 +1,12 @@
 import { adaptHotkey, Custom, Dialog, IProtyle } from "siyuan";
 import { events, EventType } from "./libs/Events";
-import { add_ref, convertMinutesToTimeFormat, getContenteditableElement, intervalMinutesBetween, isMainWin, NewNodeID, parseIDTimestamp, setTimeouts, siyuan, sleep, sqlQuoteStr, timeUtil, } from "./libs/utils";
+import { add_ref, coerceIdeaIntervalMode, getContenteditableElement, isMainWin, NewNodeID, planIdeaIntervals, planNotTimedStrips, setTimeouts, siyuan, sleep, sqlQuoteStr, timeUtil, } from "./libs/utils";
 import NoteBoxSvelte from "./NoteBox.svelte";
 import { DATA_NODE_ID, TOMATO_IDEA_QUEUE } from "./libs/gconst";
 import { DestroyManager } from "./libs/destroyer";
-import { avoiding_cloud_synchronization_conflicts, flash_thoughts_2_top, flash_thoughts_target_file, flashBlockForm, flashStatTag, noteBoxCheckbox, noteBoxMobileSync, storeNoteBox_fastnote, storeNoteBox_pin, storeNoteBox_selectedNotebook, storeNoteBox_selectedNoteType } from "./libs/stores";
-import { lifelogAttrs, shouldRepinDailyNote, ymdFromCreated } from "./libs/dailyCollect";
+import { avoiding_cloud_synchronization_conflicts, flash_thoughts_2_top, flash_thoughts_target_file, flashBlockForm, flashRelayByTime, flashStatTag, ideaIntervalMode, noteBoxAllKinds, noteBoxCheckbox, noteBoxMobileSync, storeNoteBox_fastnote, storeNoteBox_pin, storeNoteBox_selectedNotebook, storeNoteBox_selectedNoteType } from "./libs/stores";
+import { lifelogAttrs, lifelogStamp, shouldRepinDailyNote, ymdFromCreated } from "./libs/dailyCollect";
+import { hhmmFromCreated, planRelayTimeSlots, relayAnchorBlocks } from "./libs/shorthandRelay";
 import { debugLog } from "./libs/logUtils";
 import { isDailyNoteIal } from "./libs/dailyReview";
 import { isPinned, removeStatusBar } from "./libs/ui";
@@ -13,7 +14,8 @@ import { createRefDoc, OpenSyFile2 } from "./libs/docUtils";
 import { tomatoI18n } from "./tomatoI18n";
 import { BaseTomatoPlugin } from "./libs/BaseTomatoPlugin";
 import { domNewLine, md2Divs } from "./libs/sydom";
-import { coerceFlashBlockForm, flashAttrs, flashMD, wrapFlashBlocksDOM } from "./libs/flashBlockForm";
+import { aliasNoteBody, coerceFlashBlockForm, flashAttrs, flashMD, kindChannel, queueLifelogSource, wrapFlashBlocksDOM } from "./libs/flashBlockForm";
+import { PLAIN_KIND, kindAliasDeclared, kindNotTimedDeclared, parseNoteKindDecls } from "./libs/quicknoteCore";
 import { newID } from "stonev5-utils";
 import { mount, unmount } from "svelte";
 
@@ -39,6 +41,70 @@ function removeIcons() {
 
 function isNoteBox() {
     return document.getElementById(NoteBoxID) != null;
+}
+
+/** need-0926-03：lifelog-content 随编辑同步——原为一次性快照（落块/搬运/合并三时机只写
+ *  初始文本），块被再编辑后属性与内容脱节，下游（轻迹等 lifelog 生态）统计不到修改后
+ *  内容。监听 ws-main 事务的 update op（800ms 防抖合并窗）：仅对已带
+ *  custom-lifelog-content 的块回写 content+updated（getBlockAttrs 判定+文本比对零变化
+ *  不写）；setBlockAttrs 广播 action=updateAttrs 非 update，自写不回流=无环。
+ *  **注册在主插件 onload 无条件链（index.ts）**——速记块有面板/小窗/移动端队列多通道，
+ *  同步是数据维护不随 NoteBox 面板开关走（dev 实测面板关=NoteBox.onload 首行早退，
+ *  监听挂那里永不注册）。开关 flashStatTag 关=回快照行为不追写（体内判，热生效） */
+export function bindLifelogContentSync(plugin: BaseTomatoPlugin) {
+    let pending = new Set<string>();
+    let timer: number | undefined;
+    plugin.eventBus.on("ws-main", ({ detail }) => {
+        if (!flashStatTag.get()) return;
+        // 广播体两路形态：data=事务数组（每项含 doOperations，0926 dev 实测）或已解包
+        const d = (detail as any)?.data;
+        const ops: any[] = Array.isArray(d)
+            ? d.flatMap(t => t?.doOperations ?? [])
+            : d?.doOperations ?? (detail as any)?.doOperations ?? [];
+        const ids = ops.filter(o => o?.action === "update" && o?.id).map(o => o.id);
+        if (ids.length === 0) return;
+        ids.forEach(i => pending.add(i));
+        if (timer) return;
+        timer = window.setTimeout(() => {
+            timer = undefined;
+            const batch = [...pending];
+            pending = new Set();
+            void syncLifelogBatch(batch);
+        }, 800);
+    });
+}
+
+/** 同步批：逐块查属性筛「速记块」→ 取块 DOM 当前文本（​ 清洗+trim，与落块 trim
+ *  同口径）→ 与属性值比对，变了才写 content+updated。单块失败静默不阻断批（对齐
+ *  tagLifelogAfterInsert fire-and-forget 语义，debugLog 留痕） */
+async function syncLifelogBatch(ids: string[]) {
+    if (!flashStatTag.get()) return;
+    for (const id of ids) {
+        try {
+            const attrs = await siyuan.getBlockAttrs(id);
+            const old = attrs?.["custom-lifelog-content"];
+            if (old === undefined) continue;
+            const dom = await siyuan.getBlockDOM(id);
+            const div = document.createElement("div");
+            div.innerHTML = dom?.dom ?? "";
+            // need-0928-01 □2 实测发现的存量缺陷：getBlockDOM 的 dom 含 .protyle-attr
+            // 属性徽标行（alias/书签等渲染成可见文本，如 alias=喝水 的「喝水」徽标）——
+            // 裸 textContent 会把徽标文本拼进 content 尾部（搬运链 aliasText 型实测
+            // 「喝水：400ml」首挂干净、sync 800ms 防抖后变「喝水：400ml喝水」；既有
+            // 形态「锻炼@别名」不带尾@ 同复现=need-0926-03 sync × need-0926-13 aliasText
+            // 组合缺陷，非本批引入）。修=剥 .protyle-attr 子树再取文本（属性徽标专用类
+            // 不进正文；零宽空格清洗口径不变）
+            div.querySelectorAll(".protyle-attr").forEach(e => e.remove());
+            const text = (div.textContent ?? "").replace(/​/g, "").trim();
+            if (!text || text === old) continue;
+            await siyuan.setBlockAttrs(id, {
+                "custom-lifelog-content": text,
+                "custom-lifelog-updated": lifelogStamp(),
+            });
+        } catch (e) {
+            debugLog("flashlog", `sync fail id=${id}: ${e}`, "dailynote");
+        }
+    }
 }
 
 
@@ -69,6 +135,19 @@ class NoteBox {
         }
 
         this.addTab();
+
+        // need-0926-18：手动「重算速记间隔」命令——必须官方 addCommand 通道（建 keymap 条目
+        // +命令面板+注入 customHotkey 三合一；裸 commands.push 不进面板，在档纪律）。
+        // 无默认键（winHotkey 定键纪律：⇧⌘ 字母族多为 Chrome 保留、⌥⌘ 字母已全占，无干净
+        // 键位不硬定——用户可经思源键位设置自行绑定）；随速记总开关冷生效（关=不注册）
+        this.plugin.addCommand({
+            langKey: "recalcIdeaInterval",
+            langText: tomatoI18n.重算速记间隔,
+            callback: () => {
+                void recalcIntervalForCurrentDoc(true);
+            },
+        });
+
         if (events.isMobile) {
             this.plugin.addTopBar({
                 icon: "iconCamera",
@@ -173,6 +252,7 @@ class NoteBox {
             });
         });
 
+
         if (!events.isMobile) {
             setTimeouts(() => {
                 if (isNoteBox() && !isMainWin()) {
@@ -182,22 +262,82 @@ class NoteBox {
         }
     }
 
-    private async calcTimeInterval(docID: string) {
-        if (!docID) return;
-        const [timeMap, intervalMap] = await siyuan
-            .sqlAttr(`select name,block_id,value from attributes 
-                where (name="custom-tomato-idea-time" or name="custom-tomato-idea-interval") 
+    /** □4 间隔重算（need-0926-18 起公开：requestIdeaIntervalCalc/recalcIntervalForCurrentDoc
+     *  主动通道与事件链共用）。写入决策收拢纯函数 planIdeaIntervals（libs/strUtils，单测
+     *  覆盖）——「间隔计算模式」两档：start=写在较早条（存量语义，默认）/end=写在较晚条；
+     *  全量 diff（不在规划 map=清空值）使模式切换后旧位置残留自动清零（空串清值的显示
+     *  兜底=cssStyle :not([custom-tomato-idea-interval=""])）。返回写入条数 */
+    async calcTimeInterval(docID: string): Promise<number> {
+        if (!docID) return 0;
+        // need-0928-01：扩查 idea-type/alias 两键——存量不计时摘除的类型标记通道
+        // （emoji 型仅 alias、文字别名型双写；引用型存量=引用锚非属性天然不识别不动）
+        const [timeMap, intervalMap, typeMap, aliasMap] = await siyuan
+            .sqlAttr(`select name,block_id,value from attributes
+                where (name="custom-tomato-idea-time" or name="custom-tomato-idea-interval"
+                    or name="custom-tomato-idea-type" or name="alias")
                 and root_id = "${docID}"`
             )
             .then(rows => {
-                const t = new Map(rows.filter(i => i.name == "custom-tomato-idea-time").map(row => [row.block_id, row.value]))
-                const i = new Map(rows.filter(i => i.name == "custom-tomato-idea-interval").map(row => [row.block_id, row.value]))
-                return [t, i]
+                const by = (n: string) => new Map(rows.filter(i => i.name == n).map(row => [row.block_id, row.value]))
+                return [
+                    by("custom-tomato-idea-time"),
+                    by("custom-tomato-idea-interval"),
+                    by("custom-tomato-idea-type"),
+                    by("alias"),
+                ]
             });
 
-        if (timeMap.size == 0) return
-        const ids = await siyuan.getBlocksIndexes([...timeMap.keys()])
+        if (timeMap.size == 0) return 0
+        let ids = await siyuan.getBlocksIndexes([...timeMap.keys()])
             .then(obj => Object.entries(obj).sort((a, b) => a[1] - b[1]).map(entr => entr[0]))
+        // need-0928-01：存量不计时顺手清——拉链候选里类型标记命中不计时声明名单的
+        // 存量块摘 time+interval（陆杰飞书 om_x100b64940882dcacb2631b2f714bb32：喝水类
+        // 高频分类记录隔断真正要统计间隔的时间记录链；摘后分类标记保留=可统计次数），
+        // 从拉链剔除=相邻间隔即时接通。名单=设置串 parseNoteKindDecls 预展开 Set
+        // （kindNotTimedDeclared 批量版提性能）；空名单零摘除=未声明用户存量零迁移。
+        // 破坏性摘属性前 getBlockAttrs IAL 直读复核（读写竞态家族纪律：attributes 快照
+        // 与盘上真态可能脱节——盘上已无 time 或标记已不命中〔用户改分类/改设置〕则
+        // 跳过该块留链上下轮处理）；单块失败吞错留痕不阻断拉链
+        const notTimedNames = new Set(parseNoteKindDecls(noteBoxAllKinds.get()).filter(d => d.notTimed).map(d => d.icon))
+        let changed = 0
+        if (notTimedNames.size > 0) {
+            const stripIDs = planNotTimedStrips(ids, id => ({
+                ideaType: typeMap.get(id),
+                alias: aliasMap.get(id),
+            }), notTimedNames)
+            const stripSet = new Set(stripIDs)
+            for (const id of stripIDs) {
+                try {
+                    const ial = await siyuan.getBlockAttrs(id)
+                    const t = (ial?.["custom-tomato-idea-time"] ?? "").trim()
+                    if (!t) { stripSet.delete(id); continue }
+                    const type = (ial?.["custom-tomato-idea-type"] ?? "").trim()
+                    const alias = (ial?.["alias"] ?? "").trim()
+                    if (!notTimedNames.has(type) && !notTimedNames.has(alias)) { stripSet.delete(id); continue }
+                    await siyuan.setBlockAttrs(id, {
+                        "custom-tomato-idea-time": "",
+                        "custom-tomato-idea-interval": "",
+                    })
+                    changed++
+                } catch (e) {
+                    stripSet.delete(id)
+                    debugLog("flashlog", `not-timed strip fail ${id}: ${e}`, "dailynote")
+                }
+            }
+            if (stripSet.size > 0) ids = ids.filter(id => !stripSet.has(id))
+        }
+        // need-1011-01：时间链断点（尾 ! 声明，陆杰 10-01 分割线提案窄化版——结束模式
+        // 下上午末条与下午首条〔断点〕之间的午休空白不再误算）。断点名集 → 拉链内断点
+        // 条 id 集：planNotTimedStrips 复用为成员查询器（本就是泛化的「id 集中类型标记
+        // 命中名单」纯函数，此处只查 id 不摘属性）。断点记录 idea-time 照落=正常时间
+        // 记录、进近期列表（与 notTimed 摘 time 不进列表相反的有意差异）；跳对非破坏性
+        // 写，不吃 notTimed 那种破坏前 IAL 复核——快照误判最坏=间隔多算、下次重算自愈；
+        // 引用型分类（分类标记=引用锚非属性）不命中=notTimed 同款已文档化限制
+        const breakNames = new Set(parseNoteKindDecls(noteBoxAllKinds.get()).filter(d => d.breakpoint).map(d => d.icon))
+        const breakIDs = breakNames.size > 0 ? new Set(planNotTimedStrips(ids, id => ({
+            ideaType: typeMap.get(id),
+            alias: aliasMap.get(id),
+        }), breakNames)) : undefined
         const createdMap = new Map((await siyuan.getRows(ids, "created")).map(r => [r.id, r.created]))
         const times = ids
             .map(id => {
@@ -207,30 +347,15 @@ class NoteBox {
                 return { id, time, interval, created: createdMap.get(id) } as ID_Time
             })
             .filter(i => !!i)
-        for (let i = 1; i < times.length; i++) {
-            await this.updateTimeInterval(times[i - 1], times[i])
-        }
-    }
-
-    private async updateTimeInterval(a: ID_Time, b: ID_Time) {
-        // created 全时间戳优先（跨天块如队列搬运块与平面 HH:MM 会错出 20h 级差值）
-        const minutes = intervalMinutesBetween(a, b)
-        if (minutes == null) return
-        const interval = convertMinutesToTimeFormat(minutes)
-        const at = parseIDTimestamp(a.created ?? "");
-        const bt = parseIDTimestamp(b.created ?? "");
-        const aEarlier = (!isNaN(at) && !isNaN(bt))
-            ? at < bt
-            : (new Date("2020-01-01 " + a.time)).getTime() < (new Date("2020-01-01 " + b.time)).getTime();
-        if (aEarlier) {
-            if (interval != a.interval) {
-                await siyuan.setBlockAttrs(a.id, { "custom-tomato-idea-interval": interval })
-            }
-        } else {
-            if (interval != b.interval) {
-                await siyuan.setBlockAttrs(b.id, { "custom-tomato-idea-interval": interval })
+        const desired = planIdeaIntervals(times, coerceIdeaIntervalMode(ideaIntervalMode.get()), breakIDs)
+        for (const { id } of times) {
+            const want = desired.get(id) ?? ""
+            if (want !== (intervalMap.get(id) ?? "")) {
+                await siyuan.setBlockAttrs(id, { "custom-tomato-idea-interval": want })
+                changed++
             }
         }
+        return changed
     }
 
     private getCloseSvg() {
@@ -295,10 +420,31 @@ class NoteBox {
         } as any); // addDock.init 的 dock 参数同 GraphBox：1.2.5 类型漏了，运行时仍传
     }
 
+    /** 幂等确保拍照闪念 dock 面板可见（GraphBox.ensureDockVisible 同款，本面板在 leftDock）：
+     *  toggleModel 对已激活且面板区可见的面板是收起语义，先判激活态；键必须用
+     *  plugin.name+DOCK_TYPE 完整键（DOM data-type/toggleModel/leftDock.data 三处同源）。
+     *  need-0926-08：速记器 focus 形态「带出思源」主窗入口改走本通道（原 openTab custom tab
+     *  撞 addTab 的 2024-06 主窗守卫恒空壳页签）。面板未注册/插件未就绪=静默无操作 */
+    ensureDockVisible() {
+        if (!this.plugin) return;
+        const layoutDock = (window.siyuan as any).layout?.leftDock;
+        if (!layoutDock) return;
+        const fullType = this.plugin.name + DOCK_TYPE;
+        const item = document.querySelector(`.dock__item[data-type="${fullType}"]`);
+        if (!item) return;
+        const active = item.classList.contains("dock__item--active");
+        if (!active || layoutDock.panelVisible === false) {
+            layoutDock.toggleModel(fullType, true);
+        }
+    }
+
     private addTab() {
         this.custom; // 压 TS6133：custom 只在 onload 前的类型期被赋值读用
         // □4 窗口统一化（2026-09-07）：「拍照闪念（全局）」命令退役——全局入口收拢到速记器 ⌥J
-        // （外部轻窗默认/带出思源面板可配），图片闪念走 Dock 图标/速记器 focus 形态进面板
+        // （外部轻窗默认/带出思源面板可配），图片闪念走 Dock 图标/速记器 focus 形态进面板。
+        // need-0926-08：速记器 focus 形态主窗入口改走 ensureDockVisible（Dock 通道）——
+        // openTab 入口退役；本 tab 注册仅存分离窗（window.html 无 dock 栏，custom tab 是
+        // 分离窗里唯一的面板形态，!isMainWin() 守卫勿动=主窗 Dock/分离窗 tab 各司其职）
         this.custom = this.plugin.addTab({
             type: TAB_TYPE,
             init() {
@@ -352,7 +498,7 @@ class NoteBox {
             return;
         }
         const ideaIDs = (await Promise.all(rows.map(row => siyuan.getChildBlocks(row.root_id)))).flat().map(c => c.id);
-        const ideas = await siyuan.getRows(ideaIDs, "created,markdown,type", false, [/*`box="${box}"`,*/ "markdown is not null", "LENGTH(markdown) > 0"]);
+        const ideas = await siyuan.getRows(ideaIDs, "created,markdown,content,alias,type", false, [/*`box="${box}"`,*/ "markdown is not null", "LENGTH(markdown) > 0"]);
         if (ideas.length == 0) {
             await this.removeQueueDocs(box, rows);
             return;
@@ -364,7 +510,24 @@ class NoteBox {
         if (!dayID) return;
 
         let ops = [];
-        if (flash_thoughts_2_top.get()) {
+        if (flashRelayByTime.get()) {
+            // need-0926-11 归位分支：逐条按记录时刻锚定（首个更晚时刻速记块前；非速记块
+            // 透明穿越/无更晚锚尾插兜底见 planRelayTimeSlots）；头插开关让位（归位语义自带
+            // 位置决策，与 shorthandRelay 同口径）。队列块=手机端落块原块（保 id 保属性，
+            // idea-time 已随块带上），tailID=块自身；时刻=created 全时间戳（跨天队列块正确）
+            const anchors = await relayAnchorBlocks(dayID);
+            const slots = planRelayTimeSlots(anchors, ideas.map(i => ({
+                created: i.created,
+                ideaTime: hhmmFromCreated(i.created),
+                tailID: i.id,
+            })));
+            for (let i = 0; i < ideas.length; i++) {
+                const slot = slots[i];
+                if (slot.kind === "head") ops.push(...siyuan.transMoveBlocksAsChild([ideas[i].id], dayID));
+                else ops.push(...siyuan.transMoveBlocksAfter([ideas[i].id], slot.anchorID));
+            }
+            debugLog("shorthand_relay", `time-order queue merge ideas=${ideas.length} anchorBlocks=${anchors.length}`, "dailynote");
+        } else if (flash_thoughts_2_top.get()) {
             // 头插分支反向传参=刻意：净契约「传什么序落什么序」（6808 实证 □7），ideas 已按
             // created 升序，reverse 后落序=新→旧，配合前插语义成 feed（最新闪念恒在日记最顶，
             // 批内批间皆全序倒排）；尾插分支则传正序落旧→新时间线——勿删此 reverse（双重反转
@@ -386,12 +549,25 @@ class NoteBox {
             // date/time 取块 created（记录时刻）非搬运时刻——跨天合并语义；「闪念」是块属性值
             // 非 UI 文案，固定中文不 i18n。单条失败吞错留痕不阻断搬运主链
             if (flashStatTag.get()) {
+                // need-0926-10：队列块 idea-type 批查（纯文本块无 alias 无引用锚，唯一
+                // 类型源=idea-type 属性——搬运补标照认「纯文本」不落「闪念」兜底；
+                // emoji/引用块无此属性零影响；root_id 限队列文档族，rows 非空保证 in 非空）
+                const plainTypeOf = new Map(
+                    (await siyuan.sqlAttr(
+                        `select block_id, value from attributes where name="custom-tomato-idea-type" and root_id in (${rows.map(r => sqlQuoteStr(r.root_id)).join(",")})`
+                    )).map(r => [r.block_id, (r.value ?? "").trim()])
+                );
                 for (const i of ideas) {
                     if (i.type !== "p") continue;
                     try {
+                        // need-0926-14：content 改 content 列纯文本源（markdown 列 ((id 'xx'))
+                        // 块引用原文会污染 custom-lifelog-content，时迹类插件检测失效）+
+                        // type 从 alias/首部引用锚还原手机端所选分类（原恒写死「闪念」）；
+                        // need-0926-10：纯文本块经 ideaType 参还原
+                        const src = queueLifelogSource(i, plainTypeOf.get(i.id) || undefined);
                         await siyuan.setBlockAttrs(i.id, lifelogAttrs({
-                            content: (i.markdown ?? "").trim(),
-                            type: "闪念",
+                            content: src.content,
+                            type: src.type,
                             time: i.created.slice(8, 10) + ":" + i.created.slice(10, 12),
                             date: ymdFromCreated(i.created),
                         }));
@@ -403,6 +579,9 @@ class NoteBox {
             // □4 即搬即清：事务 HTTP 恒 code 0（op 级失败只走 ws 回声）——删队列文档前
             // fresh 重扫 getChildBlocks 确认真的搬空，防事务竞态删到未搬空的
             await this.removeQueueDocs(box, rows);
+            // need-0926-18：队列合并后主动重算日记间隔（免等下次打开日记；块搬运保 id
+            // +补标记刚落，延迟起步等属性索引窗）
+            requestIdeaIntervalCalc(dayID);
             setTimeout(() => {
                 for (const { id } of ideas.slice().reverse()) {
                     OpenSyFile2(this.plugin, id);
@@ -462,6 +641,44 @@ export async function getTargetID(box: string) {
 
 export const noteBox = new NoteBox();
 
+/** need-0926-18 主动重算防抖表：docID → timer（同文档保存连发合并一次 calc） */
+const ideaIntervalCalcTimers = new Map<string, number>();
+
+/** need-0926-18：主动重算通道（保存/官方速记搬运/队列合并后免等下次打开日记）。
+ *  延迟起步=等 custom-* 属性 SQL 索引窗（setBlockAttrs 后 attributes 表 1~4s 延迟，
+ *  在档坑；早算会漏新块）；防抖合并连发。avoiding+移动端=落点是队列文档非日记
+ *  （getTargetDoc 改道），calc 无意义直接跳（与事件链同款门控）。fire-and-forget，
+ *  calc 本身幂等（diff 相同值零写入），失败 debugLog 留痕不阻断调用方 */
+export function requestIdeaIntervalCalc(docID: string, delayMs = 3000) {
+    if (!docID) return;
+    if (avoiding_cloud_synchronization_conflicts.get() && events.isMobile) return;
+    const prev = ideaIntervalCalcTimers.get(docID);
+    if (prev) window.clearTimeout(prev);
+    ideaIntervalCalcTimers.set(docID, window.setTimeout(() => {
+        ideaIntervalCalcTimers.delete(docID);
+        noteBox.calcTimeInterval(docID).catch(e => {
+            debugLog("flashlog", `interval calc fail ${docID}: ${e}`, "dailynote");
+        });
+    }, delayMs));
+}
+
+/** need-0926-18 手动「重算速记间隔」命令体/设置保存链挂点：对当前打开文档重算。
+ *  编辑器取 events.currentProtyle() 统一通道（插件重载后到首次点击前的空窗里裸取
+ *  .protyle=TypeError 静默死，两路皆空=undefined 判空早退）；非日记文档=命令通道给
+ *  toast（notify=true）、保存链静默（面板已关再弹提示扰人）。模式切换重算当日=IndexConf
+ *  save() 检测 idea-interval-mode 落盘后调本函数（silent） */
+export async function recalcIntervalForCurrentDoc(notify: boolean) {
+    const protyle = events.currentProtyle();
+    const docID = protyle?.block?.rootID;
+    if (!docID || !isDailyNoteIal((protyle as any)?.background?.ial as any)) {
+        if (notify) siyuan.pushMsg(tomatoI18n.当前文档不是日记);
+        return;
+    }
+    const changed = await noteBox.calcTimeInterval(docID);
+    debugLog("flashlog", `interval recalc doc=${docID} changed=${changed}`, "dailynote");
+    if (notify) siyuan.pushMsg(tomatoI18n.已重算速记间隔);
+}
+
 export function getTime() {
     const d = new Date();
     const time = timeUtil.dateFormatTime(d);
@@ -482,11 +699,39 @@ async function getContent2insert(text: string, isPic: boolean, iconOverride?: st
     const form = coerceFlashBlockForm(flashBlockForm.get());
     if (isPic) {
         return { md: text };
-    } else if (["💡", "🏞️", "💪", "💬", "🍴", "📚", "💼"].includes(icon)) {
-        const r = flashMD(text, getTime(), form, icon);
+    }
+    // need-0926-13：四值分流（kindChannel）——声明反查 kindAliasDeclared 用 chips 同一
+    // 设置串（chips 显示名=剥「@别名」后缀名，选中态与分流同名源）。
+    // need-0928-01：尾 @ 不计时声明独立反查（kindNotTimedDeclared 与别名声明正交，
+    // 双后缀「喝水@别名@」两声明并存）——命中则落块零 idea-time（间隔拉链链外）
+    // 但分类标记照落（alias/idea-type/引用锚，可统计次数；陆杰飞书
+    // om_x100b64940882dcacb2631b2f714bb32）
+    const channel = kindChannel(icon, kindAliasDeclared(icon, noteBoxAllKinds.get()));
+    const notTimed = kindNotTimedDeclared(icon, noteBoxAllKinds.get());
+    if (channel === "plain") {
+        // need-0926-10：纯文本类型——不建引用不落 alias 的裸内容块，形态随 flashBlockForm
+        // 三态与 emoji 分支同构；need-0927-03 楼9 修订：不挂 custom-tomato-idea-time /
+        // custom-tomato-idea-type 两属性（idea-time 是间隔统计 calcTimeInterval 拉链键，
+        // 挂着即隔断相邻记录间隔；纯文本=「非闪念记录」，近期列表自然不进）——flashIAL
+        // 对 PLAIN_KIND 只产 id 占位行；cssStyle PLAIN_KIND 排除规则留作存量块兼容。
+        // notTimed 对纯文本无增量语义（本来就不挂 time），不透传
+        const r = flashMD(text, getTime(), form, undefined, false, PLAIN_KIND);
         return { md: r.md, id: r.id, twoStep: r.twoStep };
-    } else if (icon === "📌") {
-        const r = flashMD(text, getTime(), form, icon, true);
+    } else if (channel === "aliasEmoji") {
+        // need-0926-17：内置 8 emoji 集合提取共享常量（原 7 元素数组+📌 单判两分支合一，
+        // 行为等价——📌 走 task=true 同旧）；need-0926-13 起用户声明的自定义 emoji（如
+        // 「🎯@别名」）同入本通道——正文零标记维持现状口径（陆杰拍板）；need-0928-01
+        // 起 notTimed 透传（「💧@」=emoji 分类+不计时，alias 照落零 time）
+        const r = flashMD(text, getTime(), form, icon, icon === "📌", undefined, notTimed);
+        return { md: r.md, id: r.id, twoStep: r.twoStep };
+    } else if (channel === "aliasText") {
+        // need-0926-13 文字别名（「@别名」声明，陆杰 09-26 17:01 拍板）：不建引用文档，
+        // 正文「别名名称：内容」前缀（名称按设置字数完整展示不截断）+alias/idea-type
+        // 双写——alias=属性行类型标记（emoji 通道同款，近期列表 alias 列优先直读）、
+        // idea-type=need-15 派生链第二还原键（历史块 alias 被改时兜底）；md 通道与
+        // emoji 分支同构（形态随 flashBlockForm 三态）；need-0928-01 起 notTimed 透传
+        // （双后缀「喝水@别名@」=alias+idea-type 双写照落、time 摘）
+        const r = flashMD(aliasNoteBody(icon, text), getTime(), form, icon, false, icon, notTimed);
         return { md: r.md, id: r.id, twoStep: r.twoStep };
     } else {
         const id = await createRefDoc(boxID, icon);
@@ -507,8 +752,10 @@ async function getContent2insert(text: string, isPic: boolean, iconOverride?: st
         }
         add_ref(textDiv, id, icon, false, false);
         const targetDoc = dayID ?? await getTargetDoc();
-        // □4 三态包装：para=多块平铺属性挂内容锚/list=单 li 收块属性挂 li/super=双层 sb（原状）
-        const w = wrapFlashBlocksDOM(blocks, textDiv, form, getTime());
+        // □4 三态包装：para=多块平铺属性挂内容锚/list=单 li 收块属性挂 li/super=双层 sb（原状）；
+        // need-0928-01：notTimed（「学习@」引用型+不计时）三态 idea-time 挂载全跳过——
+        // 引用锚分类标记照挂（add_ref 上行），lifelog 由 tagLifelogAfterInsert 照挂
+        const w = wrapFlashBlocksDOM(blocks, textDiv, form, getTime(), notTimed);
         if (flash_thoughts_2_top.get()) {
             // 只能放到这里，不能放到insertIntoDailynote，只能插入到编辑器，刷新消失。
             //
@@ -530,6 +777,8 @@ export async function insertIntoDailynote(text: string, isPic = false, iconOverr
     if (!r.md) {
         // flashlog □2：DOM 支容器直插完成即回填（预挂 id 事务通道保留）；□4 bare 形态宿主=内容锚
         tagLifelogAfterInsert(r.lifelogHost, r.lifelogHost ? undefined : r.id, text, isPic, iconOverride);
+        // need-0926-18：记完即时重算间隔（免等下次打开日记；延迟起步等属性索引窗）
+        requestIdeaIntervalCalc(dayID);
         return r.id;
     }
     let blockID = r.id;
@@ -545,7 +794,18 @@ export async function insertIntoDailynote(text: string, isPic = false, iconOverr
         const itemID = cID ? await firstTypedChild(cID, "i") : undefined;
         if (itemID) {
             const icon = (iconOverride ?? storeNoteBox_selectedNoteType.get()).trim();
-            await siyuan.setBlockAttrs(itemID, flashAttrs(getTime(), icon));
+            // need-0926-10：纯文本类型不落 alias（零类型痕迹）；need-0927-03 楼9 修订：
+            // 纯文本形态零属性（idea-time/idea-type 源头不落，间隔拉链链外）——跳过属性
+            // 回填；need-0926-13：文字别名=alias+idea-type 双写（面板 aliasText 分支同构）；
+            // emoji 分支 alias 直写照旧；need-0928-01：notTimed 反查对齐——time 摘但
+            // alias/idea-type 照落（flashAttrs notTimed 参，与一步形态同口径）
+            const ch = kindChannel(icon, kindAliasDeclared(icon, noteBoxAllKinds.get()));
+            const notTimed = kindNotTimedDeclared(icon, noteBoxAllKinds.get());
+            if (ch !== "plain") {
+                await siyuan.setBlockAttrs(itemID, ch === "aliasText"
+                    ? flashAttrs(getTime(), icon, icon, notTimed)
+                    : flashAttrs(getTime(), icon, undefined, notTimed));
+            }
             // lifelog 宿主=内层 p（生态四键识别面 type='p' 契约），无 p（纯子列表等）退化 item 自身
             lifelogHost = (await firstTypedChild(itemID, "p")) ?? itemID;
             blockID = itemID;
@@ -557,14 +817,28 @@ export async function insertIntoDailynote(text: string, isPic = false, iconOverr
             debugLog("flashlog", `two-step item resolve fail, attrs fallback to container ${cID}`, "dailynote");
         }
     } else {
-        if (flash_thoughts_2_top.get()) {
-            await siyuan.insertBlockAsChildOf(r.md, dayID);
-        } else {
-            await siyuan.appendBlock(r.md, dayID);
+        const resp = flash_thoughts_2_top.get()
+            ? await siyuan.insertBlockAsChildOf(r.md, dayID)
+            : await siyuan.appendBlock(r.md, dayID);
+        // □16：isPic 兜底通道（失焦关窗在途图直落，唯一 isPic=true 调用点）补挂
+        // idea-time——对齐 DOM 通道含图内容形态（主链纯图照挂，仅此兜底链曾漏），近期
+        // 列表（recentDerived 按该键派生）与搬运归位照认；普通 md 通道自带 IAL 不经过
+        // 此补挂。挂失败不阻断落块（列表缺该条而已，debugLog 留痕）
+        if (isPic) {
+            const picID = firstOpID(resp);
+            if (picID) {
+                try {
+                    await siyuan.setBlockAttrs(picID, flashAttrs(getTime()));
+                } catch (e) {
+                    debugLog("flashlog", `pic attrs fail ${picID}: ${e}`, "dailynote");
+                }
+            }
         }
     }
     // flashlog □2：md 支插完回填（预挂 id markdown 通道被认领）；super 形态下钻首个 p
     tagLifelogAfterInsert(lifelogHost, lifelogHost ? undefined : blockID, text, isPic, iconOverride);
+    // need-0926-18：记完即时重算间隔（免等下次打开日记；延迟起步等属性索引窗）
+    requestIdeaIntervalCalc(dayID);
     return blockID;
 }
 

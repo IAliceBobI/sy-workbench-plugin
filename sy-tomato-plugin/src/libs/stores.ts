@@ -1,7 +1,7 @@
 import { writable, get } from "svelte/store";
 import { Plugin } from "siyuan";
 import { STORAGE_Prog_SETTINGS, STORAGE_SETTINGS } from "../constants";
-import { siyuan } from "./utils";
+import { siyuan, attrOf } from "./utils";
 import { HISTORY_MSGS_DEFAULT, DOC_SNAPSHOT_DEFAULT } from "./agentContext";
 import { zipNways } from "./functional";
 import { events } from "./Events";
@@ -318,15 +318,17 @@ export const storeAttrManager = () => {
             const attr = await siyuan.getBlockAttrs(blockID);
             store.set(attr);
             set.clear();
-            store.get()[key] = store.get()[key] ?? "";
-            store.get()[key].split(sep).filter(i => !!i).forEach(i => set.add(i.trim()))
+            // 内核 2025-12 起属性名小写化（siyuan#16604）：键大小写不敏感取值，老内核
+            // 遗留的原大小写数据也认（否则置底列表等 per-doc 值重挂载即静默重置）
+            (attrOf(attr, String(key)) ?? "")
+                .split(sep).filter(i => !!i).forEach(i => set.add(i.trim()))
         },
         save: async () => {
             store.get()[key] = join();
             await siyuan.setBlockAttrs(blockID, newObj(key, store.get()[key]));
         },
         syIDClean: async () => {
-            const updated = Number(store.get()[cleanTimeKey]) || 0
+            const updated = Number(attrOf(store.get(), String(cleanTimeKey))) || 0
             const now = new Date().getTime();
             if (now - updated > 1000 * 60 * 60) {
                 const ids = [...set.values()];
@@ -449,6 +451,11 @@ export const userID = settingFactory("userID", "", STORAGE_SETTINGS, null as TSK
 // 语义 = 已回填激活码的 md5 指纹（libs/redeem.ts fingerprintOf，spec admin-codes 批次 B1）；
 // 升级前老值为布尔——读到的代码走指纹比对自然处理（布尔必然不等 → 触发一次幂等回填）
 export const licenseCloudSynced = settingFactory("licenseCloudSynced", "", STORAGE_SETTINGS, null as TSK);
+// 订单申报态三态（FC 降本 2026-10-02，libs/claimLease 心跳守卫源；2026-10-06 起严格门：
+// !==true 一律不连）：null=历史残留用户（从未申报，严格门拦下零心跳）/ true=在心跳体系
+// （申报/兑换短码 markClaimPending 落定，心跳可重建）/ false=已探明无租约（404/终态/
+// 转正后落定）——详见 claimLease.ts「心跳降频」「严格门」注释块
+export const claimActive = settingFactory<boolean | null>("claimActive", null, STORAGE_SETTINGS, null as TSK);
 /** 批注收集使用记忆（2026-09-02，不出设置面板行——是记忆不是偏好）：范围/去向/指定文件目标 */
 export const annoCollectScope = settingFactory("annoCollectScope", "doc", STORAGE_SETTINGS, null as TSK);
 export const annoCollectDest = settingFactory("annoCollectDest", "daily", STORAGE_SETTINGS, null as TSK);
@@ -484,6 +491,18 @@ export const cssRefEffect = settingFactory("cssRefEffect", "none", STORAGE_SETTI
  *  故双开与只开 style 同落 shadow，迁移后渲染与迁移前完全一致 */
 export function refEffectFromLegacy(styleOn: boolean, bracketsOn: boolean): string {
     return styleOn ? "shadow" : bracketsOn ? "brackets" : "none";
+}
+
+/** A3 旧布尔 dailyNoteCopyUseRef → 复制锚三态迁移映射：true→ref、false→href（旧
+ *  布尔无「无」档，false 的实际行为=超链接，故不落 none） */
+export function anchorModeFromLegacy(useRef: boolean): "ref" | "href" {
+    return useRef ? "ref" : "href";
+}
+
+/** A3 复制锚三态收拢：合法值透传、坏值退 "ref"（coerceIdeaIntervalMode 同款纪律，
+ *  防手改 storage 坏值打进复制链） */
+export function coerceAnchorMode(v: unknown): "ref" | "href" | "none" {
+    return v === "href" || v === "none" ? v : "ref";
 }
 export const exportWL4All = settingFactory("exportWL4All", false, STORAGE_SETTINGS, null as TSK);
 export const exportWhiteList = settingFactory("exportWhiteList", [], STORAGE_SETTINGS, null as TSK);
@@ -548,6 +567,27 @@ export const graph_float = settingFactory("graph_float", true, STORAGE_SETTINGS,
 // gfloatnav（2026-09-19）：图内导航（双击/Alt点/右键跳转/树双击/标记叶单击）后自动收起
 // 悬浮面板——「悬浮图当大纲用」闭环；默认开（丝滑跳转诉求）。运行时逐次读，非结构类
 export const graphFloatJumpClose = settingFactory("graphFloatJumpClose", true, STORAGE_SETTINGS, null as TSK);
+// navcompass（2026-10-11）：十字罗盘导航=第四悬浮球（点球变身 D-pad，方向导航文档树）。
+// 分端启用（独立开关、默认都开）——结构性键（storageHotReload 已登记：NavFloat 挂载
+// 决策 onload 读死，改动须整插件重载）；方向流派（运行时逐次读非结构类）：默认 "tree"
+//（↑父 ↓首子 ←前兄 →后兄），可切 "hegemon" 霸主流派（←→父子 ↑↓前后篇）
+export const nav_compass_desktop = settingFactory("nav_compass_desktop", true, STORAGE_SETTINGS, null as TSK);
+export const nav_compass_mobile = settingFactory("nav_compass_mobile", true, STORAGE_SETTINGS, null as TSK);
+export const nav_compass_scheme = settingFactory("nav_compass_scheme", "tree", STORAGE_SETTINGS, null as TSK);
+// 翻页模式（navflip 2026-10-11）：翻页轴（hegemon ↑↓ / tree ←→）行为——"sibling"=文件夹序
+// 前后篇（默认，现状）；"history"=浏览历史回退/前进+最新处续读下一篇（数据层 libs/navHistory.ts，
+// localStorage 持久化轨迹）。运行时逐次读非结构键（保存即热切，同 scheme）
+export const nav_compass_flip = settingFactory("nav_compass_flip", "sibling", STORAGE_SETTINGS, null as TSK);
+// 罗盘浏览轨迹（navflip 数据层，lsfix 2026-10-13 家族战役；原 localStorage
+// sy-tomato-plugin__nav-history-v1）：全时间线浏览记录 t（封顶 200）+游标 c+各父文档下
+// 最后浏览子文档记忆 p（navHistory.ts NavHistoryState）。桌面端随机端口下原档跨重启蒸发=
+// history 翻页模式轨迹/位置记忆失效。⚠两难（迁移工/bear 知情）：原设计刻意「不进设置文件
+// 防落盘搭车、不进插件数据防云同步扰动」（navHistory.ts 头注）——迁移后 recordVisit 写频高
+// （每次切文档），消费侧须防抖/合并写（saveState 攒批落盘）；且轨迹将随工作空间同步，多端
+// 互相覆盖=行为变化。模块内存缓存语义保留（navHistory.ts 模块级 state 仍是读写首层，
+// loadState 无档时收编 localStorage 旧档一次）
+export const navHistory = settingFactory<{ v: 1; t: { i: string; n: string }[]; c: number; p?: Record<string, string> }>(
+    "navHistory", { v: 1, t: [], c: -1 }, STORAGE_SETTINGS, null as TSK);
 export const tomatoClockCheckbox = settingFactory("tomatoClockCheckbox", true, STORAGE_SETTINGS, null as TSK);
 export const tomato_clocks_audio = settingFactory("tomato_clocks_audio", "", STORAGE_SETTINGS, null as TSK);
 export const tomato_clocks_notice = settingFactory("tomato_clocks_notice", true, STORAGE_SETTINGS, null as TSK);
@@ -652,9 +692,29 @@ export const superRefBoxCheckBox = settingFactory("superRefBoxCheckBox", false, 
 export const superRefBoxGlobalLnkMenu = settingFactory("superRefBoxGlobalLnkMenu", true, STORAGE_SETTINGS, null as TSK);
 export const blockEditorBox = settingFactory("blockEditorBox", false, STORAGE_SETTINGS, null as TSK);
 export const blockEditorMenu = settingFactory("blockEditorMenu", true, STORAGE_SETTINGS, null as TSK);
+// 块编辑器侧边布局记忆（lsfix 2026-10-13 家族战役）：blockside □2 布局偏好原走 localStorage
+// 「块编辑器布局_side」——桌面 Electron 每次启动给内核随机端口，origin 含端口变=localStorage
+// 换格子清空，跨重启必丢（qeBallPos 同病根）。true=侧边布局（左目录右内容两栏）；移动端
+// 恒上下不读档（消费者 BlockEditor.svelte 既有守卫，旧档收编时同守卫）
+export const blockEditorSideLayout = settingFactory("blockEditorSideLayout", false, STORAGE_SETTINGS, null as TSK);
+// 块编辑器侧栏比例（blockside □3）：0.15~0.5 clamp 的拖拽记忆；旧档=localStorage 数字串
+// 「块编辑器侧栏比例」（收编 parseFloat，NaN 忽略回默认 0.32——loadSideRatio 既有语义）
+export const blockEditorSideRatio = settingFactory("blockEditorSideRatio", 0.32, STORAGE_SETTINGS, null as TSK);
 // □5 块编辑器常驻悬浮球：开=onload 即挂收缩球（toggle 入口统一为球显隐）；默认开
 // （提需求者本人要球；参照阅读点 readingFloatBar 默认 true）
 export const qeFloatBall = settingFactory("qeFloatBall", true, STORAGE_SETTINGS, null as TSK);
+// 块编辑器收缩球位置（qeballfix 2026-10-13 群实报：桌面端重启球回左上角）。原走
+// localStorage——思源桌面 Electron 壳每次启动给内核随机端口，origin 含端口变=localStorage
+// 换格子清空，跨重启必丢；改本档落工作空间（readingFloatBallPos 同款）。null=无存档
+// （球回默认 16,16）；localStorage 旧档由 qeBall.loadQEBallPos 一次性收编
+export const qeBallPos = settingFactory<{ x: number; y: number } | null>("qeBallPos", null, STORAGE_SETTINGS, null as TSK);
+// 仿写浮条位置（lsfix 2026-10-13 家族战役）：recite 浮条拖拽位原走 localStorage
+// 「sy-recite-floatbar-pos」——桌面 Electron 每次启动随机端口换 origin，localStorage
+// 跨重启必丢（与 qeBallPos 同病根）。store 实体建在本文件是仓内惯例（s/r 复用
+// tomato settingFactory，各自 loadStore 里 load，勿在 tomato 侧 load）。null=无存档
+// （浮条回默认 200,200）；localStorage 旧档=单键 JSON 串 {x,y}，由消费者一次性收编
+// （坏档忽略，沿用现 try/catch 语义）
+export const reciteFloatBarPos = settingFactory<{ x: number; y: number } | null>("reciteFloatBarPos", null, STORAGE_SETTINGS, null as TSK);
 export const superRefBoxGlobalFixMenu = settingFactory("superRefBoxGlobalFixMenu", true, STORAGE_SETTINGS, null as TSK);
 // R5 □1 总开关化退役：cpBoxCheckbox/linkBoxCheckbox/linkBoxSyncBlock 三功能开关并入
 // pairBarEnabled（老 petal 存量值读不到即忽略，零迁移）
@@ -692,11 +752,32 @@ export const dailyNoteCopySimple = settingFactory("dailyNoteCopySimple", false, 
 export const dailyNoteCopyFragment = settingFactory("dailyNoteCopyFragment", true, STORAGE_SETTINGS, null as TSK);
 export const dailyNoteCopyMenu = settingFactory("dailyNoteCopyMenu", true, STORAGE_SETTINGS, null as TSK);
 export const dailyNoteCopyAnchorText = settingFactory("dailyNoteCopyAnchorText", "  *  ", STORAGE_SETTINGS, null as TSK);
+// A3（陆杰 2026-10-11）起退役为迁移读源（cssRefEffect 同款）：面板不再展示、存储不删，
+// loadStore 见 anchorModeFromLegacy 一次性推导
 export const dailyNoteCopyUseRef = settingFactory("dailyNoteCopyUseRef", true, STORAGE_SETTINGS, null as TSK);
+// A3 复制锚三态：ref=引用锚（默认）/href=超链接/none=不挂；片段级非纯净档同三态。
+// 运行时动作读（复制/落块分流），非 onload 注册读死类，不进 STRUCTURAL_KEYS
+export const dailyNoteCopyAnchorMode = settingFactory("dailyNoteCopyAnchorMode", "ref", STORAGE_SETTINGS, null as TSK);
+// A1 复制收集落点三档：daily=当日日记（默认=存量零迁移）/fixed=固定文档/source=按
+// 来源文档建子文档「收集 YYYYMMDD」（多端同步冲突面收窄，同速记「一笔记一文档」
+// 思路）；仅复制链生效——移动内容/快记 NewFile 语义本就是日记/快记不接三档。
+// 运行时动作读，不进 STRUCTURAL_KEYS
+export const dailyNoteCopyTarget = settingFactory("dailyNoteCopyTarget", "daily", STORAGE_SETTINGS, null as TSK);
+// A1 fixed 档目标文档 id（DocPathSelect 选择）；用前 checkBlockExist 校验、失效即清+提示重选
+export const dailyNoteCopyTargetDoc = settingFactory("dailyNoteCopyTargetDoc", "", STORAGE_SETTINGS, null as TSK);
+// A2 片段级纯净档：不套 superblock 壳/不挂 custom 属性/不挂锚/直落段落+条间空行/
+// 保留行内样式；不挂 idea-time=不进时间间隔统计链与近期列表（与速记纯文本同口径，
+// 属预期）。勿与块级 dailyNoteCopySimple（整块结构纯净）混淆。运行时动作读，不进 STRUCTURAL_KEYS
+export const dailyNoteCopyFragmentPlain = settingFactory("dailyNoteCopyFragmentPlain", false, STORAGE_SETTINGS, null as TSK);
 export const dailyNoteCopyUpdateBG = settingFactory("dailyNoteCopyUpdateBG", true, STORAGE_SETTINGS, null as TSK);
 export const dailyNoteCopyInsertPR = settingFactory("dailyNoteCopyInsertPR", true, STORAGE_SETTINGS, null as TSK);
 export const dailyNoteCopyShowPath = settingFactory("dailyNoteCopyShowPath", true, STORAGE_SETTINGS, null as TSK);
+// 退役（2026-10-04 双菜单改造）：本键不再被消费，仅作迁移源——loadStore 见 true 即开
+// 新键 dailyNoteCopyFlashMenu 并回写 false（不回写=用户日后关菜单项会被残留旧值顶回）
 export const dailyNoteCopyFlashCard = settingFactory("dailyNoteCopyFlashCard", false, STORAGE_SETTINGS, null as TSK);
+// 闪卡变体菜单显隐开关（2026-10-04 双菜单）：控「复制到 dailynote 并加入闪卡」右键菜单项；
+// 命令+快捷键恒注册（菜单运行时门控非结构性，不进 storageHotReload STRUCTURAL_KEYS）
+export const dailyNoteCopyFlashMenu = settingFactory("dailyNoteCopyFlashMenu", false, STORAGE_SETTINGS, null as TSK);
 export const imgOverlayCheckbox = settingFactory("imgOverlayCheckbox", false, STORAGE_SETTINGS, null as TSK);
 export const backLinkBottomBoxCheckbox = settingFactory("backLinkBottomBoxCheckbox", false, STORAGE_SETTINGS, null as TSK);
 export const bk启用禁用文档的底部反链menu = settingFactory("bkenableAndDisablemenu", true, STORAGE_SETTINGS, null as TSK);
@@ -714,6 +795,28 @@ export const back_link_float = settingFactory("back_link_float", true, STORAGE_S
 // 面板展开时球驻留（09-18 bear 需求，默认开）：共存模式——开面板球不隐藏，再点球收面板；
 // 关=旧互斥行为「面板开球藏」。非结构性键：BkFloat 订阅本 store 即改即生效（含他端热更）
 export const back_link_float_ball_stay = settingFactory("back_link_float_ball_stay", true, STORAGE_SETTINGS, null as TSK);
+// ---- 悬浮反链/悬浮图/罗盘族的记忆迁移（lsfix 2026-10-13 家族战役）----
+// 以下原全走 localStorage（BkFloat.ts 头注「记忆粒度全局一份」）——桌面 Electron 每次启动
+// 给内核随机端口，origin 含端口变=localStorage 换格子清空，跨重启必丢（qeBallPos 同病根），
+// 改工作空间档；localStorage 旧档由消费者读侧一次性收编
+// 悬浮反链面板开合重开态（原 tomato-bkfloat-open）：true=重启后首个 protyle 事件落地自动
+// 开面板（BkFloat.pendingOpen 恢复 Wish）；插件 unload/reload 的收尾 persist=false 不写档（既有语义）
+export const bkFloatPanelOpen = settingFactory("bkFloatPanelOpen", false, STORAGE_SETTINGS, null as TSK);
+// 悬浮反链球显隐意图（原 tomato-bkfloat-ball-hidden；状态栏钮/⌘⇧X toggle 的用户显隐标记）
+export const bkFloatBallHidden = settingFactory("bkFloatBallHidden", false, STORAGE_SETTINGS, null as TSK);
+// 悬浮图面板开合重开态（原 tomato-gfloat-open，GraphFloatBox pendingOpen 同款）
+export const graphFloatPanelOpen = settingFactory("graphFloatPanelOpen", false, STORAGE_SETTINGS, null as TSK);
+// 悬浮图球显隐意图（原 tomato-gfloat-ball-hidden，命令 toggle）
+export const graphFloatBallHidden = settingFactory("graphFloatBallHidden", false, STORAGE_SETTINGS, null as TSK);
+// 悬浮反链/悬浮图共用面板几何（原 tomato-bkfloat-panel 单键 JSON：x/y/w/h 像素+o 透明度
+// 0.4~1.0；BkFloatPanel 键为硬编码常量、两宿主共用同一份几何=现状语义保持）；null=无档
+// 回默认右下 520×420；旧档收编沿用既有 Number.isFinite 守卫
+export const bkFloatPanelGeo = settingFactory<{ x: number; y: number; w: number; h: number; o: number } | null>("bkFloatPanelGeo", null, STORAGE_SETTINGS, null as TSK);
+// BkFloatBall/NavCompass 组件族三球位置字典（lsfix）：键=原 localStorage lsKey
+// （tomato-bkfloat-ball-pos 反链球/tomato-gfloat-ball-pos 图球/tomato-navcompass-ball-pos
+// 罗盘球——罗盘与球共享同键=「变身前后同一落点」语义），调用方仍按 lsKey 寻址零改动；
+// 键缺=无档回 defPos，旧档由组件 loadPos 一次性收编（qeBall.loadQEBallPos 同款）
+export const floatBallPos = settingFactory("floatBallPos", {} as Record<string, { x: number; y: number }>, STORAGE_SETTINGS, null as TSK);
 export const back_link_concept_fold = settingFactory("back_link_concept_fold", true, STORAGE_SETTINGS, null as TSK);
 export const back_link_copy = settingFactory("back_link_copy", false, STORAGE_SETTINGS, null as TSK);
 export const back_link_move_to_dailynote = settingFactory("back_link_move_to_dailynote", true, STORAGE_SETTINGS, null as TSK);
@@ -765,6 +868,10 @@ export const noteBoxAllKinds = settingFactory("noteBoxAllKinds", `📌,💡, �
 export const avoiding_cloud_synchronization_conflicts = settingFactory("avoiding-cloud-synchronization-conflicts", false, STORAGE_SETTINGS, null as TSK);
 export const flash_thoughts_2_top = settingFactory("flash-thoughts-2-top", false, STORAGE_SETTINGS, null as TSK);
 export const cssFlashThoughts = settingFactory("cssFlashThoughts", false, STORAGE_SETTINGS, null as TSK);
+// need-0926-12 ⑤：闪念时间标识的「任务项不显示」子开关——cssFlashThoughts 全局开时，任务
+// 项（📌→l/i subtype=t 的 .li）单独可关时间胶囊+间隔角标（成对）；默认 true=存量行为零迁移
+// （任务项照旧显示）。cssStyle 一次性注入族（STRUCTURAL_KEYS 已登记）
+export const cssFlashThoughtsTask = settingFactory("cssFlashThoughtsTask", true, STORAGE_SETTINGS, null as TSK);
 export const cssSuperBlockBorder = settingFactory("cssSuperBlockBorder", false, STORAGE_SETTINGS, null as TSK);
 export const flashThoughtUseDialog = settingFactory("flashThoughtUseDialog", false, STORAGE_SETTINGS, null as TSK);
 // 日记落点的文件级覆盖（□1 语义坐实）：空=每天按内核路径模板创建新日记（内核 v3.4.2+ 自动写
@@ -774,6 +881,18 @@ export const flash_thoughts_target_file = settingFactory("flash-thoughts-target-
 // □2 官方闪念速记吸收（2026-09-06）：sync_end 自动把官方速记中转文档新块搬进日记管线
 // （libs/shorthandRelay.ts；仅支持官方 ShorthandSavePath 日期模板模式）；默认关=新功能不惊喜
 export const shorthandRelayEnabled = settingFactory("shorthandRelayEnabled", false, STORAGE_SETTINGS, null as TSK);
+// need-0926-07：移动端开启「官方速记搬运」开关的一次性提示已弹标记（防重弹）——只在移动端
+// 开启瞬间弹一次（ConfCapture.onShorthandRelayToggle），随面板保存链落盘；非 onload 注册读死类，
+// 不进 STRUCTURAL_KEYS
+export const shorthandRelayMobileHinted = settingFactory("shorthandRelayMobileHinted", false, STORAGE_SETTINGS, null as TSK);
+// need-0926-19 官方速记中转路径模板：官方「闪念速记-保存位置/路径模板」仅移动端设置 UI 有
+// 入口且写各设备本机 conf.json（conf 不进同步）→ 桌面端 ShorthandSaveBox/Path 恒空=搬运
+// 死路；插件自存同款 go 日期模板（libs/shorthandRelay.renderShorthandTemplate 受控子集
+// 渲染）优先定位中转文档，本机 conf 只作兜底。默认值=官方推荐形态（app fileTree27 示例
+// 前缀）+日粒度布局（搬运=合并模式 B：同日速记进同一文档）；空串=自存通道关闭纯走官方
+// 通道现状。运行时搬运时读，非 onload 注册读死类，不进 STRUCTURAL_KEYS
+export const SHORTHAND_RELAY_TPL_DEFAULT = '/闪念速记/{{now | date "2006-01-02"}}';
+export const shorthandRelayPathTpl = settingFactory("shorthandRelayPathTpl", SHORTHAND_RELAY_TPL_DEFAULT, STORAGE_SETTINGS, null as TSK);
 // 闪念时间记录格式兼容（flashlog □1 2026-09-20）：开启后闪念/官方速记落块时给内容段落块
 // 附 custom-lifelog-* 六键标记（libs/dailyCollect lifelogAttrs），时间记录统计类插件可识别；
 // 默认关=新功能不惊喜。运行时落点判（insertIntoDailynote/shorthandRelay/moveFromQueue 三点），
@@ -785,6 +904,17 @@ export const flashStatTag = settingFactory("flash-stat-tag", false, STORAGE_SETT
 // 勿让开关切换重写已有块（updateBlock 不迁移 custom-* 属性，在档坑）。运行时落点判
 // （insertIntoDailynote/shorthandRelay），非 onload 注册读死类，不进 STRUCTURAL_KEYS
 export const flashBlockForm = settingFactory("flash-block-form", "para", STORAGE_SETTINGS, null as TSK);
+// need-0926-18 速记间隔计算模式（对齐用户参照插件的「时间计算模式」）：start=开始模式
+// （默认=存量语义，间隔算「本条到下一条」写在较早条身上）/end=结束模式（算「上一条到
+// 当前」写在较晚条身上）。存量属性不迁移；calcTimeInterval 运行时读+全量 diff 自清旧
+// 位置残留，非 onload 注册读死类，不进 STRUCTURAL_KEYS
+export const ideaIntervalMode = settingFactory("idea-interval-mode", "start", STORAGE_SETTINGS, null as TSK);
+// need-0926-11 搬运速记按记录时间归位：官方速记搬运（shorthandRelay）与队列闪念合并
+// （NoteBox.moveFromQueue）插进日记时按记录时刻锚定「首个更晚时刻」速记块前归位，非
+// 速记块透明穿越、无更晚锚尾插兜底、不重排存量日记（bear 口径）；默认关=存量恒尾插/
+// 头插语义零改动。运行时落点判（两条搬运链构造 ops 时读），非 onload 注册读死类，
+// 不进 STRUCTURAL_KEYS
+export const flashRelayByTime = settingFactory("flash-relay-by-time", false, STORAGE_SETTINGS, null as TSK);
 // □4 全局小窗失焦自动关（2026-09-06，小记 quick-notes 可移植增强）：子窗失焦即落盘草稿并关窗；
 // pin 住 / 选图对话框在途 / 上传在途时不关。默认开=对标杆品速记手感（草稿持久化不丢内容）
 export const flashThoughtsBlurClose = settingFactory("flashThoughtsBlurClose", true, STORAGE_SETTINGS, null as TSK);
@@ -798,6 +928,12 @@ export const quickNoteOpenMode = settingFactory("quickNoteOpenMode", "external",
 // opacity 即时落盘；下次唤起原地原样弹出，出屏（拔显示器）qnFitRect 回落默认定位且不清记忆
 export const quickNoteRect = settingFactory<{ x: number; y: number; width: number; height: number; opacity?: number } | null>(
     "quickNoteRect", null, STORAGE_SETTINGS, null as TSK);
+// 速记器小窗草稿（qn-robust，lsfix 2026-10-13 家族战役；原 localStorage quicknote-draft）：
+// 未提交文本跨重启兜底——桌面端随机端口下原档蒸发=重启丢草稿。⚠消费者是独立 BrowserWindow
+// 静态页（quicknote.html，零插件加载）不能 import store，须经 BroadcastChannel "quicknote"
+// 协议中转：页面 input 防抖 post {type:'draft', text}（新增消息类型）→插件侧写档；
+// state 消息补 draft 字段恢复；done（保存成功）清空。两侧改动归迁移工
+export const quickNoteDraft = settingFactory("quickNoteDraft", "", STORAGE_SETTINGS, null as TSK);
 // □5 日记回顾面板（2026-09-06；notebox 战役翻新=日记导航器，转正目标粘滞随转正退役）
 // ：顶栏钮开关（默认开）
 export const dailyNoteReviewTopbar = settingFactory("dailyNoteReviewTopbar", true, STORAGE_SETTINGS, null as TSK);
@@ -974,7 +1110,21 @@ export const flashcardAddOriginRef = settingFactory("flashcardAddOriginRef", tru
 export const flashcardMultipleLnks = settingFactory("flashcardMultipleLnks", true, STORAGE_Prog_SETTINGS, null as TSK);
 export const digestNoBacktraceLink = settingFactory("digestNoBacktraceLink", true, STORAGE_Prog_SETTINGS, null as TSK);
 export const pieceNoBacktraceLink = settingFactory("pieceNoBacktraceLink", true, STORAGE_Prog_SETTINGS, null as TSK);
+// need-0926-01 □2 提取全部回链开关：同族第三枚但默认 false=带链接（现状 addHref=true
+// 行为零迁移）；□3 接线 extractAllNotes 读它门控装配 withHref
+export const extractAllNoBacktraceLink = settingFactory("extractAllNoBacktraceLink", false, STORAGE_Prog_SETTINGS, null as TSK);
+// need-0927-04 楼20 拍板①星号回链开关化：提取到底/keys 两链路此前硬编码恒带（withHref:
+// true），现读本键自由选择；同族命名（No 前缀=勾选即不带），默认 false=星号在（现状
+// 零迁移，陆杰 keys 点名恒带）。提取全部不读它（沿用上方 extractAllNoBacktraceLink）
+export const extractNoteNoBacktraceLink = settingFactory("extractNoteNoBacktraceLink", false, STORAGE_Prog_SETTINGS, null as TSK);
+// need-0927-04 楼20 拍板②条间空行开关：默认 false=条间加空行（现状形态零迁移）；
+// 开=产物条间紧凑无空段（buildNoteUnits blankLine 门控，四链路同读）
+export const extractNoteNoBlankLine = settingFactory("extractNoteNoBlankLine", false, STORAGE_Prog_SETTINGS, null as TSK);
 export const ProgressiveStart2learn = settingFactory("ProgressiveStart2learn", true, STORAGE_Prog_SETTINGS, null as TSK);
+// need-1001-02 移动端复访入口：渐进菜单「到期复访」项开关（桌面入口=状态栏 ✧ 角标，
+// 移动端无状态栏两入口皆不可达——菜单加项补入口；bear 2026-10-01 追加约束默认开可关）。
+// 开菜单时动态读（addMenu 内 get），非 onload 注册读死——不进 STRUCTURAL_KEYS（Start2learn 同款）
+export const ProgressiveDueMenu = settingFactory("ProgressiveDueMenu", true, STORAGE_Prog_SETTINGS, null as TSK);
 export const ProgressiveJumpMenu = settingFactory("ProgressiveJumpMenu", false, STORAGE_Prog_SETTINGS, null as TSK);
 // □8期4 移动端选块三钮开关（2026-09-09 发版前 P1 拍板补）：默认开；关=Progressive.ts
 // 事件回调不再挂（已挂钮随切文档/reload 退场，与 tomato「多行选择」同口径——勿 subscribe
@@ -993,6 +1143,10 @@ export const materialCapsuleBorder = settingFactory("materialCapsuleBorder", tru
 // 管理界面的搬迁钮方向——已有夹按 IAL 原位认回（位置无关），改档不自动搬（显式搬走
 // DigestAllDialog 搬迁钮）；阅读书摘抄落点仍由 digestLanding 三档管，两设置互不干涉
 export const writingPoolUnderBook = settingFactory("writingPoolUnderBook", true, STORAGE_Prog_SETTINGS, null as TSK);
+// need-0926-06 槽树折叠记忆（按书，鸟四答拍板②）：bookID → 展开槽 docID 列表；缺省 {}
+// =默认只开第一层；一键收回=删该书键。三处槽菜单（本书槽/批量入槽/入槽）共用一份
+export const slotTreeExpanded = settingFactory(
+    "slotTreeExpanded", {} as Record<string, string[]>, STORAGE_Prog_SETTINGS, null as TSK);
 // 修订痕迹（revtrace □4）：块级「按编辑时间着色」回看视图总开关——纯视图零档案（revTrace.ts：
 // 色层=f(块 updated 距今天数)+enrollment 基线，关掉即无痕）；默认关（□6 呈 bear 拍板，荐默认关），
 // 命令 toggle 与设置面板同此状态（浮条系统开关 toggleFloatBarSystem 同款 .set() 不落盘，
@@ -1097,6 +1251,19 @@ export const floatbarExpandPref = settingFactory(
 // 继承 mainIds 族纪律）
 export const floatbarFlatManifest = settingFactory(
     "floatbarFlatManifest", {} as Record<string, Record<string, string[]>>, STORAGE_Prog_SETTINGS, null as TSK);
+// 渐进悬浮球（收起态）位置记忆（lsfix 2026-10-13 家族战役）：原走 localStorage——思源桌面
+// Electron 壳每次启动给内核随机端口，origin 含端口变=localStorage 换格子清空，跨重启必丢
+// （群实报同根因）；改本档落工作空间（qeBallPos 同款）。null=无存档（球回默认左下
+// 200,innerHeight-200）；localStorage 旧档（prog-floatball-pos）由消费方一次性收编。
+// 展开态浮条位置是另一条键（prog-piece-floatbar-pos，共享 FloatBar 组件 posKey 传入），互不干扰
+export const progFloatBallPos = settingFactory<{ x: number; y: number } | null>("progFloatBallPos", null, STORAGE_Prog_SETTINGS, null as TSK);
+// 共享轻量工具条（libs/FloatBar.svelte，lsfix 2026-10-13 家族战役）位置字典：键=调用方
+// posKey（现消费者=渐进展开态浮条 prog-piece-floatbar-pos；tomato 仓内零消费者）。store
+// 实体建在本文件是仓内惯例（reciteFloatBarPos 同款：s/p/r 复用 tomato settingFactory，
+// load 由消费者插件的 loadStore 负责，tomato 侧勿 load）。原注释「设备属性不走插件配置
+// 跨设备同步」的旧设计随本战役退役（qeBallPos/readingFloatBallPos 先例：位置记忆进
+// 工作空间档）；旧档=单键 JSON {x,y}，组件 loadPos 一次性收编（坏档回默认位）
+export const floatBarPos = settingFactory("floatBarPos", {} as Record<string, { x: number; y: number }>, STORAGE_Prog_SETTINGS, null as TSK);
 
 // ---------------
 export const navSourceBlock = settingFactory("navSourceBlock", true, STORAGE_SETTINGS, null as TSK);
