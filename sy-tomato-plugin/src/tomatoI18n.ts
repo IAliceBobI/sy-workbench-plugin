@@ -4531,6 +4531,27 @@ export class TomatoI18n extends TomatoI18nABC {
         }
     }
 
+    /** 复习卡「回原书」胶囊带书名：片摘/书摘统一显书名（ctime 通道，不看 parentID）。
+        中文用间隔号非冒号——书名自带冒号（如「三体：黑暗森林」）会拼出双冒号 */
+    public 回原书带书名(title: string) {
+        switch (this.lang) {
+            case "zh_CN": return `回原书 · ${title}`;
+            case "zh_CHT": return `回原書 · ${title}`;
+            case "en_US":
+            default: return `Back to book: ${title}`;
+        }
+    }
+
+    /** 素材档「回出处」胶囊带写作书名（回出处键头注：素材来源不一定是书） */
+    public 回出处带名(name: string) {
+        switch (this.lang) {
+            case "zh_CN": return `回出处 · ${name}`;
+            case "zh_CHT": return `回出處 · ${name}`;
+            case "en_US":
+            default: return `Back to source: ${name}`;
+        }
+    }
+
     public get 继续读() {
         switch (this.lang) {
             case "zh_CN": return "继续读（从断点开片）";
@@ -4954,6 +4975,24 @@ export class TomatoI18n extends TomatoI18nABC {
             case "zh_CHT": return "再來一輪";
             case "en_US":
             default: return "Another round";
+        }
+    }
+
+    public get 未加入阅读推送() {
+        switch (this.lang) {
+            case "zh_CN": return "未加入阅读推送";
+            case "zh_CHT": return "未加入閱讀推送";
+            case "en_US":
+            default: return "Not in reading push";
+        }
+    }
+
+    public get 互转阅读推送() {
+        switch (this.lang) {
+            case "zh_CN": return "互转阅读推送";
+            case "zh_CHT": return "互轉閱讀推送";
+            case "en_US":
+            default: return "Convert reading push";
         }
     }
 
@@ -7220,6 +7259,59 @@ export class TomatoI18n extends TomatoI18nABC {
             case "ja_JP": return "このフラグメントの旧内容（手書きノートを含む）をすべて消去し、原文を再挿入します。取り消せません。";
             case "en_US":
             default: return "All old content in this fragment (including your handwritten notes) will be cleared, then the original text reinserted. This cannot be undone.";
+        }
+    }
+
+    // ===== 摘抄重插（2026-10-18 群反馈 650189）：digestRefill 中止提示/菜单确认/tip =====
+    public get 该摘抄没有可重插的内容() {
+        switch (this.lang) {
+            case "zh_CN": return "该摘抄没有可重插的内容（行块无原文血缘或原文已删）";
+            case "zh_CHT": return "該摘抄沒有可重插的內容（行塊無原文血緣或原文已刪）";
+            case "ja_JP": return "この抜粋には再挿入できる内容がありません（行に原文への参照がないか、原文が削除済みです）";
+            case "es_ES": return "Este excerpt no tiene contenido que reinsertar (las líneas no apuntan al original o este fue borrado)";
+            case "fr_FR": return "Cet extrait n'a rien à réinsérer (les lignes ne pointent pas vers l'original ou il a été supprimé)";
+            case "it_IT": return "Questo estratto non ha contenuto da reinserire (le righe non puntano all'originale o è stato eliminato)";
+            case "en_US":
+            default: return "This digest has nothing to reinsert (its lines carry no source link, or the source blocks are gone)";
+        }
+    }
+
+    public get 摘抄重插确认标题() {
+        switch (this.lang) {
+            case "zh_CN": return "清空并重插摘抄";
+            case "zh_CHT": return "清空並重插摘抄";
+            case "ja_JP": return "抜粋を空にして再挿入";
+            case "es_ES": return "Vaciar y reinsertar el excerpt";
+            case "fr_FR": return "Vider et réinsérer l'extrait";
+            case "it_IT": return "Svuota e reinserisci l'estratto";
+            case "en_US":
+            default: return "Clear and reinsert the digest";
+        }
+    }
+
+    public get 摘抄重插确认内容() {
+        switch (this.lang) {
+            case "zh_CN": return "将清空本篇摘抄的全部内容（包括你手写的笔记）；挂有闪卡的行，闪卡与复习进度会一并清除；含截选文字的行将按整段恢复。然后按所选方式重插原文。此操作不可撤销。";
+            case "zh_CHT": return "將清空本篇摘抄的全部內容（包括你手寫的筆記）；掛有閃卡的行，閃卡與複習進度會一併清除；含截選文字的行將按整段恢復。然後按所選方式重插原文。此操作不可撤銷。";
+            case "ja_JP": return "この抜粋の全内容（手書きノートを含む）を消去します。フラッシュカードが付いた行は、カードと復習進捗も一緒に削除されます。一部だけ選択して摘録した行は行全体で復元されます。その後、選択した方法で原文を再挿入します。取り消せません。";
+            case "es_ES": return "Se vaciará todo el contenido de este excerpt (tus notas manuscritas incluidas); las líneas con flashcards perderán también las tarjetas y su progreso de repaso; las líneas tomadas de una selección parcial se restaurarán como párrafo completo. Luego se reinsertará el original del modo elegido. No se puede deshacer.";
+            case "fr_FR": return "Tout le contenu de cet extrait sera vidé (notes manuscrites comprises) ; les lignes portant des flashcards perdront aussi leurs cartes et leur progression de révision ; les lignes issues d'une sélection partielle seront restaurées paragraphe entier. L'original sera ensuite réinséré selon le mode choisi. Irréversible.";
+            case "it_IT": return "Verrà svuotato tutto il contenuto di questo estratto (note scritte a mano incluse); le righe con flashcard perderanno anche le carte e i progressi di ripasso; le righe tratte da una selezione parziale saranno ripristinate per intero. L'originale sarà poi reinserito secondo la modalità scelta. Non si può annullare.";
+            case "en_US":
+            default: return "All content in this digest will be cleared (your handwritten notes included); lines with flashcards lose their cards and review progress too; lines taken from a partial selection will be restored as the full paragraph. The original text is then reinserted in the chosen mode. This cannot be undone.";
+        }
+    }
+
+    public get tip重插摘抄() {
+        switch (this.lang) {
+            case "zh_CN": return "清空本篇摘抄后按所选断句方式重插原文；挂有闪卡会一并清除";
+            case "zh_CHT": return "清空本篇摘抄後按所選斷句方式重插原文；掛有閃卡會一併清除";
+            case "ja_JP": return "この抜粋を空にし、選んだフレーズ設定で原文を再挿入します。フラッシュカードも一緒に削除されます";
+            case "es_ES": return "Vacía este excerpt y reinserta el original con la división elegida; las flashcards también se eliminan";
+            case "fr_FR": return "Vide cet extrait et réinsère l'original selon le découpage choisi ; les flashcards sont aussi supprimées";
+            case "it_IT": return "Svuota questo estratto e reinserisce l'originale con la suddivisione scelta; anche le flashcard vengono eliminate";
+            case "en_US":
+            default: return "Clear this digest and reinsert the original with the chosen split mode; attached flashcards are removed too";
         }
     }
 
@@ -11871,6 +11963,20 @@ export class TomatoI18n extends TomatoI18nABC {
         }
     }
 
+    /** addr-adapt B1 型1 处方文案骨架：建档穷尽双通道失败（DocCreateError）后统一用户提示 */
+    public get 文档创建失败请重试() {
+        switch (this.lang) {
+            case "zh_CN": return "文档创建失败，请重试";
+            case "zh_CHT": return "文檔建立失敗，請重試";
+            case "ja_JP": return "ドキュメントの作成に失敗しました。再試行してください";
+            case "es_ES": return "Error al crear el documento, reintenta";
+            case "fr_FR": return "Échec de création du document, réessayez";
+            case "it_IT": return "Creazione del documento non riuscita, riprova";
+            case "en_US":
+            default: return "Failed to create the document, please retry";
+        }
+    }
+
     public get 写作书名已存在() {
         switch (this.lang) {
             case "zh_CN": return "该笔记本下已有同名文档，请换个书名";
@@ -15531,6 +15637,18 @@ export class TomatoI18n extends TomatoI18nABC {
             default: return "Review this doc and subdocuments";
         }
     }
+    // issue #82：标题栏复习钮的设置项文案（按钮 tooltip 复用「复习此文档及子文档」）
+    public get 文档标题栏显示闪卡复习按钮() {
+        switch (this.lang) {
+            case "zh_CN": return "文档标题栏显示闪卡复习按钮";
+            case "zh_CHT": return "文檔標題欄顯示閃卡複習按鈕";
+            case "es_ES": return "Botón de repaso de tarjetas en la barra de título del documento";
+            case "fr_FR": return "Bouton de révision des cartes dans la barre de titre du document";
+            case "ja_JP": return "ドキュメントタイトルバーにフラッシュカード復習ボタンを表示";
+            case "en_US":
+            default: return "Show flashcard review button on document title bar";
+        }
+    }
     // confgather2 期3（2026-09-17 bear 拍板收折叠）：低频配置折叠区标题三键
     // A5+A6 反链域「静态反链与失效引用清理」维护工具合集折叠（命名对齐「数据库反链与引用修复」先例）
     public get 静态反链与失效引用清理() {
@@ -16962,6 +17080,19 @@ export class TomatoI18n extends TomatoI18nABC {
             case "zh_CHT": return "無";
             case "en_US":
             default: return "None";
+        }
+    }
+    // 浮条 tooltip 详情行（渐进 B1 帮助直达）：tip 末行可点行文案，点击 openHelpDialog 开分篇
+    public get 详细说明() {
+        switch (this.lang) {
+            case "zh_CN": return "详细说明";
+            case "zh_CHT": return "詳細說明";
+            case "ja_JP": return "詳細を見る";
+            case "es_ES": return "Más información";
+            case "fr_FR": return "En savoir plus";
+            case "it_IT": return "Per saperne di più";
+            case "en_US":
+            default: return "Learn more";
         }
     }
 }

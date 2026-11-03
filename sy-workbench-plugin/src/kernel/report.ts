@@ -7,7 +7,7 @@
 // 剪枝=滚动 8 周仅内容变化才写；坏档（parse 失败）本轮放弃不覆写（防 firstWeek 重置）。
 // 已知小窗（review 接受）：文档建成后任何后续写失败（周报表/班表）=下轮重跑产孪生文档
 // （用户可删，petal 写失败概率极低——b24e5f62 message 同款取舍）。
-import { storagePutJson, storageGetText, createDocWithMd, post, petalGetJsonFresh } from "./api";
+import { storagePutJson, storageGetText, createDocWithMd, post, petalGetJsonFresh, sql, getChildBlocks } from "./api";
 import { kernelLog } from "./loki";
 import { getLogicalDay } from "./core/dates";
 import { ROUTINE_WEEKLY_FILE, ONBOARD_FILE } from "../shared/channels";
@@ -42,8 +42,25 @@ export interface WeeklyResult {
     docId?: string;
 }
 
-/** 照镜子文档目录名（日记本下；建目录=createDocWithMd hpath 层级自动建） */
+/** 照镜子文档目录名（日记本下） */
 export const MIRROR_DIR = "照镜子";
+
+/** 显式 ensure「照镜子」中间层（3.8.9 寻址适配·A 桶，impl §5：新端点 createDocByParent
+ *  不自动补父级——此前纯靠旧端点 hpath 层级自动建（:45 旧注释自述），旧端点被限时此链断得
+ *  最彻底）。schedboard 三层链惯例：SQL 定位→树真相探针验活（索引窗内 SQL 幽灵行）→缺失建层。
+ *  层建失败 throw 上冒（Guarded 只 try/finally）→kernel.ts catch 记日志/rpc catch 回
+ *  {skipped,reason}——比旧形态（静默靠端点补层）可见。 */
+async function ensureMirrorLayer(box: string): Promise<string> {
+    const rows = await sql(`SELECT id FROM blocks WHERE type='d' AND hpath='/${MIRROR_DIR}' AND box='${box}' LIMIT 1`);
+    const found = rows?.[0]?.id ?? null;
+    if (found) {
+        try {
+            await getChildBlocks(found); // 树真相验活（schedboard blockAlive 同款——删除后 SQL 残影）
+            return found;
+        } catch { /* 残影——重建 */ }
+    }
+    return createDocWithMd(box, `/${MIRROR_DIR}`, "");
+}
 
 export async function runWeeklyReport(logger: ReportLogger, now: Date = new Date()): Promise<WeeklyResult> {
     const target = reportDue(now);
@@ -103,7 +120,9 @@ export async function runWeeklyReport(logger: ReportLogger, now: Date = new Date
     } catch (e: any) {
         logger.error(`[weekly] 训练学习失败（不阻周报）: ${String(e?.message ?? e).slice(0, 120)}`);
     }
-    const docId = await createDocWithMd(box, `/${MIRROR_DIR}/${out.docName}`, out.markdown);
+    // 建档（3.8.9 适配：显式 ensure「照镜子」层后走 C 档——parentID=层 id，不再裸 hpath 赌自动补层）
+    const mirrorLayerId = await ensureMirrorLayer(box);
+    const docId = await createDocWithMd(box, `/${MIRROR_DIR}/${out.docName}`, out.markdown, mirrorLayerId);
 
     // 班表条目（周报日落托盘，块=唯一真身；期 4 块化——幂等键=复用当日既有 report 行的块 id，
     // 补跑轮不产重复 chip/重复块）

@@ -5,6 +5,7 @@ import {
     listDocsByPath,
     moveBlock,
     moveDocsByID,
+    post,
     removeDocByID,
     sql,
 } from "../api";
@@ -93,6 +94,29 @@ async function ensureArchiveListContainer(archiveDocId: string): Promise<string>
     const l = again.find((t) => t.type === "l");
     if (!l) throw new Error("归档区收容列表建立失败（insert 后无 NodeList）");
     return l.id;
+}
+
+/** 驾驶舱建线（rpc 面——Dashboard.svelte 前端 feCall 直调下沉，master-spec 决策 §4.6）：
+ *  kernel 双通道建档（parentID=项目主文档 id 精确定位防同名孪生）+文件树钉尾序（新建默认
+ *  插顶部会把既有线顶乱——按现序追加尾部，原前端逻辑同款迁入）。throw 由 kernel.ts bind 处
+ *  catch 转 {ok:false,error} 回参（rpc 收口惯例）。 */
+export async function createLineRpc(projectId: string, name: string): Promise<{ ok: true; lineId: string } | { ok: false; error: string }> {
+    const proj = await requireDocRow(projectId);
+    const lineId = await createDocWithMd(proj.box, `${proj.hpath}/${name}`, "", projectId);
+    // 钉序失败不回滚建档（次序非正确性——现状前端同款取舍：find 不到 newPath 即跳过）
+    try {
+        const dir = proj.path.replace(/\.sy$/, "");
+        const listing = await listDocsByPath(proj.box, dir);
+        const files = listing?.files ?? [];
+        const newPath = files.find((f: any) => f?.id === lineId)?.path;
+        if (newPath) {
+            await post("/api/filetree/changeSort", {
+                notebook: proj.box,
+                paths: [...files.filter((f: any) => f.id !== lineId).map((f: any) => f.path), newPath],
+            });
+        }
+    } catch { /* 钉序失败=次序默认（插顶部），不阻建线 */ }
+    return { ok: true, lineId };
 }
 
 // ── done 任务收拢（03 收拢件：MCP sweep_done action 与 rpc 双通道共用编排） ──

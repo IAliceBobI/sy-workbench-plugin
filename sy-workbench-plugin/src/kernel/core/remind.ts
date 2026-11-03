@@ -68,8 +68,9 @@ export function isDueRemind(v: string, now: Date, repeat?: string | null): boole
     if (!d) return false;
     const rp = repeat ? parseRemindRepeat(repeat) : null;
     if (!rp) {
-        const y = (x: Date) => `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}`;
-        return y(d) <= y(now);
+        // 日界比较走补零 ISO 串（月 +1 起始且 pad 2：不补零的字典序跨单位/双位月、单位/双位日错序）
+        const ymd = (x: Date) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
+        return ymd(d) <= ymd(now);
     }
     if (!todayIsOccurrence(v, rp, now)) return false;
     return now.getTime() >= new Date(now.getFullYear(), now.getMonth(), now.getDate(), d.getHours(), d.getMinutes()).getTime();

@@ -28,6 +28,7 @@ import {
     CALENDAR_SETUP_METHOD,
     PROJECT_CREATE_METHOD,
     PROJECT_DELETE_METHOD,
+    LINE_CREATE_METHOD,
     REMIND_SYNC_METHOD,
     SCHED_BOARD_SYNC_METHOD,
     SCHED_BOARD_READ_METHOD,
@@ -71,7 +72,7 @@ import { runAmmoMigration, moveTaskPool, setPoolRatio, setPoolFreq, setTaskQuota
 import type { AversionUpsert } from "./kernel/ammoQuadrant";
 import { createMcpRegistry } from "./kernel/tools";
 import { createProjectTool, deleteProjectRpc } from "./kernel/tools/projectTools";
-import { sweepProjectDone } from "./kernel/tools/lineTools";
+import { sweepProjectDone, createLineRpc } from "./kernel/tools/lineTools";
 import { createRoutineTool } from "./kernel/tools/routineTools";
 
 class KernelPlugin {
@@ -597,6 +598,20 @@ class KernelPlugin {
         } catch (error: any) {
             await this.logger.error("[kernel] bind recon-record failed:", error);
         }
+        // 3.8.9 寻址适配：驾驶舱建线下沉（前端 feCall 直调退役——建档双通道封装唯一在
+        // kernel 侧，master-spec 决策 §4.6；建后文件树钉尾序在 rpc 内一并完成）
+        try {
+            await siyuan.rpc.bind(LINE_CREATE_METHOD, async (params: any) => {
+                kernelLog("pjcreate", `line-create rpc called (name=${String(params?.name ?? "")})`);
+                try {
+                    return await createLineRpc(String(params?.projectId ?? ""), String(params?.name ?? ""));
+                } catch (error: any) {
+                    return { ok: false, error: String(error?.message ?? error) };
+                }
+            });
+        } catch (error: any) {
+            await this.logger.error("[kernel] bind line-create failed:", error);
+        }
         // folder-model：两代起点存量迁移（幂等；目录懒建在迁移内=装完即有）。
         // fire-and-forget——生命周期不阻塞，失败只记日志（下轮 onload 幂等重试）
         void migrateFolderModel().then((r) => {
@@ -654,7 +669,7 @@ class KernelPlugin {
         } catch (error: any) {
             await this.logger.error("[kernel] unbind weather-sync failed:", error);
         }
-        for (const m of [BEHAVIOR_STAY_METHOD, BEHAVIOR_COLLECT_METHOD, BEHAVIOR_GET_METHOD, SCHEDULE_SYNC_METHOD, WEEKLY_REPORT_SYNC_METHOD, PROJECT_CREATE_METHOD, PROJECT_DELETE_METHOD, CALENDAR_SETUP_METHOD, CALENDAR_CLEAR_METHOD, SCHED_BOARD_SYNC_METHOD, SCHED_BOARD_READ_METHOD, SCHED_FOREIGN_DELETE_METHOD, REMIND_ENTRY_CREATE_METHOD, FEISHU_TEST_SEND_METHOD, FEISHU_TEST_EVENT_METHOD, FEISHU_BOT_INFO_METHOD, AMMO_START_METHOD, AMMO_STOP_METHOD, AMMO_DEPART_METHOD, AMMO_STATE_METHOD, AMMO_RESOLVE_METHOD, AMMO_REFLECT_METHOD, AMMO_PANEL_METHOD, LINE_SWEEP_METHOD, AMMO_HEALTH_METHOD, AMMO_MOVE_POOL_METHOD, AMMO_SET_RATIO_METHOD, AMMO_SET_FREQ_METHOD, AMMO_SET_QUOTA_METHOD, AMMO_LEDGER_READ_METHOD, AMMO_LIVE_STATE_METHOD, AMMO_LIVE_SYNC_METHOD, AVERSION_WRITE_METHOD, RECON_RECORD_METHOD]) {
+        for (const m of [BEHAVIOR_STAY_METHOD, BEHAVIOR_COLLECT_METHOD, BEHAVIOR_GET_METHOD, SCHEDULE_SYNC_METHOD, WEEKLY_REPORT_SYNC_METHOD, PROJECT_CREATE_METHOD, PROJECT_DELETE_METHOD, LINE_CREATE_METHOD, CALENDAR_SETUP_METHOD, CALENDAR_CLEAR_METHOD, SCHED_BOARD_SYNC_METHOD, SCHED_BOARD_READ_METHOD, SCHED_FOREIGN_DELETE_METHOD, REMIND_ENTRY_CREATE_METHOD, FEISHU_TEST_SEND_METHOD, FEISHU_TEST_EVENT_METHOD, FEISHU_BOT_INFO_METHOD, AMMO_START_METHOD, AMMO_STOP_METHOD, AMMO_DEPART_METHOD, AMMO_STATE_METHOD, AMMO_RESOLVE_METHOD, AMMO_REFLECT_METHOD, AMMO_PANEL_METHOD, LINE_SWEEP_METHOD, AMMO_HEALTH_METHOD, AMMO_MOVE_POOL_METHOD, AMMO_SET_RATIO_METHOD, AMMO_SET_FREQ_METHOD, AMMO_SET_QUOTA_METHOD, AMMO_LEDGER_READ_METHOD, AMMO_LIVE_STATE_METHOD, AMMO_LIVE_SYNC_METHOD, AVERSION_WRITE_METHOD, RECON_RECORD_METHOD]) {
             try {
                 await siyuan.rpc.unbind(m);
             } catch (error: any) {

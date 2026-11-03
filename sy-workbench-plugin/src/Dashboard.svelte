@@ -73,6 +73,7 @@
         feishuBotInfo,
         deleteProject,
         sweepDone,
+        createLine,
     }: {
         projectId: string;
         t: Record<string, string>;
@@ -117,6 +118,9 @@
         /** 收拢已完成（03 收拢件：kernel rpc line-sweep，MCP line sweep_done 双通道同编排）——
          *  顶层 done 任务（子树全 done）moveBlock 保 id 收进项目内「归档」区。缺通道=按钮不渲染 */
         sweepDone?: (projectId: string) => Promise<{ ok: boolean; swept?: number; skipped?: Array<{ id: string; name: string }>; error?: string }>;
+        /** 建线（3.8.9 寻址适配下沉，决策 §4.6：kernel 双通道建档+文件树钉尾序；
+         *  失败=UI 错误条出示 error）。缺通道（kernel 未运行）=错误条提示 */
+        createLine?: (projectId: string, name: string) => Promise<{ ok: boolean; lineId?: string; error?: string }>;
     } = $props();
 
     /** readDayBoard rpc 返回形态（Calendar BoardReadShape 的最小视图——今天卡只吃 items） */
@@ -159,7 +163,6 @@
                 error = t.dashboardNotFound;
                 return;
             }
-            mainDoc = { box: docs[0].box, hpath: docs[0].hpath, path: docs[0].path };
             const [linesRaw, tasks, snapshot, actionItems, kramdown] = await Promise.all([
                 feQuery<{ id: string; content: string; hpath?: string | null; updated: string }>(projectLinesSql(id, docs[0].path)),
                 feQuery<import("./kernel/core/progressCalc").TaskRow>(projectTasksSql(id, docs[0].path)),
@@ -357,8 +360,7 @@
     }
 
     // ── □2a 加线：骨架区 inline 输入 → 建子文档 → 文件树钉尾 → 乐观上屏 ──
-    // 主文档定位（建线 parentID/hpath/钉序目录都靠它；SQL 索引窗外查询，load 时刷新）
-    let mainDoc = $state<{ box: string; hpath: string; path: string } | null>(null);
+    // 建线走 kernel rpc（3.8.9 下沉后前端无建档逻辑——mainDoc 快照退役）
     let addingLine = $state(false);
     let newLineName = $state("");
     let addingBusy = $state(false);
@@ -381,7 +383,7 @@
     }
 
     async function submitNewLine(): Promise<void> {
-        if (addingBusy || !model || !mainDoc) return;
+        if (addingBusy || !model) return;
         const name = newLineName.trim();
         if (!name) return; // 空名=留在编辑态（blur/Esc 才收起）
         if (name.includes("/")) {
@@ -391,31 +393,15 @@
         addingBusy = true;
         addLineError = null;
         try {
-            // parentID 精确定位防同名歧义（kernel createDocWithMd 同款坑）
-            const lineId = await feCall<string>("/api/filetree/createDocWithMd", {
-                notebook: mainDoc.box,
-                path: `${mainDoc.hpath}/${name}`,
-                markdown: "",
-                parentID: model.project.id,
-            });
-            if (!lineId) throw new Error("createDocWithMd: no doc id");
-            // 文件树钉序：新建默认插顶部会把既有线顶乱——按现序追加到尾部
-            const dir = mainDoc.path.replace(/\.sy$/, "");
-            const listing = await feCall<{ files: Array<{ id: string; path: string }> } | null>(
-                "/api/filetree/listDocsByPath",
-                { notebook: mainDoc.box, path: dir },
-            );
-            const files = listing?.files ?? [];
-            const newPath = files.find((f) => f.id === lineId)?.path;
-            if (newPath) {
-                await feCall("/api/filetree/changeSort", {
-                    notebook: mainDoc.box,
-                    paths: [...files.filter((f) => f.id !== lineId).map((f) => f.path), newPath],
-                });
-            }
+            // 3.8.9 寻址适配（决策 §4.6）：建档下沉 kernel 双通道封装（rpc line-create）——
+            // parentID 精确定位防同名歧义+建后文件树钉尾序在 kernel 侧一并完成
+            // （前端 feCall 直调 createDocWithMd 退役）
+            if (!createLine) throw new Error("kernel 未响应（插件重载中？稍后再试）");
+            const r = await createLine(model.project.id, name);
+            if (!r.ok || !r.lineId) throw new Error(r.error || "createLine: no doc id");
             // 乐观上屏：SQL 索引 3~10s 窗内重查会漏新线（写后立读坑族）；头部插入=updated 最新语义
             model.lines = [
-                { id: lineId, name, isMain: false, counts: { done: 0, total: 0 }, updated: fmtUpdatedNow() },
+                { id: r.lineId, name, isMain: false, counts: { done: 0, total: 0 }, updated: fmtUpdatedNow() },
                 ...model.lines,
             ];
             addingLine = false;

@@ -2,6 +2,9 @@
 // core/ 纯逻辑零 siyuan 依赖；tools handler 只编排本模块（单测 mock 边界）。
 // goja 无 fetch/setTimeout/console——唯一外联通道 siyuan.client.fetch（path 须 / 开头）。
 import { parseListItemId } from "./core/schedboard";
+// 循环依赖说明：loki.ts 反向 import 本模块的 proxyRequest——两侧均函数体内调用（非顶层执行），
+// rollup/vitest 线性化下安全；打点通道唯一（kernelLog），勿为避环复制 loki 逻辑。
+import { kernelLog } from "./loki";
 
 interface KernelResp {
     code: number;
@@ -42,21 +45,228 @@ export async function getBlockRow(id: string): Promise<BlockRow | null> {
     return rows[0] ?? null;
 }
 
+// ── 建档双通道（思源 3.8.9 寻址适配；方案=docs/addr-adapt/master-spec.md §2，决策六项已拍板）──
+// 旧端点 createDocWithMd 优先（干净路径行为与 3.8.8 一致：hpath 自动补层+同名静默认领）；
+// 命中 legacy 拒绝（data.reason=legacyPathUnsupported/pathAmbiguous/indexUnavailable）或端点被删
+// （HTTP 404/响应非 JSON）→ 按路径记拒绝集后切新端点 createDocByParent（parentID 寻址、不补层）；
+// 穷尽后显式 throw DocCreateError。本插件调用点全部=C 档（parentID 在手）或根级（缺省=null），
+// 无 A 档逐级解析需求（周报「照镜子」层走 report.ts 显式 ensure，见 impl §5）。
+
+/** 思源式块 id：yyyymmddhhmmss-xxxxxxx（内核 IsNodeIDPattern 严校验；goja 无 Lute.NewNodeID
+ *  ——自实现，recite kernel/api.ts 同款） */
+export function newNodeID(): string {
+    const d = new Date();
+    const p = (n: number) => String(n).padStart(2, "0");
+    let rnd = "";
+    for (let i = 0; i < 7; i++) rnd += Math.floor(Math.random() * 36).toString(36);
+    return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}-${rnd}`;
+}
+
+/** 建档族穷尽失败（决策 §4.1：只建档族 throw 显式化，post 对外语义不动）。
+ *  message 含内核 msg——现有收口面（wrapHandler/{ok:false,error}/logger.error）按
+ *  String(e.message) 消费的契约不破；reason/commitState/docID 供细查（committed=已落盘勿盲目重试）。 */
+export class DocCreateError extends Error {
+    readonly reason: string;
+    readonly commitState: string;
+    readonly docID?: string;
+    constructor(reason: string, lastMsg: string, commitState = "none", docID?: string) {
+        super(`${lastMsg}${reason ? ` [${reason}]` : ""}`);
+        this.name = "DocCreateError";
+        this.reason = reason;
+        this.commitState = commitState;
+        this.docID = docID;
+    }
+}
+
+/** callFull 返回形态（不 throw——双通道判定要看完整信封；endpointGone=端点被删形态） */
+interface FullResp {
+    code: number;
+    msg: string;
+    data: any;
+    endpointGone: boolean;
+}
+
+/** 建档族专用完整响应通道：json 解析不 throw。endpointGone=HTTP 404 或响应非 JSON
+ *  （附加加固：端点被删形态视同 legacy 信号切新通道，不留死角）；client.fetch 本身
+ *  reject（网络层异常）照常上抛——那是通道故障不是端点形态。 */
+async function callFull(path: `/${string}`, body: Record<string, any>): Promise<FullResp> {
+    const resp = await siyuan.client.fetch(path, {
+        method: "POST",
+        body: JSON.stringify(body),
+    });
+    if (!resp.ok) {
+        return { code: -1, msg: `${path}: HTTP ${resp.status}`, data: null, endpointGone: resp.status === 404 };
+    }
+    let json: any;
+    try {
+        json = JSON.parse(await resp.text());
+    } catch {
+        return { code: -1, msg: `${path}: non-JSON response (endpoint removed?)`, data: null, endpointGone: true };
+    }
+    return {
+        code: typeof json?.code === "number" ? json.code : -1,
+        msg: String(json?.msg ?? ""),
+        data: json?.data,
+        endpointGone: false,
+    };
+}
+
+/** 旧端点的 legacy 拒绝信号（contract §6/§3：路径级判定——该路径候选脏且无干净/歧义/索引未就绪） */
+const LEGACY_REASONS = new Set(["legacyPathUnsupported", "pathAmbiguous", "indexUnavailable"]);
+function isLegacyRejection(r: FullResp): boolean {
+    if (r.endpointGone) return true;
+    return LEGACY_REASONS.has(String(r?.data?.reason ?? ""));
+}
+
+/** 按路径记的旧端点拒绝集（决策 §4.2：Set<"notebook|path">、≤128 条 FIFO、模块级=
+ *  插件重载清零、不持久化——同路径二访直走新通道，异路径仍先试旧通道） */
+const legacyRejected = new Set<string>();
+const LEGACY_REJECT_MAX = 128;
+function markLegacyRejected(notebook: string, path: string): void {
+    const key = `${notebook}|${path}`;
+    if (legacyRejected.has(key)) return;
+    while (legacyRejected.size >= LEGACY_REJECT_MAX) {
+        const oldest = legacyRejected.values().next().value;
+        if (oldest === undefined) break;
+        legacyRejected.delete(oldest);
+    }
+    legacyRejected.add(key);
+}
+
+/** 测试专用：清拒绝集（生产勿调） */
+export function __resetLegacyRejected(): void {
+    legacyRejected.clear();
+}
+
+/** 新端点标题净化（对齐旧端点防劈层纪律，contract §10）：/→全角／（新端点合法但含 /
+ *  标题令整条旧寻址链变 Unsupported=制造 legacy 脏数据）、控制符→空格、两端 trim（3.8.9
+ *  createDocByParent invalidTitle 拒前导/尾随空白——含全角空格 U+3000，JS .trim() 全覆盖，
+ *  句中空白无碍；trim 须在控制符→空格替换之后，否则替出的空格漏网）、超 512 rune 截断
+ *  （旧端点静默截断对齐，新端点 invalidTitle 拒——截断防 throw；截断点可恰落空白——
+ *  出口再 trim 钉死两端净）。trim 后空串=createDocSmart 空检查快速失败。 */
+function sanitizeTitleForNew(title: string): string {
+    let t = title.replace(/\//g, "／").replace(/[\u0000-\u001f\u007f]/g, " ").trim();
+    const chars = [...t];
+    if (chars.length > 512) {
+        t = chars.slice(0, 512).join("").trim();
+        kernelLog("addr", `createDocByParent title 超 512 rune 截断（原长 ${chars.length}）`);
+    }
+    return t;
+}
+
+/** hpath 尾段=新端点标题（C 档 parentID 已指父，hpath 其余段仅供旧端点） */
+function splitTailTitle(path: string): string {
+    const segs = path.split("/").filter((s) => s.length > 0);
+    return segs.length ? segs[segs.length - 1] : "";
+}
+
+/** 旧端点 code=0 的 data 兜底序（评审#2：code=0=文档已落盘，误判失败诱重试=建重复文档）：
+ *  data 裸 id → 回填 opts.id（预生成 id 已随文档落盘最稳）→ SQL 回查 → 索引窗内查不到
+ *  =返 ""+留痕（显式 throw 只留给寻址被拒，维持旧静默契约）。 */
+async function pickLegacyId(data: any, presetId: string | undefined, notebook: string, path: string): Promise<string> {
+    if (typeof data === "string" && data) return data;
+    if (presetId) return presetId;
+    const esc = path.replace(/'/g, "''");
+    try {
+        const rows = await sql(`SELECT id FROM blocks WHERE type='d' AND box='${notebook}' AND hpath='${esc}' LIMIT 1`);
+        if (rows?.[0]?.id) return rows[0].id;
+    } catch { /* 查询失败走索引窗口径 */ }
+    kernelLog("addr", `createDocWithMd code=0 但 data 空（索引窗）→ 返空串不重试: ${path}`);
+    return "";
+}
+
+/** 新端点可重试失败（父级并发变动/乐观锁失配/预生成 id 冲突——重试一次，仍败 throw） */
+const NEW_RETRY_REASONS = new Set(["parentUnavailable", "planChanged", "documentIDConflict"]);
+
+/** 建档双通道主入口（方案 §2.2 createDocSmart 的 workbench C 档形态）。
+ *  返回新文档 id 字符串——新端点 {id,document} 封内解包，13 个调用点零迁移。
+ *  kernel 侧无锁（残留并发窗口诚实接受，spec §2.1——nameConditions 乐观锁属 A 档解析链，
+ *  C 档 parentID 直给不携带；上层 ensure* 幂等先查后建兜底）。 */
+async function createDocSmart(
+    notebook: string,
+    hpath: string,
+    markdown: string,
+    opts: { id?: string; parentID?: string } = {},
+): Promise<string> {
+    if (opts.parentID === "") {
+        throw new Error("createDocWithMd: parentID 空串非法（undefined/缺省=笔记本根）");
+    }
+    const path = hpath.startsWith("/") ? hpath : `/${hpath}`;
+    // 标题生成即净化（含两端 trim）：全空白末段 trim 后空串=快速失败同「无标题段」语义，
+    // 不带空白发请求吃内核 invalidTitle 往返；旧通道 path 原样（3.8.9 起旧端点已全禁恒拒）
+    const title = sanitizeTitleForNew(splitTailTitle(path));
+    if (!title) throw new Error(`createDocWithMd: path 无标题段: ${path}`);
+
+    // 旧端点优先（该路径不在拒绝集）
+    const legacyKey = `${notebook}|${path}`;
+    if (!legacyRejected.has(legacyKey)) {
+        const r = await callFull("/api/filetree/createDocWithMd", {
+            notebook,
+            path,
+            markdown,
+            ...(opts.parentID !== undefined ? { parentID: opts.parentID } : {}),
+        });
+        if (r.code === 0) return pickLegacyId(r.data, opts.id, notebook, path);
+        if (isLegacyRejection(r)) {
+            markLegacyRejected(notebook, path);
+            const why = r.endpointGone ? "endpointGone" : String(r.data?.reason ?? "?");
+            kernelLog("addr", `createDocWithMd 拒绝（${why}）切新通道: ${path}`);
+        } else {
+            throw new DocCreateError(String(r.data?.reason ?? ""), `${path}: ${r.msg}`);
+        }
+    }
+
+    // 新端点 createDocByParent（未知字段零携带——DisallowUnknownFields；根级 parentID=null 键必须在）
+    let last: FullResp | null = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+        const id = attempt === 0 ? (opts.id ?? newNodeID()) : newNodeID();
+        const r = await callFull("/api/filetree/createDocByParent", {
+            notebook,
+            parentID: opts.parentID ?? null,
+            id,
+            title: { format: "plain", text: title },
+            markdown,
+        });
+        if (r.code === 0) {
+            // 解包 {id,document}（⑤ 坑）——data.id 空兜底=回填请求 id（code=0=已建成的最稳凭据）
+            const newId = typeof r.data?.id === "string" && r.data.id ? r.data.id : id;
+            kernelLog("addr", `createDocByParent ok: ${path} → ${newId}`);
+            return newId;
+        }
+        last = r;
+        if (r.data?.commitState === "committed" && typeof r.data?.id === "string" && r.data.id) {
+            // 已落盘当成功（排序/模板阶段失败——盲目重试=重复建档，contract §3.1）
+            kernelLog("addr", `createDocByParent commitState=committed 认成功: ${path} → ${r.data.id}`);
+            return r.data.id;
+        }
+        const reason = String(r.data?.reason ?? "");
+        if (attempt === 0 && NEW_RETRY_REASONS.has(reason)) {
+            kernelLog("addr", `createDocByParent ${reason} 重试一次: ${path}`);
+            continue;
+        }
+        break;
+    }
+    const d = last?.data;
+    throw new DocCreateError(
+        String(d?.reason ?? ""),
+        `${path}: ${last?.msg ?? "unknown"}`,
+        String(d?.commitState ?? "none"),
+        typeof d?.id === "string" ? d.id : undefined,
+    );
+}
+
 /** 文档树上建文档；返回 docId。⚠️ markdown 含围栏时须裸 ;;; 闭合（围栏吞尾坑）。
  *  parentID：同级同名孪生时 hpath 解析有歧义（kernel GetBlockTreeRootByHPath 撞名命中哪个不定），
- *  指定父文档 id 精确定位（kernel/api/filetree.go parentID 入参，issue 8138）。 */
+ *  指定父文档 id 精确定位（kernel/api/filetree.go parentID 入参，issue 8138）——新通道
+ *  （createDocByParent）上即主寻址入参。3.8.9 寻址适配：内部走双通道（见上），对外签名/返回不变；
+ *  寻址被拒穷尽后 throw（此前直调报错同样 throw——语义等价冒泡，收口面零改动）。 */
 export async function createDocWithMd(
     notebook: string,
     path: string,
     markdown: string,
     parentID?: string,
 ): Promise<string> {
-    return (await post("/api/filetree/createDocWithMd", {
-        notebook,
-        path,
-        markdown,
-        ...(parentID ? { parentID } : {}),
-    })) as string;
+    return createDocSmart(notebook, path, markdown, { parentID });
 }
 
 /** 目录直接子文档（walk 文件系统真相，不走 SQL 索引——破坏性守卫专用通道，索引窗口 3~10s 坑不住它）。

@@ -33,6 +33,11 @@ export async function feCall<T = any>(path: string, body: Record<string, unknown
         body: JSON.stringify(body),
     });
     const d = await r.json();
-    if (d.code !== 0) throw new Error(d.msg ?? `${path} failed: ${r.status}`);
+    if (d.code !== 0) {
+        // 3.8.9 寻址适配顺带修：内核业务失败 data.reason（legacyPathUnsupported 等）原先被丢——
+        // 拼进 message 供错误条/排查辨认（形态=「msg [reason]」）
+        const reason = typeof d?.data?.reason === "string" && d.data.reason ? ` [${d.data.reason}]` : "";
+        throw new Error(`${d.msg ?? `${path} failed: ${r.status}`}${reason}`);
+    }
     return d.data as T;
 }

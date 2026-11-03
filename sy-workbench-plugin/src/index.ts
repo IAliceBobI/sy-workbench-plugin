@@ -9,7 +9,7 @@ import { getLogicalDay } from "./kernel/core/dates";
 import type { OpenScenePayload, RemindWrittenPayload } from "./shared/channels";
 import { AMMO_STATE_CHANNEL, AMMO_LIVE_SYNCED_CHANNEL } from "./shared/channels";
 import { ACTIVE_PROJECT_KEY, ACTIONS_UPDATED_CHANNEL, BEHAVIOR_COLLECT_METHOD, BEHAVIOR_GET_METHOD, BEHAVIOR_PROFILE_FILE, CALENDAR_AUTH_METHOD, CALENDAR_CLEAR_METHOD, CALENDAR_INSTANCES_METHOD, CALENDAR_MIRROR_CONF_FILE, CALENDAR_MIRROR_FILE, CALENDAR_MIRROR_META_FILE, CALENDAR_MIRROR_POLL_METHOD, CALENDAR_SETUP_METHOD, CALENDAR_STATUS_CHANNEL, CALENDAR_STATUS_FILE, CAPTURE_CHANNEL, DEFAULT_REMINDER_CHANNELS, FEEDBACK_FILE, LEDGER_FILE, POMO_BRIDGE_STATE_FILE, POMODORO_LOG_FILE, ONBOARD_FILE, PROJECT_CREATE_METHOD, PROJECT_DELETE_METHOD, REMIND_WRITTEN_CHANNEL, REMINDER_CHANNELS_FILE, ROUTINE_TRAINING_FILE, ROUTINE_WEEKLY_FILE, SCENE_CHANNEL, SCHEDULE_FILE, SCHEDULE_SYNC_METHOD, SCHEDULE_UPDATED_CHANNEL, SCHED_BOARD_SYNC_METHOD, SCHED_BOARD_READ_METHOD, AMMO_LEDGER_READ_METHOD, AMMO_DEPART_METHOD, LINE_SWEEP_METHOD,
-    FEISHU_TEST_SEND_METHOD, FEISHU_TEST_EVENT_METHOD, FEISHU_BOT_INFO_METHOD, SCHED_FOREIGN_DELETE_METHOD, REMIND_ENTRY_CREATE_METHOD, SCHED_MIRROR_CONF_FILE, WEATHER_CONFIG_FILE, WEATHER_SYNC_METHOD, WEEKLY_REPORT_SYNC_METHOD, sceneKey, type ReminderChannels } from "./shared/channels";
+    FEISHU_TEST_SEND_METHOD, FEISHU_TEST_EVENT_METHOD, FEISHU_BOT_INFO_METHOD, SCHED_FOREIGN_DELETE_METHOD, REMIND_ENTRY_CREATE_METHOD, SCHED_MIRROR_CONF_FILE, WEATHER_CONFIG_FILE, WEATHER_SYNC_METHOD, WEEKLY_REPORT_SYNC_METHOD, LINE_CREATE_METHOD, sceneKey, type ReminderChannels } from "./shared/channels";
 import { stayTracker } from "./behavior/tracker";
 import { SchedNotifier } from "./schedNotify";
 import type { ActionsUpdatedPayload } from "./shared/channels";
@@ -956,6 +956,8 @@ export default class ProjectPlugin extends Plugin {
                         deleteProject: (projectId: string) => plugin.deleteProjectViaKernel(projectId),
                         // 03 收拢件：done 任务收进归档区（非破坏；kernel line-sweep rpc——MCP line sweep_done 同编排）
                         sweepDone: (projectId: string) => plugin.sweepDoneViaKernel(projectId),
+                        // 3.8.9 寻址适配：建线下沉 kernel 双通道封装（决策 §4.6——前端 feCall 直调退役）
+                        createLine: (projectId: string, name: string) => plugin.createLineViaKernel(projectId, name),
                     },
                 }) as any;
                 this.data.unmountDashboard = () => unmount(inst);
@@ -2556,6 +2558,22 @@ export default class ProjectPlugin extends Plugin {
             return await rpc.call[LINE_SWEEP_METHOD]({ projectId });
         } catch (e: any) {
             debugLog("fe", `!! line-sweep rpc failed: ${String(e)}`);
+            return { ok: false, error: String(e?.message ?? e) };
+        }
+    }
+
+    /** rpc 建线（驾驶舱建线直调下沉，3.8.9 寻址适配——master-spec 决策 §4.6）：kernel 侧
+     *  双通道建档+文件树钉尾序；缺通道（kernel 未运行/重载中）回 {ok:false,error}，
+     *  文案对齐 feishuTestSend 硬编码先例 */
+    private async createLineViaKernel(projectId: string, name: string): Promise<{ ok: boolean; lineId?: string; error?: string }> {
+        const rpc = (this as any).kernel?.rpc;
+        if (!rpc?.call?.[LINE_CREATE_METHOD]) {
+            return { ok: false, error: "kernel 未响应（插件重载中？稍后再试）" };
+        }
+        try {
+            return await rpc.call[LINE_CREATE_METHOD]({ projectId, name });
+        } catch (e: any) {
+            debugLog("fe", `!! line-create rpc failed: ${String(e)}`);
             return { ok: false, error: String(e?.message ?? e) };
         }
     }

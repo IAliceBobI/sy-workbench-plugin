@@ -197,6 +197,12 @@ export const PROJECT_CREATE_METHOD = "project-create";
  *  （bear 拍板「MCP 删除动作砍掉不做」），前端 UI 专用通道。 */
 export const PROJECT_DELETE_METHOD = "project-delete";
 
+/** 前端→kernel：驾驶舱建线（3.8.9 寻址适配下沉，master-spec 决策 §4.6——此前 Dashboard
+ *  feCall 直调 createDocWithMd 端点，绕过 kernel 封装；双通道封装唯一在 kernel 侧）。
+ *  params={projectId, name}→{ok:true, lineId}|{ok:false, error}；建后文件树钉尾序
+ *  （新建默认插顶部会把既有线顶乱）在 kernel 侧一并完成（原前端逻辑迁入）。 */
+export const LINE_CREATE_METHOD = "line-create";
+
 // ── sloop □7 作息训练·期 5：外部日历镜像+提醒通道 ──
 
 /** 自动存入配置存储键：{autoAdopt?: boolean}（期 4 起 sched 镜像链/backend/writeback 退役，
