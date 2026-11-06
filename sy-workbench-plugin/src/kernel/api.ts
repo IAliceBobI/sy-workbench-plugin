@@ -111,10 +111,16 @@ async function callFull(path: `/${string}`, body: Record<string, any>): Promise<
     };
 }
 
-/** 旧端点的 legacy 拒绝信号（contract §6/§3：路径级判定——该路径候选脏且无干净/歧义/索引未就绪） */
+/** 旧端点的 legacy 拒绝信号（contract §6/§3：路径级判定——该路径候选脏且无干净/歧义/索引未就绪）。
+ *  另收无 reason 裸拒绝形态（渐进仓 issue #28）：3.8.9 旧端点父级自动补建恒败——事务内新父
+ *  文档 metadata 未提交、预检重解析父链必 miss（kernel v3.8.9 treenode/document_legacy.go
+ *  ErrDocumentMetadataUnavailable），回包 {code:-1, msg 哨兵串, data:null}；3.8.8 及更早无
+ *  此错误串，精确匹配零误伤 */
 const LEGACY_REASONS = new Set(["legacyPathUnsupported", "pathAmbiguous", "indexUnavailable"]);
+const LEGACY_METADATA_UNREADY_MSG = "document metadata is not ready";
 function isLegacyRejection(r: FullResp): boolean {
     if (r.endpointGone) return true;
+    if (!r?.data?.reason && r?.msg === LEGACY_METADATA_UNREADY_MSG) return true;
     return LEGACY_REASONS.has(String(r?.data?.reason ?? ""));
 }
 
